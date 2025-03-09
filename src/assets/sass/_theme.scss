@@ -5,7 +5,7 @@
  * classes available. Then, we can rely on toggling those classes on <body>.
  */
 
- @import 'colors';
+ @use 'colors';
 
 /* Attach light/dark theme classes to body so custom properties are available. */
 body.sport-warehouse-light-theme {

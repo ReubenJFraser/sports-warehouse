@@ -1,17 +1,21 @@
 /* main.scss */
 
 /* 1) Typography & Shapes (Foundation) */
-@import 'typography';
-@import 'shapes';
+@use 'typography';
+@use 'shapes';
 
 /* 2) Sports Warehouse Color Definitions */
-@import 'colors';
+@use 'colors';
 
 /* 3) Theme Definitions & Base Material 3 Classes */
-@import 'theme';
-@import 'theme-base';
+@use 'theme';
+@use 'theme-base';
 
 /* 4) Layout and Logo Specific Styles */
-@import 'layout';
-@import 'logo';
+@use 'layout';
+@use 'logo';
+
+/* 5) Full Screen Dialog Styles */
+@use 'full-screen-dialog'; // Add this line
+
 
