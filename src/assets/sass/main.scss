@@ -1,0 +1,17 @@
+/* main.scss */
+
+/* 1) Typography & Shapes (Foundation) */
+@import 'typography';
+@import 'shapes';
+
+/* 2) Sports Warehouse Color Definitions */
+@import 'colors';
+
+/* 3) Theme Definitions & Base Material 3 Classes */
+@import 'theme';
+@import 'theme-base';
+
+/* 4) Layout and Logo Specific Styles */
+@import 'layout';
+@import 'logo';
+

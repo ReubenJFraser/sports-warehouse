@@ -1,0 +1,16 @@
+/* _typography.scss: Shared Material 3 typography styles */
+$font-primary: "Roboto", sans-serif;
+
+$headline-large: 32px;
+$headline-medium: 28px;
+$headline-small: 24px;
+$body-large: 16px;
+$body-medium: 14px;
+$body-small: 12px;
+
+h1, .headline-large { font-size: $headline-large; font-family: $font-primary; font-weight: 600; }
+h2, .headline-medium { font-size: $headline-medium; font-family: $font-primary; font-weight: 600; }
+h3, .headline-small { font-size: $headline-small; font-family: $font-primary; font-weight: 600; }
+p, .body-large { font-size: $body-large; font-family: $font-primary; font-weight: 400; }
+.body-medium { font-size: $body-medium; font-family: $font-primary; font-weight: 400; }
+.body-small { font-size: $body-small; font-family: $font-primary; font-weight: 400; }
