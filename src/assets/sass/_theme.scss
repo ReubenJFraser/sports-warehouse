@@ -1,0 +1,29 @@
+/* _theme.scss */
+
+/**
+ * We import _colors.scss to have .sport-warehouse-light-theme and .sport-warehouse-dark-theme
+ * classes available. Then, we can rely on toggling those classes on <body>.
+ */
+
+ @import 'colors';
+
+/* Attach light/dark theme classes to body so custom properties are available. */
+body.sport-warehouse-light-theme {
+  @extend .sport-warehouse-light-theme;
+}
+
+body.sport-warehouse-fixed-theme {
+  @extend .sport-warehouse-fixed-theme;
+}
+
+body.sport-warehouse-dark-theme {
+  @extend .sport-warehouse-dark-theme;
+}
+
+/* 
+   Now, if your <body> is:
+   <body class="sport-warehouse-light-theme sport-warehouse-fixed-theme">
+   you get both the light mode *and* the brand’s fixed color overrides 
+   (though "fixed" might not matter if you're toggling dark as well).
+*/
+ 

@@ -1,0 +1,105 @@
+/* style.css */
+
+/* Material 3 color scheme variables */
+:root {
+    --md-sys-color-primary: #6750A4;       /* Example purple tone */
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-secondary: #625B71;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-background: #FFFBFE;
+    --md-sys-color-on-background: #1C1B1F;
+  }
+  
+  /* Global resets & body styling */
+  html, body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  /* Container for the entire page layout */
+  .container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  /* Left column text (coming soon message) */
+  .left-content {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  /* Right column (contact form) */
+  .right-form {
+    width: 100%;
+  }
+  
+  /* The form itself */
+  .right-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 400px;
+  }
+  
+  /* Error message text placeholders */
+  .error-message {
+    color: #B3261E; /* Material design error color */
+    font-size: 0.875rem;
+    height: 1em;
+  }
+  
+  /* Floating action button (FAB) styling */
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  }
+  .fab:hover {
+    background-color: #5B40A1;  /* Slightly darker on hover */
+  }
+  .fab:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(103,80,164,0.3);
+  }
+  
+  /* Two-column layout on larger screens */
+  @media (min-width: 768px) {
+    .container {
+      flex-direction: row;  /* side-by-side columns */
+      align-items: center;
+      justify-content: center;
+    }
+    .left-content {
+      flex: 1;
+      text-align: left;
+      margin-bottom: 0;
+      margin-right: 2rem;
+    }
+    .right-form {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+    .right-form form {
+      align-items: flex-start;
+    }
+  }
+  
