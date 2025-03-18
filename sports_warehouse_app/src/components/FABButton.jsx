@@ -1,14 +1,18 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { usePaneContext } from '../contexts/PaneContext';
-import AddCommentIcon from '@mui/icons-material/AddComment';
+import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import { useMediaQuery } from '@mui/material';
 
 const FABButton = () => {
-  const { setDrawerOpen, setPaneContent } = usePaneContext();
+  const { paneContent, setPaneContent } = usePaneContext();
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const formOpen = paneContent === 'contact';
 
   const handleClick = () => {
-    setDrawerOpen(true);  // Open the drawer when FAB is clicked
-    setPaneContent('contact');  // Set the content to contact form
+    // Toggle the contact form: if it's open, close it; if it's closed, open it
+    setPaneContent(formOpen ? '' : 'contact');
   };
 
   return (
@@ -34,14 +38,13 @@ const FABButton = () => {
         '&:hover': {
           backgroundColor: '#e91e63', // Hover effect
         },
-        '&.pulse': {
-          animation: 'pulse 1.5s infinite', // Pulse effect for FAB (if needed)
-        },
       }}
     >
-      <AddCommentIcon />
+      {/* On mobile, if the form is open, show the cancel icon; otherwise show the add comment icon */}
+      {isMobile && formOpen ? <CancelOutlinedIcon /> : <AddCommentOutlinedIcon />}
     </Button>
   );
 };
 
 export default FABButton;
+

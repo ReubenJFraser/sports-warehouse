@@ -1,42 +1,43 @@
+// src/components/Header.jsx
 import React from 'react';
-import { AppBar, Toolbar, Box, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { usePaneContext } from '../contexts/PaneContext';
+import { AppBar, Toolbar, Box } from '@mui/material';
 import Logo from './Logo';
 
 const Header = () => {
-  const { setDrawerOpen } = usePaneContext();
-
-  const handleMenuClick = () => {
-    setDrawerOpen(true);
-  };
-
   return (
     <AppBar
       position="static"
-      // For light mode, use a pure white header (surface-bright) to contrast with the off-white body (background)
       sx={{
+        // For viewports up to 899px, use 15vh.
+        // For wider screens, add extra height proportionally.
+        height: {
+          xs: '15vh',
+          md: 'calc(15vh + ((100vw - 899px) * 0.05))',
+        },
         backgroundColor: (theme) => theme.palette.custom.surfaceBright,
-        height: '128px',
         justifyContent: 'center',
       }}
     >
-      <Toolbar disableGutters sx={{ height: '128px', px: 2 }}>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={handleMenuClick}
-          sx={{ mr: 2, display: { md: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
+      <Toolbar
+        disableGutters
+        sx={{
+          height: '100%',
+          minHeight: {
+            xs: '15vh',
+            md: 'calc(15vh + ((100vw - 899px) * 0.05))',
+          },
+          px: 2,
+          py: { xs: 0, sm: 1, md: 2, lg: 3 },
+          justifyContent: 'center',
+        }}
+      >
         <Box
           sx={{
             flexGrow: 1,
             display: 'flex',
-            justifyContent: 'center',
             alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
           }}
         >
           <Logo />
@@ -47,5 +48,8 @@ const Header = () => {
 };
 
 export default Header;
+
+
+
 
 

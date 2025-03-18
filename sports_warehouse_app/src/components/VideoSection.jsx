@@ -16,7 +16,9 @@ const VideoSection = ({ onVideoEnd }) => {
         introVideo.style.display = 'none';
         mainVideo.style.display = 'block';
         setMainVideoVisible(true);
-        mainVideo.play();
+        mainVideo.play().catch((error) => {
+          console.error("Error attempting to play main video:", error);
+        });
       };
 
       // When the intro video starts playing, ensure main video starts loading
@@ -50,7 +52,7 @@ const VideoSection = ({ onVideoEnd }) => {
       mainVideo.addEventListener('loadedmetadata', handleMainLoadedMetadata);
       mainVideo.addEventListener('ended', handleMainEnded);
 
-      // Cleanup event listeners on unmount
+      // Cleanup event listeners on component unmount
       return () => {
         introVideo.removeEventListener('ended', handleIntroEnded);
         introVideo.removeEventListener('playing', handleIntroPlaying);
@@ -99,8 +101,10 @@ const VideoSection = ({ onVideoEnd }) => {
         ref={mainVideoRef}
         id="mainVideo"
         src="/images/videos/quick-high-five.mp4"
-        preload="auto"
+        // Removed preload attribute here because the main video isn't needed immediately
         playsInline
+        autoPlay  // Optional: autoPlay if desired
+        muted     // Required for autoplay without interaction
         style={{
           width: '100%',
           height: 'auto',
@@ -115,7 +119,7 @@ const VideoSection = ({ onVideoEnd }) => {
           default
           kind="captions"
           src="/images/videos/highfive-captions.vtt"
-          srclang="en"
+          srcLang="en"  // Corrected attribute name
           label="English"
         />
       </video>
@@ -124,4 +128,6 @@ const VideoSection = ({ onVideoEnd }) => {
 };
 
 export default VideoSection;
+
+
 

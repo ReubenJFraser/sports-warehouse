@@ -4,15 +4,18 @@ import React, { createContext, useContext, useState } from 'react';
 const PaneContext = createContext();
 
 export const PaneProvider = ({ children }) => {
-  // State for which content is shown in the left pane and drawer visibility
-  const [paneContent, setPaneContent] = useState('contact');  // default to contact form
+  // Set default paneContent to an empty string so the form is hidden on initial load.
+  const [paneContent, setPaneContent] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const value = {
-    paneContent, setPaneContent,
-    selectedProduct, setSelectedProduct,
-    drawerOpen, setDrawerOpen
+    paneContent, 
+    setPaneContent,
+    selectedProduct, 
+    setSelectedProduct,
+    drawerOpen, 
+    setDrawerOpen,
   };
 
   return (
@@ -22,5 +25,5 @@ export const PaneProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the context
 export const usePaneContext = () => useContext(PaneContext);
+

@@ -143,25 +143,38 @@ let theme = createTheme({
   },
   components: {
     MuiAppBar: {
-      styleOverrides: {
-        root: {
-          padding: '0 16px',
-          display: 'flex',
-          alignItems: 'center',
-          height: '128px',
-          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+        styleOverrides: {
+          root: {
+            padding: '0 16px',
+            display: 'flex',
+            alignItems: 'center',
+            // Use responsive height values (adjust as desired)
+            height: {
+              xs: '15vh',  // e.g., 15% of viewport height on extra-small screens (mobile)
+              sm: '20vh',  // 20% on small screens
+              md: '25vh',  // 25% on medium screens
+              lg: '30vh',  // 30% on large screens
+            },
+            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.2)',
+          },
         },
       },
-    },
-    MuiToolbar: {
-      styleOverrides: {
-        root: {
-          minHeight: '128px !important',
-          height: '128px !important',
+      MuiToolbar: {
+        styleOverrides: {
+          root: {
+             // Make the Toolbar’s minimum height follow the same responsive values
+              minHeight: {
+                xs: '15vh !important',
+                sm: '20vh !important',
+                md: '25vh !important',
+                lg: '30vh !important',
+              },
+            // Let the Toolbar's height expand naturally within its container
+            height: '100%',
+          },
         },
-      },
-    },
     // Other component overrides remain as defined earlier...
+      },
   },
 });
 
