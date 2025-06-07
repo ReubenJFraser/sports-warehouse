@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 203.39 246.77">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #0e2346;
+      }
+
+      .cls-2 {
+        letter-spacing: 0em;
+      }
+
+      .cls-3 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-4 {
+        letter-spacing: 0em;
+      }
+
+      .cls-5 {
+        font-size: 32px;
+      }
+
+      .cls-5, .cls-6 {
+        fill: #f37121;
+      }
+
+      .cls-5, .cls-6, .cls-7 {
+        font-family: MyriadPro-Regular, 'Myriad Pro';
+      }
+
+      .cls-6 {
+        font-size: 48px;
+      }
+
+      .cls-7 {
+        fill: #fff;
+        font-size: 22px;
+      }
+
+      .cls-8 {
+        letter-spacing: 0em;
+      }
+
+      .cls-9 {
+        letter-spacing: .02em;
+      }
+    </style>
+  </defs>
+  <g id="Layer_2-2" data-name="Layer 2">
+    <g>
+      <g>
+        <text class="cls-5" transform="translate(0 26.78)"><tspan class="cls-3" x="0" y="0">V</tspan><tspan x="17.34" y="0">iew our b</tspan><tspan class="cls-4" x="141.85" y="0">r</tspan><tspan class="cls-8" x="152.16" y="0">and</tspan></text>
+        <text class="cls-5" transform="translate(13.46 63.27)"><tspan x="0" y="0">new </tspan><tspan class="cls-4" x="64.13" y="0">r</tspan><tspan x="74.43" y="0">ange of</tspan></text>
+        <text class="cls-6" transform="translate(37.16 113.14)"><tspan x="0" y="0">Spo</tspan><tspan class="cls-9" x="77.33" y="0">r</tspan><tspan x="94.17" y="0">ts</tspan></text>
+        <text class="cls-6" transform="translate(55.64 167.02)"><tspan x="0" y="0">balls</tspan></text>
+      </g>
+      <rect class="cls-1" x="41.68" y="191.37" width="119.72" height="55.4" rx="27.7" ry="27.7"/>
+      <text class="cls-7" transform="translate(55.22 226.11)"><tspan x="0" y="0">Shop n</tspan><tspan class="cls-2" x="64.53" y="0">o</tspan><tspan x="76.45" y="0">w</tspan></text>
+    </g>
+  </g>
+</svg>

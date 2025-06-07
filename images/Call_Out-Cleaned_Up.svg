@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 203.39 246.77"
+  role="img"
+  aria-label="View our brand new range of Sports balls. Shop now.">
+  <!-- Headline lines -->
+  <text
+    x="0"
+    y="26.78"
+    fill="var(--color-secondary)"
+    font-family="Myriad Pro, sans-serif"
+    font-size="32"
+    letter-spacing="-0.02em">
+    View our brand
+  </text>
+  <text
+    x="13.46"
+    y="63.27"
+    fill="var(--color-secondary)"
+    font-family="Myriad Pro, sans-serif"
+    font-size="32">
+    new range of
+  </text>
+  <text
+    x="37.16"
+    y="113.14"
+    fill="var(--color-secondary)"
+    font-family="Myriad Pro, sans-serif"
+    font-size="48"
+    letter-spacing="0.02em">
+    Sports
+  </text>
+  <text
+    x="55.64"
+    y="167.02"
+    fill="var(--color-secondary)"
+    font-family="Myriad Pro, sans-serif"
+    font-size="48">
+    balls
+  </text>
+
+  <!-- Button pill -->
+  <rect
+    x="41.68"
+    y="191.37"
+    width="119.72"
+    height="55.4"
+    rx="27.7"
+    ry="27.7"
+    fill="var(--color-dark-blue)" />
+
+  <!-- Button text -->
+  <text
+    x="55.22"
+    y="226.11"
+    fill="var(--color-on-dark-blue)"
+    font-family="Myriad Pro, sans-serif"
+    font-size="22"
+    letter-spacing="0.00em">
+    Shop now
+  </text>
+</svg>
+
