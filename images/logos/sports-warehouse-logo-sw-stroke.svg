@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="800" height="800"
+  viewBox="0 0 800 800"
+  role="img"
+  aria-label="Sports Warehouse favicon with extra horizontal padding"
+>
+  <defs>
+    <filter id="logo-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1"
+                    flood-color="black" flood-opacity="0.3"/>
+    </filter>
+    <style type="text/css"><![CDATA[
+      .blue-bg {
+        fill: #04acec;
+      }
+      .white {
+        fill: #ffffff;
+        stroke: rgba(0,0,0,0.6);
+        stroke-width: 4;
+        paint-order: stroke fill;
+        filter: url(#logo-shadow);
+      }
+    ]]></style>
+  </defs>
+
+  <!-- full-bleed square -->
+  <rect class="blue-bg" x="0" y="0" width="800" height="800"/>
+
+  <!-- “SW” centered in the middle -->
+  <text
+    class="white"
+    x="400" y="400"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Open Sans, sans-serif"
+    font-size="360"
+  >SW</text>
+</svg>
+
