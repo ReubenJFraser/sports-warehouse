@@ -1,0 +1,36 @@
+
+services:
+  php:
+    build:
+      context: ./.devcontainer
+      dockerfile: Dockerfile
+    container_name: sportswh_php
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+    volumes:
+      - ./:/var/www/html:cached
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: sportswh_db
+    environment:
+      MYSQL_DATABASE: sportswh
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      # host 3307 → container 3306 (avoids clashing with Laragon on 3306)
+      - "3307:3306"
+    volumes:
+      # MySQL data volume
+      - db_data:/var/lib/mysql
+      # Seed DB on first run (place seed file at db/sportswh_seed.sql)
+      - ./db/sportswh_seed.sql:/docker-entrypoint-initdb.d/sportswh_seed.sql:ro
+
+volumes:
+  db_data:
+
+
+

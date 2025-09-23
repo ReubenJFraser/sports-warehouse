@@ -1,0 +1,162 @@
+/* themes.css
+   Combined UVA (Midnight Blue & Orange) and Figma palettes
+   toggled via [data-scheme] and [data-theme].
+*/
+
+/*==============================================================================
+  1. UVA / Midnight Blue & Orange - LIGHT MODE
+  (html[data-scheme="uva"][data-theme="light"])
+==============================================================================*/
+html[data-scheme="uva"][data-theme="light"] {
+  /* Brand colors */
+  --brand-primary:    #003F7D;  /* Midnight Blue */
+  --brand-secondary:  #E57200;  /* Vibrant Orange */
+
+  /* Neutrals */
+  --neutral-default:  #FFFFFF;
+  --neutral-surface:  #EFEFE9;
+  --neutral-text:     #111111;
+  --neutral-subtext:  #B6B1A8;
+  --neutral-border:   #B6B1A8;
+
+  /* Text on brand */
+  --on-primary:       #FFFFFF;
+  --on-secondary:     #111111;
+
+  /* Accent roles */
+  --accent-info:      #54637C;
+  --accent-success:   #475929;
+  --accent-warning:   #EEE25F;
+  --accent-error:     #FF5003;
+
+  /* Utility aliases */
+  --btn-primary-bg:       var(--brand-primary);
+  --btn-primary-text:     var(--on-primary);
+
+  --btn-secondary-bg:     var(--neutral-surface);
+  --btn-secondary-text:   var(--brand-primary);
+
+  --link-color:           var(--brand-primary);
+}
+
+/*==============================================================================
+  2. UVA / Midnight Blue & Orange - DARK MODE
+  (html[data-scheme="uva"][data-theme="dark"])
+==============================================================================*/
+html[data-scheme="uva"][data-theme="dark"] {
+  /* Brand colors */
+  --brand-primary:    #336BB0;  /* Lighter Midnight Blue */
+  --brand-secondary:  #E57200;  /* Same Vibrant Orange */
+
+  /* Neutrals */
+  --neutral-default:  #1E1E1E;
+  --neutral-surface:  #121212;
+  --neutral-text:     #E0E0E0;
+  --neutral-subtext:  #3A3A3A;
+  --neutral-border:   #3A3A3A;
+
+  /* Text on brand */
+  --on-primary:       #1E1E1E;
+  --on-secondary:     #FFFFFF;
+
+  /* Accent roles */
+  --accent-info:      #76A9FF;
+  --accent-success:   #8BC34A;
+  --accent-warning:   #EEE25F; /* use dark text on it */
+  --accent-error:     #FF5003;
+
+  /* Utility aliases */
+  --btn-primary-bg:       var(--brand-primary);
+  --btn-primary-text:     var(--on-primary);
+
+  --btn-secondary-bg:     var(--neutral-surface);
+  --btn-secondary-text:   var(--brand-primary);
+
+  --link-color:           var(--accent-info);
+}
+
+/*==============================================================================
+  3. FIGMA PALETTE - LIGHT MODE
+  (html[data-scheme="figma"][data-theme="light"])
+==============================================================================*/
+html[data-scheme="figma"][data-theme="light"] {
+  /* Brand colors */
+  --brand-primary:    #53389E;  /* Deep purple */
+  --brand-secondary:  #9E77ED;  /* Mid lavender */
+  --brand-tertiary:   #D6BBFB;  /* Pale lavender */
+
+  /* Neutrals */
+  --neutral-default:  #FFFFFF;
+  --neutral-surface:  #D5D7DA;
+  --neutral-text:     #181D27;
+  --neutral-subtext:  #717680;
+  --neutral-border:   #D5D7DA;
+
+  /* Text on brand */
+  --on-primary:       #FFFFFF;
+  --on-secondary:     #181D27;
+
+  /* Accent roles */
+  --accent-1:         #2E90FA;
+  --accent-2:         #EE46BC;
+  --accent-3:         #6172F3;
+
+  /* Feedback roles */
+  --feedback-error:    #F04438;
+  --feedback-warning:  #F79009;
+  --feedback-success:  #12B76A;
+
+  /* Utility aliases */
+  --btn-primary-bg:       var(--brand-primary);
+  --btn-primary-text:     var(--on-primary);
+
+  --btn-secondary-bg:     var(--neutral-surface);
+  --btn-secondary-text:   var(--brand-primary);
+
+  --link-color:           var(--brand-primary);
+}
+
+/*==============================================================================
+  4. FIGMA PALETTE - DARK MODE
+  (html[data-scheme="figma"][data-theme="dark"])
+==============================================================================*/
+html[data-scheme="figma"][data-theme="dark"] {
+  /* Brand colors (tinted for contrast) */
+  --brand-primary:    #9E77ED;  /* Lightened purple */
+  --brand-secondary:  #D6BBFB;
+  --brand-tertiary:   #FFFFFF;
+
+  /* Neutrals */
+  --neutral-default:  #181D27;
+  --neutral-surface:  #717680;
+  --neutral-text:     #D5D7DA;
+  --neutral-subtext:  #717680;
+  --neutral-border:   #717680;
+
+  /* Text on brand */
+  --on-primary:       #181D27;
+  --on-secondary:     #181D27;
+
+  /* Accent roles */
+  --accent-1:         #76CFFA;
+  --accent-2:         #F08CCF;
+  --accent-3:         #8D9EFF;
+
+  /* Feedback roles */
+  --feedback-error:    #F04438;
+  --feedback-warning:  #F79009;
+  --feedback-success:  #12B76A;
+
+  /* Utility aliases */
+  --btn-primary-bg:       var(--brand-primary);
+  --btn-primary-text:     var(--on-primary);
+
+  --btn-secondary-bg:     var(--neutral-surface);
+  --btn-secondary-text:   var(--brand-primary);
+
+  --link-color:           var(--brand-secondary);
+}
+
+
+
+
