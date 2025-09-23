@@ -1,89 +1,24 @@
-# --- Project-specific ignores ---
-# Local test scripts (not for production)
-tests/local-only/
-
-# --- Database ---
-# Ignore all .sql files…
-*.sql
-# …but keep the seed file under version control
-!db/sportswh_seed.sql
-
-# Ignore Docker-managed database volume (container state)
-db_data/
-
-# --- Dependencies ---
-# Composer dependencies (root + any subdirs)
-vendor/
-/vendor/
-**/vendor/
-
-# Node.js dependencies (root + any subdirs)
-node_modules/
-/node_modules/
-**/node_modules/
-
-/composer.lock
-/package-lock.json
-/yarn.lock
-
-# --- WordPress-style directories ---
-# Plugin and theme vendor/node_modules
-wp-content/plugins/*/vendor/
-wp-content/plugins/*/node_modules/
-wp-content/themes/*/vendor/
-wp-content/themes/*/node_modules/
-
-# --- Uploads & Media (ignore contents, keep structure) ---
-# Ignore everything in uploads/ and wp-content/uploads/
-uploads/*
-wp-content/uploads/*
-# Keep placeholder files so folders stay in repo
-!uploads/.gitkeep
-!wp-content/uploads/.gitkeep
-# Also keep any .gitkeep anywhere (safety net)
-!*.gitkeep
-
-# --- Environment / secrets ---
+﻿# secrets & local
 .env
-.env.*.local
+/_exports/
+logs/
+tmp/
+storage/
+cache/
 
-# --- Docker / Dev containers ---
-/docker-compose.override.yml
-/.devcontainer/devcontainer.json
+# dependency folders
+vendor/
+node_modules/
+.venv/
 
-# --- IDE / Editor config ---
-.vscode/
-/.idea/
-/*.code-workspace
-
-# --- Logs / cache / temporary ---
-*.log
-/cache/
-/.tmp/
-/temp/
-/*.pid
-/*.seed
-
-# --- OS files ---
+# OS/editor cruft
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Icon?
-Desktop.ini
+.vscode/
+.idea/
+.devcontainer/
 
-# --- Other ---
-# Ignore generated files, zips, dumps
-*.dump
-*.bak
+# heavy media not needed in repo
+*.mp4
+*.mov
 *.zip
-*.tar
-*.gz
-
-
-
-
-
-
-
-
-
