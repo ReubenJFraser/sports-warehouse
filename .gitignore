@@ -1,0 +1,17 @@
+﻿.env
+/_exports/
+logs/
+tmp/
+storage/
+cache/
+vendor/
+node_modules/
+.venv/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.devcontainer/
+*.mp4
+*.mov
+*.zip

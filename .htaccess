@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase /sports-warehouse-home-page/
+Options -MultiViews
+
+# Pretty route: /men|/women|/kids → index.php (no redirect)
+RewriteRule ^(men|women|kids)/?$ index.php?section=$1&gender=$1 [QSA,L]
+
+# --- NEW: pretty URL for Plus-Size (no redirect, just an internal map) ---
+RewriteRule ^plus-size/?$ index.php?size_type=Plus%20Size [QSA,L]
