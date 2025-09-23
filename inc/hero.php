@@ -1,7 +1,10 @@
-
 <div class="page-content">
   <main class="site-container">
     <section class="hero-section split-hero">
+      <?php
+        // Honor the global switch from index.php; default false if missing.
+        $videosEnabled = isset($VIDEOS_ENABLED) ? (bool)$VIDEOS_ENABLED : false;
+      ?>
       <div class="hero-main">
         <div class="swiper-container">
           <div class="swiper-wrapper">
@@ -55,49 +58,46 @@
 
             <!-- 2) Dynamic slides for this page -->
             <?php
-if ($page === 'stax') {
-  // Pull all STAX slides
-  $slides = $db->query(
-    "SELECT * FROM slides WHERE page_key = 'stax' ORDER BY sort_order"
-  )->fetchAll(PDO::FETCH_ASSOC);
+              if ($page === 'stax') {
+                // Pull all STAX slides
+                $slides = $db->query(
+                  "SELECT * FROM slides WHERE page_key = 'stax' ORDER BY sort_order"
+                )->fetchAll(PDO::FETCH_ASSOC);
 
-  // Pull all STAX videos with full metadata
-  $slides = $db->query(
-    "SELECT * FROM slides WHERE page_key = 'stax' ORDER BY sort_order"
-  )->fetchAll(PDO::FETCH_ASSOC);
-  
-  $videosRaw = $db->query(
-    "SELECT video_key, src_path, aria_label FROM videos WHERE page_key = 'stax'"
-  )->fetchAll(PDO::FETCH_ASSOC);
-  
-  $config[$page] = [
-    'slides' => array_map(function ($slide) {
-      return [
-        'banner'   => $slide['banner_path'],
-        'alt'      => $slide['alt_text'],
-        'ariaText' => $slide['aria_text'],
-        'videoKey' => $slide['video_key'] ?: null,
-      ];
-    }, $slides),
-    'videos' => array_column($videosRaw, null, 'video_key'), // uses video_key as the array key
-    ];
-  }  
-?>
+                // Pull all STAX videos with full metadata
+                $videosRaw = $db->query(
+                  "SELECT video_key, src_path, aria_label FROM videos WHERE page_key = 'stax'"
+                )->fetchAll(PDO::FETCH_ASSOC);
+
+                $config[$page] = [
+                  'slides' => array_map(function ($slide) {
+                    return [
+                      'banner'   => $slide['banner_path'],
+                      'alt'      => $slide['alt_text'],
+                      'ariaText' => $slide['aria_text'],
+                      'videoKey' => $slide['video_key'] ?: null,
+                    ];
+                  }, $slides),
+                  // keep DB column names; we’ll use fallbacks when reading
+                  'videos' => array_column($videosRaw, null, 'video_key'),
+                ];
+              }
+            ?>
 
             <?php foreach ($config[$page]['slides'] ?? [] as $i => $slide): ?>
               <div class="swiper-slide">
                 <div class="hero-img-wrapper">
                   <?php
                     $vk = $slide['videoKey'] ?? null;
-                    $hasVideo = $vk && isset($config[$page]['videos'][$vk]);
+                    $hasVideo = $videosEnabled && $vk && isset($config[$page]['videos'][$vk]);
                   ?>
                   <?php if ($hasVideo): ?>
                     <?php $v = $config[$page]['videos'][$vk]; ?>
                     <video
                       class="hero-img hero-bg"
-                      src="<?= htmlspecialchars($v['src']) ?>"
+                      src="<?= htmlspecialchars($v['src'] ?? $v['src_path'] ?? '') ?>"
                       autoplay muted loop playsinline preload="auto"
-                      aria-label="<?= htmlspecialchars($v['ariaLabel']) ?>"
+                      aria-label="<?= htmlspecialchars($v['ariaLabel'] ?? $v['aria_label'] ?? '') ?>"
                     ></video>
                   <?php else: ?>
                     <img
@@ -132,25 +132,27 @@ if ($page === 'stax') {
         </div><!-- /.swiper-container -->
       </div><!-- /.hero-main -->
 
-      <aside class="hero-sidebar">
-        <?php foreach ($config[$page]['videos'] ?? [] as $video): ?>
-          <video
-            src="<?= htmlspecialchars($video['src']) ?>"
-            autoplay muted loop playsinline preload="auto"
-            class="sidebar-video"
-            aria-label="<?= htmlspecialchars($video['ariaLabel']) ?>"
-          ></video>
-          <div class="sidebar-caption">
-            <p><strong><?= htmlspecialchars($video['ariaLabel']) ?></strong></p>
-          </div>
-        <?php endforeach; ?>
-      </aside>
+      <?php if ($videosEnabled && !empty($config[$page]['videos'])): ?>
+        <aside class="hero-sidebar">
+          <?php foreach ($config[$page]['videos'] ?? [] as $video): ?>
+            <video
+              src="<?= htmlspecialchars($video['src'] ?? $video['src_path'] ?? '') ?>"
+              autoplay muted loop playsinline preload="auto"
+              class="sidebar-video"
+              aria-label="<?= htmlspecialchars($video['ariaLabel'] ?? $video['aria_label'] ?? '') ?>"
+            ></video>
+            <div class="sidebar-caption">
+              <p><strong><?= htmlspecialchars($video['ariaLabel'] ?? $video['aria_label'] ?? '') ?></strong></p>
+            </div>
+          <?php endforeach; ?>
+        </aside>
+      <?php endif; ?>
     </section>
   </main>
 </div>
 
 <script src="https://unpkg.com/swiper@10/swiper-bundle.min.js"></script>
-  <script>
+<script>
   // grab the Swiper container inside your split-hero
   const container = document.querySelector('.split-hero .swiper-container');
   if (container) {

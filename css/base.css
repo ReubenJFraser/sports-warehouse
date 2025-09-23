@@ -67,36 +67,23 @@ CSS Custom Properties
 --md-sys-on-primary: var(--color-on-primary);
 --md-sys-primary-container: var(--color-primary-container);
 
-/* Brand-orange shadows & ripples */
---shadow-surface-resting:   0 1px 1px rgba(0,0,0,0.2);
---shadow-tertiary-resting:  0 1px 2px rgba( var(--rgb-tertiary), 0.12 ),
-                            0 1px 3px rgba( var(--rgb-tertiary), 0.08 );
---shadow-tertiary-hover:    0 2px 4px rgba( var(--rgb-tertiary), 0.16 ),
-                            0 1px 6px rgba( var(--rgb-tertiary), 0.12 );
---ripple-tertiary:          rgba( var(--rgb-tertiary), 0.2 );
-
 /* helper: orange RGB triplet */
 --rgb-tertiary: 255, 140, 64;
 
+/* shadows & ripples */
+--shadow-surface-resting:   0 1px 1px rgba(0,0,0,0.2);
+--shadow-surface-subtle:     0 1px 2px rgba(0, 0, 0, 0.1);
+--shadow-tertiary-resting:  0 1px 2px rgba( var(--rgb-tertiary), 0.12 ),
+                            0 1px 3px rgba( var(--rgb-tertiary), 0.08 );
+--shadow-tertiary-hover:     0 2px 4px rgba(var(--rgb-tertiary), 0.16),
+                             0 1px 6px rgba(var(--rgb-tertiary), 0.12);
+--shadow-surface-hover:      0 2px 1px -1px rgba(0, 0, 0, 0.2),
+                             0 1px 1px 0 rgba(0, 0, 0, 0.14),
+                             0 1px 3px 0 rgba(0, 0, 0, 0.12);
+--ripple-tertiary:          rgba( var(--rgb-tertiary), 0.2 );
+
 /* ripple overlay for anything primary */
 --ripple-primary: rgba(255,255,255,0.2);
-
-/* Elevation shadows */
---shadow-surface-resting:    0px 1px 1px rgba(0, 0, 0, 0.2);
---shadow-surface-subtle:     0px 1px 2px rgba(0, 0, 0, 0.1);
---shadow-surface-hover:      0px 2px 1px -1px rgba(0, 0, 0, 0.2),
-                             0px 1px 1px  0px rgba(0, 0, 0, 0.14),
-                             0px 1px 3px  0px rgba(0, 0, 0, 0.12);
-
---shadow-tertiary-resting:   0px 1px 2px rgba(var(--rgb-tertiary), 0.12),
-                             0px 1px 3px rgba(var(--rgb-tertiary), 0.08);
---shadow-tertiary-hover:     0px 2px 4px rgba(var(--rgb-tertiary), 0.16),
-                             0px 1px 6px rgba(var(--rgb-tertiary), 0.12);
-
-/* Navy & Orange for footer */
---color-dark-blue: #002147;
---color-dark-orange: #D84315;
-
 
 }
 
@@ -130,8 +117,8 @@ padding: 0 var(--site-gutter);
 
 /* =====================
 Utilities & Icons
-===================== /
-/ Responsive display helpers */
+===================== */
+/* Responsive display helpers */
 .mobile-only { display: block; }
 .desktop-only { display: none; }
 

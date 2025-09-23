@@ -1,66 +1,139 @@
 <?php
 // scripts/update-orientations.php
+declare(strict_types=1);
 
-// 1️⃣ bootstrap your DB connection
-require __DIR__ . '/../db.php';  // adjust path if needed
+require __DIR__ . '/../db.php';
 
-// 2️⃣ prepare an UPDATE statement
-$update = $pdo->prepare("
-    UPDATE item
-       SET orientation = :orient
-     WHERE itemId      = :id
-");
+const SW_ROOT = __DIR__ . '/../';
+const TARGET = 0.80;
+const BAND   = 0.04;
 
-// 3️⃣ fetch each item’s image path
-$stmt = $pdo->query("SELECT itemId, images FROM item");
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $id  = $row['itemId'];
-    $img = trim($row['images']);
-
-    // — skip if there’s no path recorded
-    if ($img === '') {
-        echo "⚠️ [{$id}] no image path, skipping\n";
-        continue;
-    }
-
-    // 4️⃣ resolve to filesystem
-    $path = __DIR__ . "/../{$img}";
-
-    // — skip if that path isn’t a regular file
-    if (! is_file($path)) {
-        echo "⚠️ [{$id}] not found or not a file: {$path}\n";
-        continue;
-    }
-
-    // 5️⃣ read dimensions (silence warnings)
-    $dims = @getimagesize($path);
-    if (! $dims) {
-        echo "⚠️ [{$id}] getimagesize failed: {$path}\n";
-        continue;
-    }
-    list($w, $h) = $dims;
-
-    // — skip zero-height
-    if ($h === 0) {
-        echo "⚠️ [{$id}] zero height\n";
-        continue;
-    }
-
-    // 6️⃣ compute ratio & pick orientation
-    $r = $w / $h;
-    if    ($r <  0.85) $o = 'P';
-    elseif($r >  1.15) $o = 'L';
-    else               $o = 'S';
-
-    // 7️⃣ write it back
-    $update->execute([
-      ':orient' => $o,
-      ':id'     => $id,
-    ]);
-
-    echo "✅ [{$id}] {$w}×{$h} → ratio={$r} → {$o}\n";
+function classify_fit(float $r): string {
+    if ($r >= TARGET - BAND && $r <= TARGET + BAND) return 'B';
+    return ($r < TARGET - BAND) ? 'P' : 'L';
 }
 
-echo "🎉 All done!\n";
+function infer_crop_allowed(array $itemRow): int {
+    $name = strtolower(trim(($itemRow['itemName'] ?? '') . ' ' . ($itemRow['brand'] ?? '')));
+    $cat  = strtolower(trim(($itemRow['categoryName'] ?? '') . ' ' . ($itemRow['parentCategory'] ?? '')));
+    $hay  = $name . ' ' . $cat;
+
+    $contain = [
+        'water bottle','water bottles','bottle','bottles',
+        'backpack','backpacks','bag','bags',
+        'helmet','helmets',
+        'ball','balls',
+        'glove','gloves','boxing glove','boxing gloves',
+        'equipment',
+        'shoe','shoes','sneaker','sneakers','trainer','trainers','boot','boots','footwear',
+    ];
+    foreach ($contain as $kw) {
+        if (strpos($hay, $kw) !== false) return 0;
+    }
+    return 1;
+}
+
+function load_overrides(string $csv): array {
+    if (!is_file($csv)) return [];
+    $fp = fopen($csv, 'r');
+    if (!$fp) return [];
+
+    $map = [];
+    $header = fgetcsv($fp);
+    $hasHeader = false;
+    $idx = ['itemId'=>0,'imagePath'=>1,'ratio'=>2,'fit'=>3,'crop_allowed'=>4];
+
+    if ($header) {
+        $lower = array_map(fn($s)=>strtolower(trim((string)$s)), $header);
+        if (in_array('itemid',$lower) || in_array('fit',$lower)) {
+            $hasHeader = true;
+            foreach ($lower as $i=>$col) {
+                if (isset($idx[$col])) $idx[$col] = $i;
+            }
+        } else {
+            // first line was actually data; rewind
+            rewind($fp);
+        }
+    }
+
+    while (($row = fgetcsv($fp)) !== false) {
+        $id  = (int)($row[$idx['itemId']] ?? 0);
+        if (!$id) continue;
+        $fit = strtoupper(trim((string)($row[$idx['fit']] ?? '')));
+        $crp = trim((string)($row[$idx['crop_allowed']] ?? ''));
+        $out = [];
+        if (in_array($fit, ['B','P','L'], true)) $out['orientation'] = $fit;
+        if ($crp !== '') {
+            $lc = strtolower($crp);
+            $out['crop_allowed'] = ($lc === '1' || $lc === 'yes' || $lc === 'true') ? 1 : 0;
+        }
+        if ($out) $map[$id] = $out;
+    }
+    fclose($fp);
+    return $map;
+}
+
+function best_ratio_from_item(array $item): ?float {
+    $paths = [];
+    $json = $item['thumbnails_json'] ?? null;
+    if ($json) {
+        $arr = json_decode($json, true);
+        if (is_array($arr)) {
+            foreach ($arr as $p) $paths[] = ltrim((string)$p, '/');
+        }
+    }
+    if (empty($paths) && !empty($item['images'])) $paths[] = ltrim((string)$item['images'], '/');
+    if (!$paths) return null;
+
+    $best = null;
+    foreach ($paths as $rel) {
+        $abs = realpath(SW_ROOT . $rel);
+        if (!$abs || !is_file($abs)) continue;
+        $dim = @getimagesize($abs);
+        if (!$dim || !$dim[1]) continue;
+        $ratio = $dim[0] / $dim[1];
+        $d = abs($ratio - TARGET);
+        if ($best === null || $d < $best['d']) $best = ['r'=>$ratio,'d'=>$d];
+    }
+    return $best ? $best['r'] : null;
+}
+
+// Load CSV overrides if any
+$overrides = load_overrides(__DIR__ . '/../item_orientations.csv');
+
+$update = $pdo->prepare("
+    UPDATE item
+       SET orientation  = :o,
+           crop_allowed = :c
+     WHERE itemId       = :id
+");
+
+$stmt = $pdo->query("
+    SELECT itemId, itemName, brand, categoryName, parentCategory, images, thumbnails_json
+      FROM item
+    ORDER BY itemId
+");
+
+$count = 0;
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $id = (int)$row['itemId'];
+
+    // Orientation from CSV or from best image ratio
+    if (isset($overrides[$id]['orientation'])) {
+        $o = $overrides[$id]['orientation']; // B/P/L
+    } else {
+        $r = best_ratio_from_item($row);
+        $o = $r !== null ? classify_fit($r) : 'B'; // default to best
+    }
+
+    // crop_allowed from CSV or heuristic
+    $c = $overrides[$id]['crop_allowed'] ?? infer_crop_allowed($row);
+
+    $update->execute([':o'=>$o, ':c'=>$c, ':id'=>$id]);
+    echo "✔ item {$id}: orientation={$o}, crop_allowed={$c}\n";
+    $count++;
+}
+echo "Done: {$count} items updated.\n";
+
 
 

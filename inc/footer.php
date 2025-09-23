@@ -1,5 +1,21 @@
+<?php
+// Footer preamble — must be the first thing in the file
+$section   = $_GET['section']   ?? '';
+$gender    = $_GET['gender']    ?? '';
+$size_type = $_GET['size_type'] ?? '';
 
-<!-- ==== NEW FOOTER (in development) ==== -->
+function active_link($targetSection, $targetGender = null, $targetSizeType = null) {
+  global $section, $gender, $size_type;
+  $isActive = ($targetSection === 'plus_size')
+    ? ($section === 'plus_size' || $size_type === 'plus')
+    : ($section === $targetSection && ($targetGender === null || $gender === $targetGender));
+  return $isActive ? ' selected" aria-current="page' : '';
+}
+
+// (optional) alias so your new markup can keep using shop_active()
+function shop_active($a, $b = null, $c = null) { return active_link($a, $b, $c); }
+?>
+
 <footer class="footer-new">
 
   <!-- Three-column widgets on navy -->
@@ -11,24 +27,41 @@
           <!-- Left Column -->
           <div class="footer-column footer-left-col">
             <h4>Site Navigation</h4>
-            <ul>
-              <li><a href="#">Home</a></li>
-              <li><a href="#">About SW</a></li>
-              <li><a href="#">View Products</a></li>
-            </ul>
+            <nav class="footer-nav" aria-label="Site Navigation">
+              <ul class="footer-list">
+                <li><a href="index.php">Home</a></li>
+                <li><a href="#">About SW</a></li>
+                <li><a href="index.php?section=catalog">View Products</a></li>
+              </ul>
+            </nav>
+
+            <h4>Shop by</h4>
+            <nav class="footer-filters" aria-label="Shop by">
+              <ul class="footer-list footer-list--filters">
+                <li><a class="link<?php echo shop_active('men','men'); ?>"
+                        href="index.php?section=men&gender=men">Men</a></li>
+                <li><a class="link<?php echo shop_active('women','women'); ?>"
+                        href="index.php?section=women&gender=women">Women</a></li>
+                <li><a class="link<?php echo shop_active('kids','kids'); ?>"
+                        href="index.php?section=kids&gender=kids">Kids</a></li>
+                <li><a class="link<?php echo shop_active('plus_size', null, 'plus'); ?>"
+                        href="index.php?section=plus_size&size_type=plus">Plus-Size</a></li>
+              </ul>
+            </nav>
           </div>
 
           <!-- Middle Column -->
           <div class="footer-column footer-mid-col">
             <h4>Product Categories</h4>
             <ul>
-              <li><a href="#">Shoes</a></li>
-              <li><a href="#">Helmets</a></li>
-              <li><a href="#">Pants</a></li>
-              <li><a href="#">Tops</a></li>
-              <li><a href="#">Balls</a></li>
-              <li><a href="#">Equipment</a></li>
-              <li><a href="#">Training Gear</a></li>
+              <li><a href="index.php?categoryID=1">Tops</a></li>
+              <li><a href="index.php?categoryID=2">Pants</a></li>
+              <li><a href="index.php?categoryID=3">Skirts &amp; Dresses</a></li>
+              <li><a href="index.php?categoryID=4">Set</a></li>
+              <li><a href="index.php?categoryID=5">Shoes</a></li>
+              <li><a href="index.php?categoryID=6">Training Gear</a></li>
+              <li><a href="index.php?categoryID=7">Water Sports</a></li>
+              <li><a href="index.php?categoryID=8">Equipment</a></li>
             </ul>
           </div>
 
@@ -264,7 +297,7 @@
 
     <!-- 3) Logos grid -->
     <div class="brands-logos">
-    <a href="#" aria-label="Adidas">
+    <a href="index.php?brand=Adidas" aria-label="Adidas — browse products">
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 725 500"
@@ -286,7 +319,7 @@
   </svg>
 </a>
 
-<a href="#" aria-label="ASICS">
+<a href="index.php?brand=Asics" aria-label="ASICS — browse products">
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 250 88"
@@ -367,7 +400,7 @@
   </svg>
 </a>
 
-<a href="#" aria-label="Nike">
+<a href="index.php?brand=Nike" aria-label="Nike — browse products">
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="135.5 361.38 1000 356.39"
@@ -382,7 +415,7 @@
   </svg>
 </a>
 
-<a href="#" aria-label="Puma">
+<a href="index.php?brand=Puma" aria-label="Puma — browse products">
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="35.433 -191.049 889.299 889.299"
@@ -401,7 +434,7 @@
   </svg>
 </a>
 
-<a href="#" aria-label="Reebok">
+<a href="index.php?brand=Reebok" aria-label="Reebok — browse products">
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 756 383"
@@ -425,7 +458,7 @@
 </a>
 
 
-<a href="#" aria-label="Under Armour">
+<a href="index.php?brand=Under%20Armour" aria-label="Under Armour — browse products">
   <svg
     viewBox="0 0 302 177.11797"
     xmlns="http://www.w3.org/2000/svg"
@@ -485,7 +518,7 @@
   </svg>
 </a>
 
-<a href="#" aria-label="Wilson">
+<a href="index.php?brand=Wilson" aria-label="Wilson — browse products">
   <svg
     viewBox="0 0 768.57 191.43"
     xmlns="http://www.w3.org/2000/svg"

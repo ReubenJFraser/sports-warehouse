@@ -1,166 +1,182 @@
 
   /* ----------------------------------------
-     4. Search Row (mobile-first + tablet + desktop)
-     ---------------------------------------- */
-  
-  /* —— Mobile only: logo + search stacked —— */
-  .logo-row.mobile-only {
-    text-align: center;
-    padding: 12px 0 8px;      /* top 12px, bottom 8px */
-  }
-  
-  .search-row.mobile-only {
+   GLOBAL IMAGE SCOPING (stop competing rules)
+   ---------------------------------------- */
+  /* IMPORTANT:
+   - Do NOT style <img> globally in main.css.
+   - Scope header/logo image sizing to header-only selectors.
+   - Product card imagery is controlled in css/components/cards/base.css.
+  */
+  .site-header img,
+  .logo-wrapper img {
     display: block;
-    padding: 0 32px 16px;     /* 32px side, 16px bottom */
+    height: auto;
+    width: auto;      /* prevent unintended stretching */
+    max-height: 60px; /* header logo cap */
   }
   
-  /* Inner flex container that holds input + button */
-  .search-row.mobile-only .search-container-inner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  /* ----------------------------------------
+   4. Search Row (mobile-first + tablet + desktop)
+   ---------------------------------------- */
+
+/* —— Mobile only: logo + search stacked —— */
+.logo-row.mobile-only {
+  text-align: center;
+  padding: 12px 0 8px;      /* top 12px, bottom 8px */
+}
+
+.search-row.mobile-only {
+  display: block;
+  padding: 0 32px 16px;     /* 32px side, 16px bottom */
+}
+
+/* Inner flex container that holds input + button */
+.search-row.mobile-only .search-container-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-container-inner input[type="text"] {
+  flex: 1 1 auto;           /* fill leftover space */
+  height: 48px;
+  line-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--color-outline);
+  border-radius: 24px;
+  font-size: 16px;
+  color: var(--color-on-surface);
+  box-sizing: border-box;
+}
+
+.search-row.mobile-only button {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* hide the desktop nav on phones by default */
+.desktop-only {
+  display: none;
+}
+
+/* —— Tablet: move into white “logo + search” grid —— */
+@media (min-width: 768px) {
+  /* hide the stacked mobile header/search */
+  .logo-row.mobile-only,
+  .search-row.mobile-only {
+    display: none;
+  }
+
+  /* …and hide the mobile drawer & pill toggle & mobile categories */
+  .mobile-nav-drawer,
+  .pill-toggle,
+  .mobile-product-categories {
+    display: none;
+  }
+
+  /* reveal the desktop header/nav */
+  .desktop-only {
+    display: block;
+  }
+
+  /* make a two-column grid for logo + search */
+  .logo-search-row {
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 4rem;
+    background-color: #fff;
+    padding: 12px 32px 12px 24px;  /* top • right • bottom • left */
     width: 100%;
-    box-sizing: border-box;
   }
-  
-  .search-container-inner input[type="text"] {
-    flex: 1 1 auto;           /* fill leftover space */
-    height: 48px;
-    line-height: 48px;
-    padding: 0 12px;
-    border: 2px solid var(--color-outline);
-    border-radius: 24px;
-    font-size: 16px;
-    color: var(--color-on-surface);
-    box-sizing: border-box;
-  }
-  
-  .search-row.mobile-only button {
-    flex: 0 0 48px;
+
+  /* ensure the magnifier button stays 48×48 and centered */
+  .search-wrapper button.search-icon {
     width: 48px;
     height: 48px;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
   }
+}
 
-  /* hide the desktop nav on phones by default */
-  .desktop-only {
-    display: none;
+/* —— Desktop & up: wire up logo + search side-by-side —— */
+@media (min-width: 801px) {
+  /* logo in column 1 */
+  .sports-warehouse-logo,
+  .logo-wrapper {
+    grid-column: 1;
+    display: block;
+    max-height: 60px;
   }
-  
-  /* —— Tablet: move into white “logo + search” grid —— */
-  @media (min-width: 768px) {
-    /* hide the stacked mobile header/search */
-    .logo-row.mobile-only,
-    .search-row.mobile-only {
-      display: none;
-    }
+  .logo-wrapper img {
+    display: block;
+    max-height: 60px; /* scoped to header logo only (no global img rules) */
+  }
 
-    /* …and hide the mobile drawer & pill toggle & mobile categories */
-    .mobile-nav-drawer,
-    .pill-toggle,
-    .mobile-product-categories {
-      display: none;
-    }
-
-    /* reveal the desktop header/nav */
-    .desktop-only {
-      display: block;
-    }
-  
-    /* make a two-column grid for logo + search */
-    .logo-search-row {
-      display: grid;
-      grid-template-columns: auto auto;
-      column-gap: 4rem;
-      background-color: #fff;
-      padding: 12px 32px 12px 24px;  /* top • right • bottom • left */
-      width: 100%;
-    }
-  
-    /* ensure the magnifier button stays 48×48 and centered */
-    .search-wrapper button.search-icon {
-      width: 48px;
-      height: 48px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-  }
-  
-  /* —— Desktop & up: wire up logo + search side-by-side —— */
-  @media (min-width: 801px) {
-    /* logo in column 1 */
-    .sports-warehouse-logo,
-    .logo-wrapper {
-      grid-column: 1;
-      display: block;
-      max-height: 60px;
-    }
-    .logo-wrapper img {
-      display: block;
-      max-height: 60px;
-    }
-  
-    /* search form in column 2 */
-    .search-wrapper {
-      grid-column: 2;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .search-wrapper input[type="text"] {
-      flex: 1 1 auto;
-      min-width: 300px;
-      padding: 8px 12px;
-      border: 2px solid var(--color-outline);
-      border-radius: 20px;
-      font-size: 16px;
-      color: var(--color-on-surface);
-    }
-    .search-wrapper button.search-icon {
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-  }
-  
-  /* —— Desktop-only (≥1024px): tighten horizontal gutters —— */
-  @media (min-width: 1024px) {
-    .logo-search-row {
-      padding: 12px 16px;     /* slim left/right gutters */
-    }
-  }
-     
-  .pill-toggle {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background: var(--color-tertiary);
-    color: var(--color-on-tertiary);
-    border-radius: 999px;
-    border: none;
-    font-weight: 600;
-    margin: 1rem 0;
-  }
-  
-  .mobile-product-categories {
-    display: none;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .mobile-product-categories.open {
+  /* search form in column 2 */
+  .search-wrapper {
+    grid-column: 2;
     display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .mobile-product-categories a {
+  .search-wrapper input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 300px;
+    padding: 8px 12px;
+    border: 2px solid var(--color-outline);
+    border-radius: 20px;
+    font-size: 16px;
     color: var(--color-on-surface);
-    text-decoration: none;
   }
+  .search-wrapper button.search-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+/* —— Desktop-only (≥1024px): tighten horizontal gutters —— */
+@media (min-width: 1024px) {
+  .logo-search-row {
+    padding: 12px 16px;     /* slim left/right gutters */
+  }
+}
+   
+.pill-toggle {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--color-tertiary);
+  color: var(--color-on-tertiary);
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.mobile-product-categories {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mobile-product-categories.open {
+  display: flex;
+}
+.mobile-product-categories a {
+  color: var(--color-on-surface);
+  text-decoration: none;
+}
 
 /* —— Tablet & up: replace mobile drawer with horizontal bar —— */
 @media (min-width: 768px) {
@@ -215,30 +231,30 @@
     margin-bottom: 1.5rem !important;
   }
 }
-  
-  /* ----------------------------------------
-     6. Hero Section
-     ---------------------------------------- */
-  
-  /* —— Base (mobile-first) —— */
-  /* Positioning context for its immediate child—the .hero-overlay */
-  .hero-img-wrapper { position: relative; width: 100%; }
-  .hero-img { display: block; width: 100%; height: auto; }
-  
-  /* ——— Ellipse overlay ——— */
-  /* Children absolutely positioned against it over the right 60% of the image. */
-  .hero-img-wrapper .hero-overlay {
-    position: absolute; top: 0; right: 0;
-    width: var(--hero-ellipse-width); height: 100%;
-    background: url("../images/AdobeStock_536942588-ellipse.png")
-                right center no-repeat;
-    background-size: auto 100%;
-    padding: 1.5rem 0.5rem 0.5rem;
-    color: var(--color-tertiary);
-    z-index: 1;
-  }
 
-  /* ——— Responsive callout wrapper & SVG ——— */
+/* ----------------------------------------
+   6. Hero Section
+   ---------------------------------------- */
+
+/* —— Base (mobile-first) —— */
+/* Positioning context for its immediate child—the .hero-overlay */
+.hero-img-wrapper { position: relative; width: 100%; }
+.hero-img { display: block; width: 100%; height: auto; }
+
+/* ——— Ellipse overlay ——— */
+/* Children absolutely positioned against it over the right 60% of the image. */
+.hero-img-wrapper .hero-overlay {
+  position: absolute; top: 0; right: 0;
+  width: var(--hero-ellipse-width); height: 100%;
+  background: url("../images/AdobeStock_536942588-ellipse.png")
+              right center no-repeat;
+  background-size: auto 100%;
+  padding: 1.5rem 0.5rem 0.5rem;
+  color: var(--color-tertiary);
+  z-index: 1;
+}
+
+/* ——— Responsive callout wrapper & SVG ——— */
 .hero-callout {
   position: absolute;
   top: 50%;
@@ -254,113 +270,113 @@
   height: auto;
   filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.4));
 }
-  
-  /* “Sports balls” copy: pin its bottom edge to the divider line */
-  .hero-img-wrapper .hero-overlay .hero-copy {
-    position: absolute;
-    right: var(--site-gutter);
-    bottom: var(--hero-divider);  /* 40% up from the bottom */
-    margin:   0 0 clamp(0.25rem, 0.5vw, 0.5rem) 0; /* responsive bottom gap */
-  }
-  
-  /* “Shop now” button: pin its top edge to the same line */
-  .hero-img-wrapper .hero-overlay .hero-button {
-    position: absolute;
-    right: var(--site-gutter);
-    top: calc(100% - var(--hero-divider)); /* 60% down from the top */
-    margin:   clamp(0.25rem, 0.5vw, 0.5rem) 0 0 0; /* responsive top gap */
-  }
-  
-  /* ——— Text inside the ellipse ——— */
-  .hero-copy,
-  .hero-subhead,
-  .hero-title { text-align:center; }
-  
-  .hero-copy    { margin-bottom:1.5rem; }
-  .hero-subhead {
-    font-size:1rem; opacity:.9; line-height:1.25; margin:0 0 .2rem 0;
-  }
-  .hero-title   { font-size:1.5rem; line-height:1.25; margin:0; white-space:nowrap; }
-  
-  /* ——— Shop now button ——— */
-  .hero-button  {
-    background: var(--color-dark-blue);
-    color:#fff; padding:.75rem 1.5rem; border-radius:4px;
-    font-size:1rem; text-decoration:none;
-  }
-  
-  /* —— Mobile: extra-narrow (<380px) —— */
-  @media (max-width: 379px) {
-    .hero-img-wrapper .hero-overlay {
-      /* overlay stays at ellipse width */
-      padding: 2.5rem clamp(0.5rem, 2vw, 1rem) 1rem clamp(1rem, 4vw, 1.5rem);
-    }
-  
-    /* gutter & pin copy */
-    .hero-img-wrapper .hero-overlay .hero-copy,
-    .hero-img-wrapper .hero-overlay .hero-button {
-      right: clamp(0.25rem, 3vw, 0.5rem);
-    }
-    /* bottom-pin copy with responsive gap */
-    .hero-img-wrapper .hero-overlay .hero-copy {
-      bottom: var(--hero-divider);
-      margin: 0 0.5rem clamp(0.5rem, 2vw, 0.75rem) 0;
-    }
-  
-    /* right-align text + scale way down */
-    .hero-copy,
-    .hero-subhead,
-    .hero-title {
-      text-align: right;
-    }
-    .hero-subhead { font-size: 0.7rem; line-height: 1.3; margin: 0 0 .25rem; }
-    .hero-title   { font-size: 0.9rem; line-height: 1.2; margin: 0 0 .5rem; }
-  
-    /* button snug under divider */
-    .hero-img-wrapper .hero-overlay .hero-button {
-      top:    calc(100% - var(--hero-divider));
-      margin: clamp(0.3rem, 2vw, 0.5rem) 0 0 0;
-      font-size: 0.75rem;
-      padding:   clamp(0.25rem, 2vw, 0.5rem)
-                 clamp(0.5rem,  3vw,  0.75rem);
-    }
-  }
-  
-  /* —— Mobile: regular (≤767px) —— */
-  @media (max-width: 767px) {
-    .hero-img-wrapper .hero-overlay {
-      padding: 2rem clamp(0.75rem, 3vw, 1rem) 1rem clamp(1rem, 5vw, 1.5rem);
-    }
-  
-    .hero-img-wrapper .hero-overlay .hero-copy,
-    .hero-img-wrapper .hero-overlay .hero-button {
-      right: clamp(0.5rem, 2vw, 0.75rem);
-    }
-    .hero-img-wrapper .hero-overlay .hero-copy {
-      bottom: var(--hero-divider);
-      margin: 0 0.75rem clamp(0.75rem, 2vw, 1rem) 0;
-    }
-  
-    .hero-copy,
-    .hero-subhead,
-    .hero-title {
-      text-align: right;
-    }
-    .hero-subhead { font-size: 0.8rem; line-height: 1.4; margin: 0 0 .3rem; }
-    .hero-title   { font-size: 1.1rem; line-height: 1.2; margin: 0 0 .4rem; }
-  
-    .hero-img-wrapper .hero-overlay .hero-button {
-      top:    calc(100% - var(--hero-divider));
-      margin: clamp(0.4rem, 2vw, 0.6rem) 0 0 0;
-      font-size: 0.85rem;
-      padding:   clamp(0.3rem, 2vw, 0.6rem)
-                 clamp(0.6rem, 2.5vw, 0.9rem);
-    }
+
+/* “Sports balls” copy: pin its bottom edge to the divider line */
+.hero-img-wrapper .hero-overlay .hero-copy {
+  position: absolute;
+  right: var(--site-gutter);
+  bottom: var(--hero-divider);  /* 40% up from the bottom */
+  margin:   0 0 clamp(0.25rem, 0.5vw, 0.5rem) 0; /* responsive bottom gap */
+}
+
+/* “Shop now” button: pin its top edge to the same line */
+.hero-img-wrapper .hero-overlay .hero-button {
+  position: absolute;
+  right: var(--site-gutter);
+  top: calc(100% - var(--hero-divider)); /* 60% down from the top */
+  margin:   clamp(0.25rem, 0.5vw, 0.5rem) 0 0 0; /* responsive top gap */
+}
+
+/* ——— Text inside the ellipse ——— */
+.hero-copy,
+.hero-subhead,
+.hero-title { text-align:center; }
+
+.hero-copy    { margin-bottom:1.5rem; }
+.hero-subhead {
+  font-size:1rem; opacity:.9; line-height:1.25; margin:0 0 .2rem 0;
+}
+.hero-title   { font-size:1.5rem; line-height:1.25; margin:0; white-space:nowrap; }
+
+/* ——— Shop now button ——— */
+.hero-button  {
+  background: var(--color-dark-blue);
+  color:#fff; padding:.75rem 1.5rem; border-radius:4px;
+  font-size:1rem; text-decoration:none;
+}
+
+/* —— Mobile: extra-narrow (<380px) —— */
+@media (max-width: 379px) {
+  .hero-img-wrapper .hero-overlay {
+    /* overlay stays at ellipse width */
+    padding: 2.5rem clamp(0.5rem, 2vw, 1rem) 1rem clamp(1rem, 4vw, 1.5rem);
   }
 
-  /* -----------------------------
-   Split-Hero Layout (Desktop)
-   ----------------------------- */
+  /* gutter & pin copy */
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.25rem, 3vw, 0.5rem);
+  }
+  /* bottom-pin copy with responsive gap */
+  .hero-img-wrapper .hero-overlay .hero-copy {
+    bottom: var(--hero-divider);
+    margin: 0 0.5rem clamp(0.5rem, 2vw, 0.75rem) 0;
+  }
+
+  /* right-align text + scale way down */
+  .hero-copy,
+  .hero-subhead,
+  .hero-title {
+    text-align: right;
+  }
+  .hero-subhead { font-size: 0.7rem; line-height: 1.3; margin: 0 0 .25rem; }
+  .hero-title   { font-size: 0.9rem; line-height: 1.2; margin: 0 0 .5rem; }
+
+  /* button snug under divider */
+  .hero-img-wrapper .hero-overlay .hero-button {
+    top:    calc(100% - var(--hero-divider));
+    margin: clamp(0.3rem, 2vw, 0.5rem) 0 0 0;
+    font-size: 0.75rem;
+    padding:   clamp(0.25rem, 2vw, 0.5rem)
+               clamp(0.5rem,  3vw,  0.75rem);
+  }
+}
+
+/* —— Mobile: regular (≤767px) —— */
+@media (max-width: 767px) {
+  .hero-img-wrapper .hero-overlay {
+    padding: 2rem clamp(0.75rem, 3vw, 1rem) 1rem clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.5rem, 2vw, 0.75rem);
+  }
+  .hero-img-wrapper .hero-overlay .hero-copy {
+    bottom: var(--hero-divider);
+    margin: 0 0.75rem clamp(0.75rem, 2vw, 1rem) 0;
+  }
+
+  .hero-copy,
+  .hero-subhead,
+  .hero-title {
+    text-align: right;
+  }
+  .hero-subhead { font-size: 0.8rem; line-height: 1.4; margin: 0 0 .3rem; }
+  .hero-title   { font-size: 1.1rem; line-height: 1.2; margin: 0 0 .4rem; }
+
+  .hero-img-wrapper .hero-overlay .hero-button {
+    top:    calc(100% - var(--hero-divider));
+    margin: clamp(0.4rem, 2vw, 0.6rem) 0 0 0;
+    font-size: 0.85rem;
+    padding:   clamp(0.3rem, 2vw, 0.6rem)
+               clamp(0.6rem, 2.5vw, 0.9rem);
+  }
+}
+
+/* -----------------------------
+ Split-Hero Layout (Desktop)
+ ----------------------------- */
 .hero-section.split-hero {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -376,23 +392,23 @@
 }
 
 /* —— Tablet & up (≥768px) —— */
-  @media (min-width: 768px) {
-    .hero-img-wrapper                   { width:50%; max-width:1200px; margin:0 auto; }
-    .hero-img-wrapper .hero-overlay     { padding-bottom: clamp(3rem,6vw,8rem); }
-  
-    /* horizontal gutter for overlay text/button */
-    .hero-img-wrapper .hero-overlay .hero-copy,
-    .hero-img-wrapper .hero-overlay .hero-button {
-      right: clamp(0.5rem, 1vw, 0.75rem);
-    }
-  
-    /* right-align all of the overlay text */
-    .hero-copy,
-    .hero-subhead,
-    .hero-title                        { text-align: right; }
+@media (min-width: 768px) {
+  .hero-img-wrapper                   { width:50%; max-width:1200px; margin:0 auto; }
+  .hero-img-wrapper .hero-overlay     { padding-bottom: clamp(3rem,6vw,8rem); }
+
+  /* horizontal gutter for overlay text/button */
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.5rem, 1vw, 0.75rem);
   }
 
-  /* —— Use padding to inset both slides & arrows —— */
+  /* right-align all of the overlay text */
+  .hero-copy,
+  .hero-subhead,
+  .hero-title                        { text-align: right; }
+}
+
+/* —— Use padding to inset both slides & arrows —— */
 .hero-section.split-hero .swiper-container {
   position: relative;
   padding: 0 2rem;        /* inset slides and arrows by 2rem on each side */
@@ -418,109 +434,151 @@
   background-repeat: no-repeat;
 }
 
-/* Inset from the padded container edges */
-.hero-section.split-hero .swiper-container {
-  position: relative;
-  padding: 0 2rem;   /* insets both slides & nav by 2rem */
-  box-sizing: content-box;
-}
-
 .hero-section.split-hero .swiper-button-prev { left: 0; }
 .hero-section.split-hero .swiper-button-next { right: 0; }
 
-  /* —— Small-Tablet: 768–819px —— */
-  @media (min-width: 768px) and (max-width: 819px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,3.5vw,4rem); }
-    .hero-subhead                   { font-size: .85rem; line-height: 1.2; }
-    .hero-title                     { font-size: 1.3rem; line-height: 1.2; }
-    .hero-button {
-      font-size: .9rem;
-      /* clamp( vertical , preferred , vertical ) clamp( horizontal , preferred , horizontal ) */
-      padding:    clamp(0.275rem, 0.5vw, 0.5rem) clamp(0.5rem, 1.25vw, 0.75rem);
-      margin-top: .2rem;
-    }
+/* —— Small-Tablet: 768–819px —— */
+@media (min-width: 768px) and (max-width: 819px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,3.5vw,4rem); }
+  .hero-subhead                   { font-size: .85rem; line-height: 1.2; }
+  .hero-title                     { font-size: 1.3rem; line-height: 1.2; }
+  .hero-button {
+    font-size: .9rem;
+    /* clamp( vertical , preferred , vertical ) clamp( horizontal , preferred , horizontal ) */
+    padding:    clamp(0.275rem, 0.5vw, 0.5rem) clamp(0.5rem, 1.25vw, 0.75rem);
+    margin-top: .2rem;
   }
-  
-  /* —— Mid-Tablet: 820–911px —— */
-  @media (min-width: 820px) and (max-width: 911px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,4vw,5rem); }
-    .hero-subhead { font-size: .9rem; line-height: 1.2; }
-    .hero-title  { font-size: 1.2rem; line-height: 1.2; }
-    .hero-button {
-      font-size: 1rem;
-      padding:   clamp(0.3rem,  0.75vw, 0.55rem)
-                 clamp(0.5rem,  1.25vw, 0.8rem);
-      margin-top: .2rem;
-    }
+}
+
+/* —— Mid-Tablet: 820–911px —— */
+@media (min-width: 820px) and (max-width: 911px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,4vw,5rem); }
+  .hero-subhead { font-size: .9rem; line-height: 1.2; }
+  .hero-title  { font-size: 1.2rem; line-height: 1.2; }
+  .hero-button {
+    font-size: 1rem;
+    padding:   clamp(0.3rem,  0.75vw, 0.55rem)
+               clamp(0.5rem,  1.25vw, 0.8rem);
+    margin-top: .2rem;
   }
-  
-  /* —— Large-Tablet: 912–1023px —— */
-  @media (min-width: 912px) and (max-width: 1023px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,5vw,7rem); }
-    .hero-subhead { font-size: 1rem; line-height: 1.25; }
-    .hero-title  { font-size: 1.4rem; line-height: 1.25; }
-    .hero-button {
-      font-size: 1.1rem;
-      padding:   clamp(0.325rem, 0.85vw,  0.6rem)
-                 clamp(0.6rem,  1.35vw, 0.85rem);
-      margin-top: .25rem;
-    }
+}
+
+/* —— Large-Tablet: 912–1023px —— */
+@media (min-width: 912px) and (max-width: 1023px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,5vw,7rem); }
+  .hero-subhead { font-size: 1rem; line-height: 1.25; }
+  .hero-title  { font-size: 1.4rem; line-height: 1.25; }
+  .hero-button {
+    font-size: 1.1rem;
+    padding:   clamp(0.325rem, 0.85vw,  0.6rem)
+               clamp(0.6rem,  1.35vw, 0.85rem);
+    margin-top: .25rem;
   }
-  
-  /* —— Regular Desktop: 1024–1439px —— */
-  @media (min-width: 1024px) and (max-width: 1439px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,6vw,8rem); }
-    .hero-subhead { font-size: 1.1rem; line-height: 1.3; }
-    .hero-title  { font-size: 1.5rem; line-height: 1.3; }
-    .hero-button {
-      font-size: 1.2rem;
-      padding:   clamp(0.35rem, 1vw,   0.65rem)
-                 clamp(0.65rem, 1.5vw, 0.9rem);
-      margin-top: -.5rem;
-    }
+}
+
+/* —— Regular Desktop: 1024–1439px —— */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,6vw,8rem); }
+  .hero-subhead { font-size: 1.1rem; line-height: 1.3; }
+  .hero-title  { font-size: 1.5rem; line-height: 1.3; }
+  .hero-button {
+    font-size: 1.2rem;
+    padding:   clamp(0.35rem, 1vw,   0.65rem)
+               clamp(0.65rem, 1.5vw, 0.9rem);
+    margin-top: -.5rem;
   }
-  
-  /* —— Wide Desktop: 1440–1919px —— */
-  @media (min-width: 1440px) and (max-width: 1919px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,8vw,10rem); }
-    .hero-subhead { font-size: 1.2rem; }
-    .hero-title  { font-size: 1.7rem; }
-    .hero-button {
-      font-size: 1.3rem;
-      padding:   clamp(0.4rem,  1.25vw, 0.7rem)
-                 clamp(0.70rem, 1.75vw, 1rem);
-    }
+}
+
+/* —— Wide Desktop: 1440–1919px —— */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,8vw,10rem); }
+  .hero-subhead { font-size: 1.2rem; }
+  .hero-title  { font-size: 1.7rem; }
+  .hero-button {
+    font-size: 1.3rem;
+    padding:   clamp(0.4rem,  1.25vw, 0.7rem)
+               clamp(0.70rem, 1.75vw, 1rem);
   }
-  
-  /* —— Ultra-Wide Desktop: ≥1920px —— */
-  @media (min-width: 1920px) {
-    .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,10vw,12rem); }
-    .hero-subhead { font-size: 1.3rem; }
-    .hero-title  { font-size: 1.8rem; }
-    .hero-button {
-      font-size: 1.4rem;
-      padding:   clamp(0.45rem,  1.5vw, 0.85rem)
-                 clamp(0.75rem,    2vw,  1.1rem);
-    }
+}
+
+/* —— Ultra-Wide Desktop: ≥1920px —— */
+@media (min-width: 1920px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,10vw,12rem); }
+  .hero-subhead { font-size: 1.3rem; }
+  .hero-title  { font-size: 1.8rem; }
+  .hero-button {
+    font-size: 1.4rem;
+    padding:   clamp(0.45rem,  1.5vw, 0.85rem)
+               clamp(0.75rem,    2vw,  1.1rem);
   }
-   
+}
+ 
 /* ==== NEW FOOTER STYLES ==== */
 
 /* —— 1) Widgets Section —— */
 .footer-new .footer-widgets .full-width-stripe {
   background-color: var(--color-dark-blue);
-  padding:          2rem var(--site-gutter);
+  padding: 2rem var(--site-gutter);
 }
-
 .footer-new .footer-widgets .footer-columns {
   display: flex;
-  gap:     var(--site-gutter);
+  gap: var(--site-gutter);
+}
+.footer-new .footer-widgets .footer-column {
+  flex: 1;
+  color: #fff;
+  padding: 1rem;
 }
 
-.footer-new .footer-widgets .footer-column {
-  flex:    1;
-  color:   #fff;
-  padding: 1rem;
+/* Space between a nav list and the next section heading (e.g., before “Shop by”) */
+.footer-new .footer-widgets .footer-column nav + h4 { margin-top: 1rem; }
+
+/* ——— Shared gutter so an active pill can align to the heading edge ——— */
+:root {
+  --footer-list-gutter: 0.6rem;  /* tweak to taste */
+  --pill-pad-x: 0.6rem;
+  --pill-pad-y: 0.35rem;
+}
+
+/* Normalize lists and reserve the gutter on every item */
+.footer-new .footer-widgets .footer-column ul { margin: 0; padding: 0; list-style: none; }
+.footer-new .footer-widgets .footer-column li { padding-left: var(--footer-list-gutter); }
+
+/* Base link rhythm for ALL footer columns */
+.footer-new .footer-widgets .footer-column a {
+  display: block;
+  padding: 0.15rem 0;
+  color: #fff;
+  text-decoration: none;
+  transition: color .2s;
+}
+.footer-new .footer-widgets .footer-column a:visited { color: #fff; }
+
+/* “Shop by” active pill should size to its text, not full width */
+.footer-new .footer-filters .footer-list--filters a.link.selected,
+.footer-new .footer-filters .footer-list--filters a.link[aria-current="page"] {
+  display: inline-block;                 /* shrink-to-fit */
+  white-space: nowrap;                   /* keep short labels on one line */
+  margin-left: calc(-1 * var(--footer-list-gutter));
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  background-color: var(--color-tertiary);
+  color: var(--color-on-tertiary) !important;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-tertiary-hover);
+  transition: background-color .2s, color .2s, box-shadow .2s;
+}
+
+/* Hover/focus only when NOT selected (so we don’t override the active state) */
+.footer-new .footer-filters .footer-list--filters a.link:not(.selected):hover,
+.footer-new .footer-filters .footer-list--filters a.link:not(.selected):focus {
+  background-color: var(--color-dark-blue-lighter);
+  color: var(--color-on-primary);
+}
+
+/* Focus ring for keyboard users */
+.footer-new .footer-filters .footer-list--filters a.link:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: 2px;
 }
 
 /* —— 2) Headings —— */
@@ -734,70 +792,70 @@
 }
 
 
-  /* ===================================================================
-   Hero “Shop now” overrides: give it MD3 ripple/shadow but keep clamps
-   =================================================================== */
-  .hero-button.m3-btn {
-    /* re-apply your hero colors */
-    background: var(--color-dark-blue);
-    color: #fff;
-    /* *your* clamp() padding (overrides the generic .m3-btn defaults) */
-    padding: clamp(0.25rem, 0.5vw, 0.5rem)
-             clamp(0.5rem, 1vw, 0.75rem);
-    /* keep your existing border-radius & font sizing */
-    border-radius: 4px;
-    font-size: 1rem;
-    text-decoration: none;
-  }
+/* ===================================================================
+ Hero “Shop now” overrides: give it MD3 ripple/shadow but keep clamps
+ =================================================================== */
+.hero-button.m3-btn {
+  /* re-apply your hero colors */
+  background: var(--color-dark-blue);
+  color: #fff;
+  /* *your* clamp() padding (overrides the generic .m3-btn defaults) */
+  padding: clamp(0.25rem, 0.5vw, 0.5rem)
+           clamp(0.5rem, 1vw, 0.75rem);
+  /* keep your existing border-radius & font sizing */
+  border-radius: 4px;
+  font-size: 1rem;
+  text-decoration: none;
+}
 
-    /* =====
-     BUTTON
-  ========*/
-  
-  /* Hero button: retain the clamp() sizing & positioning
-   but add MD3 elevation + ripple */
+/* =====
+   BUTTON
+========*/
 
-  /* 1) Make sure it can show a pseudo-element ripple */
-  .hero-button.m3-btn {
-    position: relative;
-    overflow: hidden;
+/* Hero button: retain the clamp() sizing & positioning
+ but add MD3 elevation + ripple */
+
+/* 1) Make sure it can show a pseudo-element ripple */
+.hero-button.m3-btn {
+  position: relative;
+  overflow: hidden;
 
   /* MD3 resting elevation */
-    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-    transition: box-shadow .2s;
-  }
+  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  transition: box-shadow .2s;
+}
 
-  /* 2) Hover elevation (you already have your hover padding/font elsewhere) */
-  .hero-button.m3-btn:hover {
-    box-shadow:
-      0 2px 1px -1px rgba(0,0,0,0.2),
-      0 1px 1px  0 rgba(0,0,0,0.14),
-      0 1px 3px  0 rgba(0,0,0,0.12);
-  }
+/* 2) Hover elevation (you already have your hover padding/font elsewhere) */
+.hero-button.m3-btn:hover {
+  box-shadow:
+    0 2px 1px -1px rgba(0,0,0,0.2),
+    0 1px 1px  0 rgba(0,0,0,0.14),
+    0 1px 3px  0 rgba(0,0,0,0.12);
+}
 
-  /* 3) The ripple pseudo-element */
-  .hero-button.m3-btn::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.2);
-    border-radius: inherit;     /* match your 4px corners */
-    transform: scale(0);
-    opacity: 1;
-    transition: transform .3s, opacity .3s;
-    pointer-events: none;
-  }
+/* 3) The ripple pseudo-element */
+.hero-button.m3-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: inherit;     /* match your 4px corners */
+  transform: scale(0);
+  opacity: 1;
+  transition: transform .3s, opacity .3s;
+  pointer-events: none;
+}
 
-  /* 4) Trigger ripple on press */
-  .hero-button.m3-btn:active::after {
-    transform: scale(1);
-    opacity: 0;
-    transition: none;
-  }
+/* 4) Trigger ripple on press */
+.hero-button.m3-btn:active::after {
+  transform: scale(1);
+  opacity: 0;
+  transition: none;
+}
 
-  /* -----------------------------
-   Refine Swiper arrows per breakpoint
-   ----------------------------- */
+/* -----------------------------
+ Refine Swiper arrows per breakpoint
+ ----------------------------- */
 
 /* 1) MOBILE (≤767px): slightly smaller arrows, nudged down */
 @media (max-width: 767px) {
@@ -841,8 +899,19 @@
   }
 }
 
+/* ----------------------------------------
+   7. Featured Products spacing
+   ---------------------------------------- */
 
+/* Only add a top gap when a hero appears earlier on the page */
+.hero-section ~ main .featured-products {
+  margin-top: clamp(16px, 3vw, 32px);
+}
 
+/* A little space between the orange pill and the card grid */
+.featured-products .pill.pill--full {
+  margin-bottom: 0.75rem;
+}
 
 
 
