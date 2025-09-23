@@ -1,24 +1,17 @@
-﻿# secrets & local
-.env
+﻿.env
 /_exports/
 logs/
 tmp/
 storage/
 cache/
-
-# dependency folders
 vendor/
 node_modules/
 .venv/
-
-# OS/editor cruft
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 .devcontainer/
-
-# heavy media not needed in repo
 *.mp4
 *.mov
 *.zip
