@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy via SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.3
         with:
           server:   ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USER }}
