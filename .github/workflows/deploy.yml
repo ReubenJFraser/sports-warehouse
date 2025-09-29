@@ -14,9 +14,9 @@ jobs:
           username: ${{ secrets.SFTP_USER }}
           password: ${{ secrets.SFTP_PASSWORD }}
           protocol: sftp
-          port: 22
+          port: ${{ secrets.SFTP_PORT }}
           local-dir: .
-          server-dir: /public_html
+          server-dir: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
           dangerous-clean-slate: false
           exclude: |
             .git*
@@ -34,3 +34,4 @@ jobs:
             _who_db.php
             **/.DS_Store
             **/Thumbs.db
+
