@@ -15,3 +15,6 @@ Thumbs.db
 *.mp4
 *.mov
 *.zip
+online_website/
+_audit*/
+_audit_min_*/
