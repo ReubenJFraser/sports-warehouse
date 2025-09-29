@@ -1,27 +1,31 @@
-﻿name: Deploy to Hostinger (SSH)
+﻿name: Deploy (SCP probe)
 on:
   push:
     branches: [ main ]
 jobs:
-  rsync-deploy:
+  scp-and-probe:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add host to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p 65002 109.106.254.43 >> ~/.ssh/known_hosts
-      - name: Deploy via SSH/rsync
-        uses: SamKirkland/web-deploy@v1
+
+      # Upload just index.php to confirm file transfer
+      - name: Copy index.php via SCP
+        uses: appleboy/scp-action@v1
         with:
-          target-server: 109.106.254.43
-          remote-user: u642727376
-          private-ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh-port: 65002
-          destination-path: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
-          rsync-options: >-
-            --archive --compress --human-readable --delete-after
-            --exclude=.git* --exclude=.github/** --exclude=.env --exclude=_backup_*/
-            --exclude=db/** --exclude=logs/** --exclude=cache/** --exclude=.well-known/**
-            --exclude=tests/local-only/** --exclude=*__debug*.php --exclude=_scan_*.php
-            --exclude=_recent.php --exclude=_who_db.php --exclude=**/.DS_Store --exclude=**/Thumbs.db
+          host: 109.106.254.43
+          username: u642727376
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 65002
+          source: "index.php"
+          target: "/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html"
+
+      # Create a simple marker file server-side to double-confirm SSH works
+      - name: Create probe file over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 109.106.254.43
+          username: u642727376
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 65002
+          script: |
+            date > /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
