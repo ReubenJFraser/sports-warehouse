@@ -18,3 +18,6 @@ Thumbs.db
 online_website/
 _audit*/
 _audit_min_*/
+
+index_live.php
+footer_live.php

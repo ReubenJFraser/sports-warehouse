@@ -1,37 +1,27 @@
-﻿name: Deploy to Hostinger
+﻿name: Deploy to Hostinger (SSH)
 on:
   push:
     branches: [ main ]
 jobs:
-  sftp-deploy:
+  rsync-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy via SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.3
+      - name: Add host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 65002 109.106.254.43 >> ~/.ssh/known_hosts
+      - name: Deploy via SSH/rsync
+        uses: SamKirkland/web-deploy@v1
         with:
-          server:   ${{ secrets.SFTP_HOST }}
-          username: ${{ secrets.SFTP_USER }}
-          password: ${{ secrets.SFTP_PASSWORD }}
-          protocol: sftp
-          port: ${{ secrets.SFTP_PORT }}
-          local-dir: .
-          server-dir: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
-          dangerous-clean-slate: false
-          exclude: |
-            .git*
-            .github/**
-            .env
-            _backup_*/
-            db/**
-            logs/**
-            cache/**
-            .well-known/**
-            tests/local-only/**
-            *_debug*.php
-            _scan_*.php
-            _recent.php
-            _who_db.php
-            **/.DS_Store
-            **/Thumbs.db
-
+          target-server: 109.106.254.43
+          remote-user: u642727376
+          private-ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-port: 65002
+          destination-path: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
+          rsync-options: >-
+            --archive --compress --human-readable --delete-after
+            --exclude=.git* --exclude=.github/** --exclude=.env --exclude=_backup_*/
+            --exclude=db/** --exclude=logs/** --exclude=cache/** --exclude=.well-known/**
+            --exclude=tests/local-only/** --exclude=*__debug*.php --exclude=_scan_*.php
+            --exclude=_recent.php --exclude=_who_db.php --exclude=**/.DS_Store --exclude=**/Thumbs.db
