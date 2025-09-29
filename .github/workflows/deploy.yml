@@ -1,31 +1,46 @@
-﻿name: Deploy (SCP probe)
+﻿name: Deploy to Hostinger (SSH)
 on:
   push:
     branches: [ main ]
 jobs:
-  scp-and-probe:
+  scp-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Upload just index.php to confirm file transfer
-      - name: Copy index.php via SCP
+      # Upload the whole site (with excludes)
+      - name: Upload site via SCP
         uses: appleboy/scp-action@v1
         with:
           host: 109.106.254.43
           username: u642727376
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          source: "index.php"
-          target: "/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html"
+          source: |
+            ./**
+            !.git/**
+            !.github/**
+            !.env
+            !_backup_*/
+            !db/**
+            !logs/**
+            !cache/**
+            !.well-known/**
+            !tests/local-only/**
+            !*_debug*.php
+            !_scan_*.php
+            !_recent.php
+            !_who_db.php
+            !**/.DS_Store
+            !**/Thumbs.db
+          target: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
 
-      # Create a simple marker file server-side to double-confirm SSH works
-      - name: Create probe file over SSH
+      # One-time cleanup of the probe file
+      - name: Remove probe file
         uses: appleboy/ssh-action@v1
         with:
           host: 109.106.254.43
           username: u642727376
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          script: |
-            date > /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
+          script: rm -f /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
