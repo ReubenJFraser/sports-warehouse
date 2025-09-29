@@ -1,0 +1,36 @@
+﻿name: Deploy to Hostinger
+on:
+  push:
+    branches: [ main ]
+jobs:
+  sftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy via SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server:   ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          protocol: sftp
+          port: 22
+          local-dir: .
+          server-dir: /public_html
+          dangerous-clean-slate: false
+          exclude: |
+            .git*
+            .github/**
+            .env
+            _backup_*/
+            db/**
+            logs/**
+            cache/**
+            .well-known/**
+            tests/local-only/**
+            *_debug*.php
+            _scan_*.php
+            _recent.php
+            _who_db.php
+            **/.DS_Store
+            **/Thumbs.db
