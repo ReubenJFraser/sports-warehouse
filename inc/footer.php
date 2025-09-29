@@ -558,3 +558,5 @@ function shop_active($a, $b = null, $c = null) { return active_link($a, $b, $c);
     </div> <!-- /.footer-brand-legal -->
 
   </footer>
+
+<!-- deploy 2025-09-29T21:59:04 -->
