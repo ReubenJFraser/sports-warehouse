@@ -1,4 +1,3 @@
-// inc/image-headroom.php
 <?php
 function sw_fetch_headroom_map(PDO $pdo, array $basenames): array {
   if (empty($basenames)) return [];
