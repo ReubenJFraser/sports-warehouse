@@ -445,15 +445,15 @@ $sqlItems = "
          o.image_basename,
          SUBSTRING_INDEX(i.chosen_image, '/', -1)
        )
-  {$whereSql}
+    {$whereSql}
   ORDER BY {$orderBy}
-  LIMIT :limit OFFSET :offset
 ";
+$sqlItems .= " LIMIT " . (int)$pageSize . " OFFSET " . (int)$offset;
+
 $stmt = $pdo->prepare($sqlItems);
-sw_execute_with_params($stmt, $sqlItems, $params, [
-  'limit'  => (int)$pageSize,
-  'offset' => (int)$offset,
-]);
+// limit/offset are now inlined; no need to pass them for binding
+sw_execute_with_params($stmt, $sqlItems, $params);
+
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* -----------------------------------------------------------------
