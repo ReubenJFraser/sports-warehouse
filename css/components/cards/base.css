@@ -232,6 +232,53 @@
   object-fit: contain !important;
 }
 
+/* ─────────────────────────
+   Hero debug & positioning aids (APPENDED)
+   ───────────────────────── */
+
+/* If JS swaps to a placeholder image, avoid ugly crop */
+.card-media img.is-placeholder{
+  object-fit: contain;
+}
+
+/* Allow a vertical bias so focus_y sits nearer the upper third.
+   Pass a number *with %* in --objpos-y (e.g., 18%).
+   You can optionally tweak the bias amount via --objpos-bias (default 17%). */
+.card-media.image-fit-cover img{
+  /* override earlier rule with a smarter vertical calc */
+  object-position: 50% calc(var(--objpos-y, 50%) - var(--objpos-bias, 17%));
+}
+
+/* Debug overlay you can toggle via data attribute (set in PHP when ?imgdebug=1) */
+.card-media[data-debug="1"]{
+  position: relative;
+}
+
+/* Red dashed line at the upper third (33.34%) */
+.card-media[data-debug="1"]::before{
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 33.34%;
+  height: 0;
+  border-top: 2px dashed rgba(255,0,0,.5);
+  pointer-events: none;
+}
+
+/* Blue dot at the focus_y position (uses --objpos-y) */
+.card-media[data-debug="1"]::after{
+  content: "";
+  position: absolute;
+  left: calc(50% - 4px);
+  top: calc(var(--objpos-y, 50%));
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(0,128,255,.7);
+  box-shadow: 0 0 0 2px rgba(0,128,255,.25);
+  pointer-events: none;
+}
+
+
 
 
 

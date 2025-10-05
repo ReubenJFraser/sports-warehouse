@@ -7,7 +7,7 @@
 require_once __DIR__ . '/color-groups.php';   // sw_color_groups(), sw_effective_colors()
 require_once __DIR__ . '/color-where.php';    // sw_where_colors()
 
-// NEW: bring in headroom map + PHP picker for post-query override
+// Headroom + PHP picker for post-query override
 require_once __DIR__ . '/image-picker.php';    // sw_pick_best_image()
 require_once __DIR__ . '/image-headroom.php';  // sw_fetch_headroom_map()
 
@@ -18,14 +18,14 @@ $catalogQueryRan = false;
 if (!$isCatalog) return;
 
 // ---------------------------
-// Helper: execute statement (normalize + filter to placeholders present)
+// Helper: execute statement (normalize + bind types correctly)
 // ---------------------------
 if (!function_exists('sw_execute_with_params')) {
   /**
    * Execute statement with normalized named parameters.
    * - Strips leading ':' from keys.
-   * - Filters to only the placeholders that actually appear in $stmt->queryString.
-   * - Merges $extra (e.g., ['limit'=>48, 'offset'=>0]) and filters them too.
+   * - Filters to only placeholders that appear in the SQL.
+   * - Binds INT for numeric placeholders (e.g., limit/offset/categoryId).
    * - Logs SQL + final bound params under SW_DEBUG.
    */
   function sw_execute_with_params(PDOStatement $stmt, string $sql, array $params, array $extra = []): void {
@@ -44,16 +44,34 @@ if (!function_exists('sw_execute_with_params')) {
 
     $bind = $present ? array_intersect_key($norm, $present) : [];
 
+    // Debug log what we're about to bind
     if (!empty($SW_DEBUG) && function_exists('sw_log')) {
       sw_log(['SQL' => $sqlText, 'params' => $bind]);
     }
 
-    $stmt->execute($bind);
+    // Bind with types where needed (INT for limit/offset/ids)
+    foreach ($bind as $name => $value) {
+      $param = ':' . $name;
+
+      // Decide INT vs STR
+      $isIntName = in_array($name, ['limit','offset','categoryId','page','per_page'], true);
+      $isIntVal  = is_int($value) || (is_numeric($value) && (string)(int)$value === (string)$value);
+
+      if ($isIntName || $isIntVal) {
+        $stmt->bindValue($param, (int)$value, PDO::PARAM_INT);
+      } else {
+        $stmt->bindValue($param, $value, PDO::PARAM_STR);
+      }
+    }
+
+    $stmt->execute();
   }
 }
 
+
 // ---------------------------
 /** WHERE + params **/
+// ---------------------------
 $where  = [];
 $params = [];
 
@@ -175,29 +193,132 @@ $sqlItems = "
     SUBSTRING_INDEX(i.chosen_image, '/', -1) AS _chosen_base,
     SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1) AS _thumb1_base,
 
-    /* Effective image path (SQL fallback):
-       1) keep stored if crop-safe
-       2) else first token of thumbnails_json if crop-safe
-       3) else stored chosen_image
-    */
+    /* ===========================================================
+       SQL EFFECTIVE HERO (coarse):
+       1) First thumbnail (in thumbnails_json order) where:
+          - headroom.face_count >= 1
+          - focus_y_pct <= 33.34 (face in upper third)
+          - crop_safe = 1
+          We return the token path (prefixed with images/ only if needed).
+       2) Else stored chosen_image if crop_safe
+       3) Else first-thumb if crop_safe
+       4) Else stored chosen_image
+       =========================================================== */
     CASE
+      WHEN EXISTS (
+        SELECT 1
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t
+        JOIN image_headroom ihx
+          ON ihx.image_basename = SUBSTRING_INDEX(t.token, '/', -1)
+        WHERE ihx.face_count >= 1
+          AND ihx.focus_y_pct IS NOT NULL AND ihx.focus_y_pct <= 33.34
+          AND ihx.crop_safe = 1
+        LIMIT 1
+      )
+      THEN (
+        SELECT
+          CASE
+            WHEN LEFT(t2.token, 7) = 'images/' THEN t2.token
+            ELSE CONCAT('images/', SUBSTRING_INDEX(t2.token, '/', -1))
+          END
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t2
+        JOIN image_headroom ih2
+          ON ih2.image_basename = SUBSTRING_INDEX(t2.token, '/', -1)
+        WHERE ih2.face_count >= 1
+          AND ih2.focus_y_pct IS NOT NULL AND ih2.focus_y_pct <= 33.34
+          AND ih2.crop_safe = 1
+        ORDER BY t2.pos
+        LIMIT 1
+      )
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
           AND ih.crop_safe = 1
       )
       THEN i.chosen_image
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
           AND ih.crop_safe = 1
       )
-      THEN CONCAT('images/', SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1))
+      THEN CONCAT(
+        'images/',
+        SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
+      )
+
       ELSE i.chosen_image
     END AS chosen_image_effective,
 
-    /* Effective ratio aligned to the same selected image (SQL fallback) */
+    /* Effective ratio aligned to the SAME SQL-chosen image */
     CASE
+      WHEN EXISTS (
+        SELECT 1
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t
+        JOIN image_headroom ihx
+          ON ihx.image_basename = SUBSTRING_INDEX(t.token, '/', -1)
+        WHERE ihx.face_count >= 1
+          AND ihx.focus_y_pct IS NOT NULL AND ihx.focus_y_pct <= 33.34
+          AND ihx.crop_safe = 1
+        LIMIT 1
+      )
+      THEN (
+        SELECT ih3.ratio
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t3
+        JOIN image_headroom ih3
+          ON ih3.image_basename = SUBSTRING_INDEX(t3.token, '/', -1)
+        WHERE ih3.face_count >= 1
+          AND ih3.focus_y_pct IS NOT NULL AND ih3.focus_y_pct <= 33.34
+          AND ih3.crop_safe = 1
+        ORDER BY t3.pos
+        LIMIT 1
+      )
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
@@ -206,19 +327,65 @@ $sqlItems = "
       THEN (SELECT ih2.ratio FROM image_headroom ih2
             WHERE ih2.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
             LIMIT 1)
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
           AND ih.crop_safe = 1
       )
-      THEN (SELECT ih3.ratio FROM image_headroom ih3
-            WHERE ih3.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
+      THEN (SELECT ih4.ratio FROM image_headroom ih4
+            WHERE ih4.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
             LIMIT 1)
+
       ELSE i.chosen_ratio
     END AS chosen_ratio_effective,
 
-    /* Effective focus_y (percent) aligned to same selected image (SQL fallback) */
+    /* Effective focus_y aligned to the SAME SQL-chosen image */
     CASE
+      WHEN EXISTS (
+        SELECT 1
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t
+        JOIN image_headroom ihx
+          ON ihx.image_basename = SUBSTRING_INDEX(t.token, '/', -1)
+        WHERE ihx.face_count >= 1
+          AND ihx.focus_y_pct IS NOT NULL AND ihx.focus_y_pct <= 33.34
+          AND ihx.crop_safe = 1
+        LIMIT 1
+      )
+      THEN (
+        SELECT ih5.focus_y_pct
+        FROM (
+          SELECT
+            TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', n.n), ';', -1)) AS token,
+            n.n AS pos
+          FROM (
+            SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+            UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10
+            UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
+            UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20
+          ) AS n
+          WHERE n.n <= 1 + LENGTH(i.thumbnails_json) - LENGTH(REPLACE(i.thumbnails_json, ';', ''))
+        ) t5
+        JOIN image_headroom ih5
+          ON ih5.image_basename = SUBSTRING_INDEX(t5.token, '/', -1)
+        WHERE ih5.face_count >= 1
+          AND ih5.focus_y_pct IS NOT NULL AND ih5.focus_y_pct <= 33.34
+          AND ih5.crop_safe = 1
+        ORDER BY t5.pos
+        LIMIT 1
+      )
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
@@ -227,6 +394,7 @@ $sqlItems = "
       THEN (SELECT ih2.focus_y_pct FROM image_headroom ih2
             WHERE ih2.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
             LIMIT 1)
+
       WHEN EXISTS(
         SELECT 1 FROM image_headroom ih
         WHERE ih.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
@@ -235,6 +403,7 @@ $sqlItems = "
       THEN (SELECT ih3.focus_y_pct FROM image_headroom ih3
             WHERE ih3.image_basename = SUBSTRING_INDEX(SUBSTRING_INDEX(i.thumbnails_json, ';', 1), '/', -1)
             LIMIT 1)
+
       ELSE (SELECT ih4.focus_y_pct FROM image_headroom ih4
             WHERE ih4.image_basename = SUBSTRING_INDEX(i.chosen_image, '/', -1)
             LIMIT 1)
@@ -311,6 +480,7 @@ if ($useEffective && !empty($items)) {
     if (!empty($it['thumbnails_json'])) {
       $thumbs = array_filter(array_map('trim', explode(';', $it['thumbnails_json'])));
       foreach ($thumbs as $t) {
+        // Keep directory if present in token; default to prefixing images/ when absent
         $p = (strpos($t, 'images/') === 0) ? $t : ('images/' . $t);
         $base = strtolower(substr($p, strrpos($p, '/') + 1));
         $cand[] = ['path' => $p, 'basename' => $base, 'source' => 'thumb'];
@@ -371,6 +541,7 @@ $catalogQueryRan = true;
 if (!empty($SW_DEBUG) && function_exists('sw_log')) {
   sw_log(['TOTAL' => $total, 'page' => $pageNum ?? 1, 'pageSize' => $pageSize]);
 }
+
 
 
 
