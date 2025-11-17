@@ -1,46 +1,62 @@
-﻿name: Deploy to Hostinger (SSH)
+name: Deploy to Hostinger (full mirror)
+
 on:
   push:
     branches: [ main ]
+
 jobs:
-  scp-deploy:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Upload the whole site (with excludes)
-      - name: Upload site via SCP
-        uses: appleboy/scp-action@v1
+      - name: Add Hostinger to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p 65002 109.106.254.43 >> ~/.ssh/known_hosts
+
+      - name: Deploy via rsync over SSH
+        uses: SamKirkland/web-deploy@v1
         with:
-          host: 109.106.254.43
-          username: u642727376
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 65002
-          source: |
-            ./**
-            !.git/**
-            !.github/**
-            !.env
-            !_backup_*/
-            !db/**
-            !logs/**
-            !cache/**
-            !.well-known/**
-            !tests/local-only/**
-            !*_debug*.php
-            !_scan_*.php
-            !_recent.php
-            !_who_db.php
-            !**/.DS_Store
-            !**/Thumbs.db
-          target: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
+          # SSH connection
+          target-server: 109.106.254.43
+          remote-user: u642727376
+          private-ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-port: 65002
 
-      # One-time cleanup of the probe file
-      - name: Remove probe file
+          # Paths
+          source-path: .
+          destination-path: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
+
+          # rsync behaviour
+          rsync-options: >-
+            --archive
+            --compress
+            --human-readable
+            --delete-after
+            --exclude=.git*
+            --exclude=.github/**
+            --exclude=.env
+            --exclude=db/**
+            --exclude=logs/**
+            --exclude=uploads/**
+            --exclude=wp-content/uploads/**
+            --exclude=_backup_*/**
+            --exclude=tests/local-only/**
+            --exclude=manifest.php
+            --exclude=_image-system_manifest.csv
+            --exclude=**/.DS_Store
+            --exclude=**/Thumbs.db
+
+      - name: Create probe file over SSH (optional sanity check)
         uses: appleboy/ssh-action@v1
         with:
           host: 109.106.254.43
           username: u642727376
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          script: rm -f /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
+          script: |
+            date > /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
+
