@@ -1,19 +1,10 @@
-/* 1) Base: card is always column stack */
+/* Base: card is always column stack */
 .product-card {
   display: flex;
   flex-direction: column;
 }
 
-/* 2) Default image sizing (square/portrait) */
-.product-card img {
-  flex: 0 0 60%;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  margin: 0 auto;
-}
-
-/* 3) Default info block stacks pricing/name vertically */
+/* Default info block stacks pricing/name vertically */
 .product-card .product-info {
   display: flex;
   flex-direction: column;
@@ -22,23 +13,24 @@
   justify-content: center;
 }
 
-/* 4) Landscape cards get a single-line info row */
-.product-card[data-orientation="L"] .product-info {
-  flex-direction: row;            /* price & name side-by-side */
+/* Landscape cards get a single-line info row */
+.product-card[data-orientation="landscape"] .product-info {
+  flex-direction: row;
   justify-content: space-between;
-  align-items: center;           /* vertically center that one row */
+  align-items: center;
 }
 
-/* (Optionally tweak aspect-ratios via your existing rules) */
-.product-card[data-orientation="P"] {
-  aspect-ratio: 3/4;
+/* Orientation-aware aspect ratios */
+.product-card[data-orientation="portrait"] {
+  aspect-ratio: 3 / 4;
 }
-.product-card[data-orientation="S"] {
-  aspect-ratio: 1/1;
+.product-card[data-orientation="square"] {
+  aspect-ratio: 1 / 1;
 }
-.product-card[data-orientation="L"] {
-  aspect-ratio: 4/3;
+.product-card[data-orientation="landscape"] {
+  aspect-ratio: 4 / 3;
 }
+
 
 
 

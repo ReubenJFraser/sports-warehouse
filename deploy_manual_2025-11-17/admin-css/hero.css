@@ -1,0 +1,321 @@
+/* ---------------------------------------------------------
+   HERO ADMIN MODULE
+   Requires: /css/admin/core.css
+   Contains only hero-specific layouts and components
+--------------------------------------------------------- */
+
+/* =========================================================
+   Layout containers (hero-edit + hero-manager)
+========================================================= */
+
+.hero-admin {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 16px 12px 40px;
+}
+
+@media (min-width: 720px) {
+    .hero-admin {
+        padding: 24px 16px 48px;
+    }
+}
+
+.hero-admin__header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.hero-admin__title {
+    font-size: 1.55rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+.hero-admin__subtitle {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.hero-admin__subtitle strong {
+    color: #d0dbff;
+}
+
+
+/* =========================================================
+   Shared Card Components (hero-edit + hero-manager)
+========================================================= */
+
+.hero-card {
+    background: linear-gradient(135deg, var(--card-bg), #10182b);
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+    padding: 12px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media (min-width: 720px) {
+    .hero-card {
+        flex-direction: row;
+        align-items: stretch;
+        padding: 12px 14px;
+    }
+}
+
+
+/* =========================================================
+   hero-manager — item list layout
+========================================================= */
+
+.hero-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hero-card__left {
+    display: flex;
+    gap: 10px;
+}
+
+.hero-card__id {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 4px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,235,0.4);
+    align-self: flex-start;
+    flex-shrink: 0;
+}
+
+.hero-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.hero-card__name {
+    font-size: 0.96rem;
+    font-weight: 550;
+}
+
+.hero-card__brand {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.hero-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+}
+
+.hero-badge {
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,235,0.55);
+    color: #c7d2ff;
+    background: rgba(15,23,42,0.7);
+}
+
+.hero-badge--override {
+    border-color: rgba(255,127,50,0.85);
+    color: #ffd9bd;
+    background: var(--accent-soft);
+}
+
+.hero-badge--rejections {
+    border-color: rgba(248,113,113,0.9);
+    color: #fecaca;
+    background: rgba(248,113,113,0.15);
+}
+
+.hero-badge--missing {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: #ffb3c2;
+}
+
+
+/* =========================================================
+   hero-manager — image slots
+========================================================= */
+
+.hero-card__images {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+@media (min-width: 720px) {
+    .hero-card__images {
+        margin-top: 0;
+        margin-left: auto;
+        max-width: 360px;
+    }
+}
+
+.hero-slot {
+    background: radial-gradient(circle at top, rgba(15,23,42,0.85) 0, #050815 60%);
+    border-radius: 12px;
+    border: 1px dashed rgba(148,163,235,0.35);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hero-slot__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-slot__label span {
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hero-slot__tag {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.9);
+    border: 1px solid rgba(148,163,235,0.6);
+    color: #e3e7ff;
+}
+
+.hero-slot__imgwrap {
+    border-radius: 10px;
+    background: #020617;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.hero-slot__imgwrap img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.hero-slot__meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+
+/* =========================================================
+   hero-manager — action buttons
+========================================================= */
+
+.hero-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+@media (min-width: 720px) {
+    .hero-card__actions {
+        margin-top: 0;
+        margin-left: auto;
+        align-self: center;
+    }
+}
+
+.hero-empty {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 24px;
+}
+
+.hero-footnote {
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+
+/* =========================================================
+   hero-edit.php — candidate image tiles
+========================================================= */
+
+.grid,
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+    gap: 12px;
+}
+
+.card-imagebox {
+    width: 180px;
+    background: #000;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    aspect-ratio: 4/5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-imagebox img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.candidate {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.candidate-score {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.25;
+}
+
+.candidate--selected {
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 12px rgba(255,127,50,0.4);
+}
+
+
+/* =========================================================
+   PhotoSwipe / fullscreen
+========================================================= */
+
+[data-fullscreen] {
+    cursor: zoom-in;
+}
+
+
+
+
+

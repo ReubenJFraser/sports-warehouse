@@ -1,4 +1,13 @@
+/* ===================================================================
+   main.css — global styles entry
+   Notes:
+   - @import must come first in plain CSS
+   - Product card imagery is handled in components/cards/*
+   =================================================================== */
 
+/* Component: Product Card (Swiper layer) */
+@import url("./components/cards/product-card.swiper.css");
+  
   /* ----------------------------------------
    GLOBAL IMAGE SCOPING (stop competing rules)
    ---------------------------------------- */
@@ -16,7 +25,7 @@
   }
   
   /* ----------------------------------------
-   4. Search Row (mobile-first + tablet + desktop)
+   Search Row (mobile-first + tablet + desktop)
    ---------------------------------------- */
 
 /* —— Mobile only: logo + search stacked —— */
@@ -912,6 +921,7 @@
 .featured-products .pill.pill--full {
   margin-bottom: 0.75rem;
 }
+
 
 
 

@@ -1,0 +1,919 @@
+
+  /* ----------------------------------------
+   GLOBAL IMAGE SCOPING (stop competing rules)
+   ---------------------------------------- */
+  /* IMPORTANT:
+   - Do NOT style <img> globally in main.css.
+   - Scope header/logo image sizing to header-only selectors.
+   - Product card imagery is controlled in css/components/cards/base.css.
+  */
+  .site-header img,
+  .logo-wrapper img {
+    display: block;
+    height: auto;
+    width: auto;      /* prevent unintended stretching */
+    max-height: 60px; /* header logo cap */
+  }
+  
+  /* ----------------------------------------
+   4. Search Row (mobile-first + tablet + desktop)
+   ---------------------------------------- */
+
+/* —— Mobile only: logo + search stacked —— */
+.logo-row.mobile-only {
+  text-align: center;
+  padding: 12px 0 8px;      /* top 12px, bottom 8px */
+}
+
+.search-row.mobile-only {
+  display: block;
+  padding: 0 32px 16px;     /* 32px side, 16px bottom */
+}
+
+/* Inner flex container that holds input + button */
+.search-row.mobile-only .search-container-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-container-inner input[type="text"] {
+  flex: 1 1 auto;           /* fill leftover space */
+  height: 48px;
+  line-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--color-outline);
+  border-radius: 24px;
+  font-size: 16px;
+  color: var(--color-on-surface);
+  box-sizing: border-box;
+}
+
+.search-row.mobile-only button {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* hide the desktop nav on phones by default */
+.desktop-only {
+  display: none;
+}
+
+/* —— Tablet: move into white “logo + search” grid —— */
+@media (min-width: 768px) {
+  /* hide the stacked mobile header/search */
+  .logo-row.mobile-only,
+  .search-row.mobile-only {
+    display: none;
+  }
+
+  /* …and hide the mobile drawer & pill toggle & mobile categories */
+  .mobile-nav-drawer,
+  .pill-toggle,
+  .mobile-product-categories {
+    display: none;
+  }
+
+  /* reveal the desktop header/nav */
+  .desktop-only {
+    display: block;
+  }
+
+  /* make a two-column grid for logo + search */
+  .logo-search-row {
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 4rem;
+    background-color: #fff;
+    padding: 12px 32px 12px 24px;  /* top • right • bottom • left */
+    width: 100%;
+  }
+
+  /* ensure the magnifier button stays 48×48 and centered */
+  .search-wrapper button.search-icon {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+/* —— Desktop & up: wire up logo + search side-by-side —— */
+@media (min-width: 801px) {
+  /* logo in column 1 */
+  .sports-warehouse-logo,
+  .logo-wrapper {
+    grid-column: 1;
+    display: block;
+    max-height: 60px;
+  }
+  .logo-wrapper img {
+    display: block;
+    max-height: 60px; /* scoped to header logo only (no global img rules) */
+  }
+
+  /* search form in column 2 */
+  .search-wrapper {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .search-wrapper input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 300px;
+    padding: 8px 12px;
+    border: 2px solid var(--color-outline);
+    border-radius: 20px;
+    font-size: 16px;
+    color: var(--color-on-surface);
+  }
+  .search-wrapper button.search-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+/* —— Desktop-only (≥1024px): tighten horizontal gutters —— */
+@media (min-width: 1024px) {
+  .logo-search-row {
+    padding: 12px 16px;     /* slim left/right gutters */
+  }
+}
+   
+.pill-toggle {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--color-tertiary);
+  color: var(--color-on-tertiary);
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.mobile-product-categories {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mobile-product-categories.open {
+  display: flex;
+}
+.mobile-product-categories a {
+  color: var(--color-on-surface);
+  text-decoration: none;
+}
+
+/* —— Tablet & up: replace mobile drawer with horizontal bar —— */
+@media (min-width: 768px) {
+  /* show desktop-only, hide mobile drawer/pill */
+  .desktop-only { display: block; }
+  .mobile-nav-drawer,
+  .pill-toggle,
+  .mobile-product-categories {
+    display: none;
+  }
+
+  /* container */
+  .desktop-category-nav {
+    display:          flex;
+    justify-content:  center;
+    align-items:      center;
+    background-color: var(--color-dark-blue);
+    color:            var(--color-on-primary);
+    padding:          12px var(--site-gutter);
+    gap:              1.2rem;
+    font-size:        16px;
+    width:            100%;
+    margin-bottom:    1.5rem;
+  }
+
+  /* resting pills: use our new 20%-lighter token */
+  nav.desktop-category-nav > a.m3-btn {
+    background-color: var(--color-dark-blue-lighter) !important;
+    color:            var(--color-on-primary)      !important;
+    border:           none                        !important;
+    border-radius:    0.5rem                      !important;
+    box-shadow:       var(--shadow-surface-resting)!important;
+    transition:       background-color .2s,
+                      box-shadow        .2s,
+                      color             .2s;
+  }
+
+  /* hover/focus/active/selected: full orange fill + tertiary hover shadow + on-tertiary text */
+  nav.desktop-category-nav > a.m3-btn:hover,
+  nav.desktop-category-nav > a.m3-btn:focus,
+  nav.desktop-category-nav > a.m3-btn:active,
+  nav.desktop-category-nav > a.m3-btn.selected {
+    background-color: var(--color-tertiary)        !important;
+    box-shadow:       var(--shadow-tertiary-hover) !important;
+    color:            var(--color-on-tertiary)     !important;
+  }
+}
+
+/* —— Desktop-only (≥1024px): keep the bottom gap —— */
+@media (min-width: 1024px) {
+  .desktop-category-nav {
+    margin-bottom: 1.5rem !important;
+  }
+}
+
+/* ----------------------------------------
+   6. Hero Section
+   ---------------------------------------- */
+
+/* —— Base (mobile-first) —— */
+/* Positioning context for its immediate child—the .hero-overlay */
+.hero-img-wrapper { position: relative; width: 100%; }
+.hero-img { display: block; width: 100%; height: auto; }
+
+/* ——— Ellipse overlay ——— */
+/* Children absolutely positioned against it over the right 60% of the image. */
+.hero-img-wrapper .hero-overlay {
+  position: absolute; top: 0; right: 0;
+  width: var(--hero-ellipse-width); height: 100%;
+  background: url("../images/AdobeStock_536942588-ellipse.png")
+              right center no-repeat;
+  background-size: auto 100%;
+  padding: 1.5rem 0.5rem 0.5rem;
+  color: var(--color-tertiary);
+  z-index: 1;
+}
+
+/* ——— Responsive callout wrapper & SVG ——— */
+.hero-callout {
+  position: absolute;
+  top: 50%;
+  right: 8%;           /* nudge it into the ellipse */
+  width: 60%;          /* fluid width relative to the hero */
+  /* max-width: 260px;    optional cap so it never gets too big */
+  transform: translateY(-50%);
+}
+
+.hero-callout__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.4));
+}
+
+/* “Sports balls” copy: pin its bottom edge to the divider line */
+.hero-img-wrapper .hero-overlay .hero-copy {
+  position: absolute;
+  right: var(--site-gutter);
+  bottom: var(--hero-divider);  /* 40% up from the bottom */
+  margin:   0 0 clamp(0.25rem, 0.5vw, 0.5rem) 0; /* responsive bottom gap */
+}
+
+/* “Shop now” button: pin its top edge to the same line */
+.hero-img-wrapper .hero-overlay .hero-button {
+  position: absolute;
+  right: var(--site-gutter);
+  top: calc(100% - var(--hero-divider)); /* 60% down from the top */
+  margin:   clamp(0.25rem, 0.5vw, 0.5rem) 0 0 0; /* responsive top gap */
+}
+
+/* ——— Text inside the ellipse ——— */
+.hero-copy,
+.hero-subhead,
+.hero-title { text-align:center; }
+
+.hero-copy    { margin-bottom:1.5rem; }
+.hero-subhead {
+  font-size:1rem; opacity:.9; line-height:1.25; margin:0 0 .2rem 0;
+}
+.hero-title   { font-size:1.5rem; line-height:1.25; margin:0; white-space:nowrap; }
+
+/* ——— Shop now button ——— */
+.hero-button  {
+  background: var(--color-dark-blue);
+  color:#fff; padding:.75rem 1.5rem; border-radius:4px;
+  font-size:1rem; text-decoration:none;
+}
+
+/* —— Mobile: extra-narrow (<380px) —— */
+@media (max-width: 379px) {
+  .hero-img-wrapper .hero-overlay {
+    /* overlay stays at ellipse width */
+    padding: 2.5rem clamp(0.5rem, 2vw, 1rem) 1rem clamp(1rem, 4vw, 1.5rem);
+  }
+
+  /* gutter & pin copy */
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.25rem, 3vw, 0.5rem);
+  }
+  /* bottom-pin copy with responsive gap */
+  .hero-img-wrapper .hero-overlay .hero-copy {
+    bottom: var(--hero-divider);
+    margin: 0 0.5rem clamp(0.5rem, 2vw, 0.75rem) 0;
+  }
+
+  /* right-align text + scale way down */
+  .hero-copy,
+  .hero-subhead,
+  .hero-title {
+    text-align: right;
+  }
+  .hero-subhead { font-size: 0.7rem; line-height: 1.3; margin: 0 0 .25rem; }
+  .hero-title   { font-size: 0.9rem; line-height: 1.2; margin: 0 0 .5rem; }
+
+  /* button snug under divider */
+  .hero-img-wrapper .hero-overlay .hero-button {
+    top:    calc(100% - var(--hero-divider));
+    margin: clamp(0.3rem, 2vw, 0.5rem) 0 0 0;
+    font-size: 0.75rem;
+    padding:   clamp(0.25rem, 2vw, 0.5rem)
+               clamp(0.5rem,  3vw,  0.75rem);
+  }
+}
+
+/* —— Mobile: regular (≤767px) —— */
+@media (max-width: 767px) {
+  .hero-img-wrapper .hero-overlay {
+    padding: 2rem clamp(0.75rem, 3vw, 1rem) 1rem clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.5rem, 2vw, 0.75rem);
+  }
+  .hero-img-wrapper .hero-overlay .hero-copy {
+    bottom: var(--hero-divider);
+    margin: 0 0.75rem clamp(0.75rem, 2vw, 1rem) 0;
+  }
+
+  .hero-copy,
+  .hero-subhead,
+  .hero-title {
+    text-align: right;
+  }
+  .hero-subhead { font-size: 0.8rem; line-height: 1.4; margin: 0 0 .3rem; }
+  .hero-title   { font-size: 1.1rem; line-height: 1.2; margin: 0 0 .4rem; }
+
+  .hero-img-wrapper .hero-overlay .hero-button {
+    top:    calc(100% - var(--hero-divider));
+    margin: clamp(0.4rem, 2vw, 0.6rem) 0 0 0;
+    font-size: 0.85rem;
+    padding:   clamp(0.3rem, 2vw, 0.6rem)
+               clamp(0.6rem, 2.5vw, 0.9rem);
+  }
+}
+
+/* -----------------------------
+ Split-Hero Layout (Desktop)
+ ----------------------------- */
+.hero-section.split-hero {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+  gap: var(--site-gutter);
+}
+
+/* Collapse to single-column on narrow viewports */
+@media (max-width: 767px) {
+  .hero-section.split-hero {
+    display: block;
+  }
+}
+
+/* —— Tablet & up (≥768px) —— */
+@media (min-width: 768px) {
+  .hero-img-wrapper                   { width:50%; max-width:1200px; margin:0 auto; }
+  .hero-img-wrapper .hero-overlay     { padding-bottom: clamp(3rem,6vw,8rem); }
+
+  /* horizontal gutter for overlay text/button */
+  .hero-img-wrapper .hero-overlay .hero-copy,
+  .hero-img-wrapper .hero-overlay .hero-button {
+    right: clamp(0.5rem, 1vw, 0.75rem);
+  }
+
+  /* right-align all of the overlay text */
+  .hero-copy,
+  .hero-subhead,
+  .hero-title                        { text-align: right; }
+}
+
+/* —— Use padding to inset both slides & arrows —— */
+.hero-section.split-hero .swiper-container {
+  position: relative;
+  padding: 0 2rem;        /* inset slides and arrows by 2rem on each side */
+  box-sizing: content-box; /* ensure padding doesn’t squash slide content */
+}
+
+/* —— Style the DEFAULT Swiper arrows —— */
+.hero-section.split-hero .swiper-button-prev,
+.hero-section.split-hero .swiper-button-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+
+  /* Make the button a generous tappable area */
+  width: 2.5rem;     /* ≈40px wide */
+  height: 2.5rem;    /* ≈40px tall */
+  padding: 0;        /* no extra padding needed if you size the sprite below */
+
+  /* Scale only the built-in sprite down to icon size */
+  background-size: 1.5rem 1.5rem; /* 24px × 24px */
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-section.split-hero .swiper-button-prev { left: 0; }
+.hero-section.split-hero .swiper-button-next { right: 0; }
+
+/* —— Small-Tablet: 768–819px —— */
+@media (min-width: 768px) and (max-width: 819px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,3.5vw,4rem); }
+  .hero-subhead                   { font-size: .85rem; line-height: 1.2; }
+  .hero-title                     { font-size: 1.3rem; line-height: 1.2; }
+  .hero-button {
+    font-size: .9rem;
+    /* clamp( vertical , preferred , vertical ) clamp( horizontal , preferred , horizontal ) */
+    padding:    clamp(0.275rem, 0.5vw, 0.5rem) clamp(0.5rem, 1.25vw, 0.75rem);
+    margin-top: .2rem;
+  }
+}
+
+/* —— Mid-Tablet: 820–911px —— */
+@media (min-width: 820px) and (max-width: 911px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,4vw,5rem); }
+  .hero-subhead { font-size: .9rem; line-height: 1.2; }
+  .hero-title  { font-size: 1.2rem; line-height: 1.2; }
+  .hero-button {
+    font-size: 1rem;
+    padding:   clamp(0.3rem,  0.75vw, 0.55rem)
+               clamp(0.5rem,  1.25vw, 0.8rem);
+    margin-top: .2rem;
+  }
+}
+
+/* —— Large-Tablet: 912–1023px —— */
+@media (min-width: 912px) and (max-width: 1023px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,5vw,7rem); }
+  .hero-subhead { font-size: 1rem; line-height: 1.25; }
+  .hero-title  { font-size: 1.4rem; line-height: 1.25; }
+  .hero-button {
+    font-size: 1.1rem;
+    padding:   clamp(0.325rem, 0.85vw,  0.6rem)
+               clamp(0.6rem,  1.35vw, 0.85rem);
+    margin-top: .25rem;
+  }
+}
+
+/* —— Regular Desktop: 1024–1439px —— */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,6vw,8rem); }
+  .hero-subhead { font-size: 1.1rem; line-height: 1.3; }
+  .hero-title  { font-size: 1.5rem; line-height: 1.3; }
+  .hero-button {
+    font-size: 1.2rem;
+    padding:   clamp(0.35rem, 1vw,   0.65rem)
+               clamp(0.65rem, 1.5vw, 0.9rem);
+    margin-top: -.5rem;
+  }
+}
+
+/* —— Wide Desktop: 1440–1919px —— */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,8vw,10rem); }
+  .hero-subhead { font-size: 1.2rem; }
+  .hero-title  { font-size: 1.7rem; }
+  .hero-button {
+    font-size: 1.3rem;
+    padding:   clamp(0.4rem,  1.25vw, 0.7rem)
+               clamp(0.70rem, 1.75vw, 1rem);
+  }
+}
+
+/* —— Ultra-Wide Desktop: ≥1920px —— */
+@media (min-width: 1920px) {
+  .hero-img-wrapper .hero-overlay { padding-bottom: clamp(3rem,10vw,12rem); }
+  .hero-subhead { font-size: 1.3rem; }
+  .hero-title  { font-size: 1.8rem; }
+  .hero-button {
+    font-size: 1.4rem;
+    padding:   clamp(0.45rem,  1.5vw, 0.85rem)
+               clamp(0.75rem,    2vw,  1.1rem);
+  }
+}
+ 
+/* ==== NEW FOOTER STYLES ==== */
+
+/* —— 1) Widgets Section —— */
+.footer-new .footer-widgets .full-width-stripe {
+  background-color: var(--color-dark-blue);
+  padding: 2rem var(--site-gutter);
+}
+.footer-new .footer-widgets .footer-columns {
+  display: flex;
+  gap: var(--site-gutter);
+}
+.footer-new .footer-widgets .footer-column {
+  flex: 1;
+  color: #fff;
+  padding: 1rem;
+}
+
+/* Space between a nav list and the next section heading (e.g., before “Shop by”) */
+.footer-new .footer-widgets .footer-column nav + h4 { margin-top: 1rem; }
+
+/* ——— Shared gutter so an active pill can align to the heading edge ——— */
+:root {
+  --footer-list-gutter: 0.6rem;  /* tweak to taste */
+  --pill-pad-x: 0.6rem;
+  --pill-pad-y: 0.35rem;
+}
+
+/* Normalize lists and reserve the gutter on every item */
+.footer-new .footer-widgets .footer-column ul { margin: 0; padding: 0; list-style: none; }
+.footer-new .footer-widgets .footer-column li { padding-left: var(--footer-list-gutter); }
+
+/* Base link rhythm for ALL footer columns */
+.footer-new .footer-widgets .footer-column a {
+  display: block;
+  padding: 0.15rem 0;
+  color: #fff;
+  text-decoration: none;
+  transition: color .2s;
+}
+.footer-new .footer-widgets .footer-column a:visited { color: #fff; }
+
+/* “Shop by” active pill should size to its text, not full width */
+.footer-new .footer-filters .footer-list--filters a.link.selected,
+.footer-new .footer-filters .footer-list--filters a.link[aria-current="page"] {
+  display: inline-block;                 /* shrink-to-fit */
+  white-space: nowrap;                   /* keep short labels on one line */
+  margin-left: calc(-1 * var(--footer-list-gutter));
+  padding: var(--pill-pad-y) var(--pill-pad-x);
+  background-color: var(--color-tertiary);
+  color: var(--color-on-tertiary) !important;
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-tertiary-hover);
+  transition: background-color .2s, color .2s, box-shadow .2s;
+}
+
+/* Hover/focus only when NOT selected (so we don’t override the active state) */
+.footer-new .footer-filters .footer-list--filters a.link:not(.selected):hover,
+.footer-new .footer-filters .footer-list--filters a.link:not(.selected):focus {
+  background-color: var(--color-dark-blue-lighter);
+  color: var(--color-on-primary);
+}
+
+/* Focus ring for keyboard users */
+.footer-new .footer-filters .footer-list--filters a.link:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: 2px;
+}
+
+/* —— 2) Headings —— */
+/* Mobile-first: side‐accent bar */
+.footer-new .footer-widgets .footer-column h4 {
+  position:       relative;
+  padding-left:   0.75rem;
+  font-size:      1.25rem;
+  font-weight:    600;
+  margin-bottom:  1rem;
+  color:          var(--color-tertiary);
+}
+.footer-new .footer-widgets .footer-column h4::before {
+  content:          "";
+  position:         absolute;
+  left:             0;
+  top:              0;
+  width:            4px;
+  height:           100%;
+  background-color: var(--color-tertiary);
+  border-radius:    2px;
+}
+
+/* Tablet & up: switch to inline underline */
+@media (min-width: 600px) {
+  .footer-new .footer-widgets .footer-column h4 {
+    position:       static;
+    padding-left:   0;
+    padding-bottom: 0.25rem;
+    margin-bottom:  0.75rem;
+    display:        inline-block;
+    border-bottom:  2px solid var(--color-tertiary);
+  }
+  .footer-new .footer-widgets .footer-column h4::before {
+    display: none;
+  }
+}
+
+/* Desktop: prevent wrapping */
+@media (min-width: 1024px) {
+  .footer-new .footer-widgets .footer-column h4 {
+    white-space: nowrap;
+  }
+}
+
+/* —— 3a) Lists & Links —— */
+.footer-new .footer-widgets .footer-column ul {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+}
+.footer-new .footer-widgets .footer-column li + li {
+  margin-top: 0.5rem;
+}
+.footer-new .footer-widgets .footer-column a {
+  color:           #fff;
+  text-decoration: none;
+  transition:      color .2s;
+}
+.footer-new .footer-widgets .footer-column a:hover {
+  color: var(--color-tertiary);
+}
+
+/* —— 3b) Social Icons —— */
+.footer-new .social-icon {
+  display:        inline-flex;
+  align-items:    center;
+  justify-content:center;
+  width:          24px;
+  height:         24px;
+  color:          #fff;
+  margin-right:   0.75rem;
+  transition:     color .2s, transform .2s;
+}
+.footer-new .social-icon:hover {
+  color:          var(--color-tertiary);
+  transform:      scale(1.1);
+}
+.footer-new .social-icon:focus {
+  outline:        2px dashed var(--color-tertiary);
+  outline-offset: 2px;
+}
+
+/* —— 4) Contact & Social block spacing —— */
+.footer-new .footer-column.footer-right-col .contact-info {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.5rem;   /* space between lines */
+  margin-bottom:  1.5rem;   /* space before the button */
+}
+.footer-new .footer-column.footer-right-col .contact-info > * {
+  display:     inline-flex;
+  align-items: center;
+  gap:         0.5rem;      /* icon + text */
+}
+
+/* —— 5) “Contact Us” button as MD3‐style pill —— */
+.footer-new .footer-column.footer-right-col .contact-button {
+  background-color: var(--color-dark-blue-lighter);
+  color:            var(--color-on-primary);
+  border:           none;
+  border-radius:    0.5rem;
+  box-shadow:       var(--shadow-surface-resting);
+  padding:          0.5rem 1rem;
+  font:             inherit;
+  transition:       background-color .2s,
+                    box-shadow        .2s,
+                    transform         .1s;
+}
+.footer-new .footer-column.footer-right-col .contact-button:hover,
+.footer-new .footer-column.footer-right-col .contact-button:focus,
+.footer-new .footer-column.footer-right-col .contact-button:active {
+  background-color: var(--color-tertiary);
+  color:            var(--color-on-tertiary);
+  box-shadow:       var(--shadow-tertiary-hover);
+  transform:        translateY(-1px);
+}
+
+
+/* —— 5) Brands + Legal Stripe —— */
+.footer-new .footer-brand-legal {
+  display:          flex;
+  flex-wrap:        wrap;
+  align-items:      center;
+  justify-content:  space-between;
+  background-color: var(--color-tertiary);
+  color:            var(--color-dark-blue); /* default text color = dark blue */
+  padding:          2rem var(--site-gutter);
+  margin:           2rem 0;
+  font-size:        0.9rem;
+}
+
+/* Heading */
+.footer-new .footer-brand-legal .brands-heading {
+  flex:              1 1 100%;
+  text-align: center;
+  background:        none !important;
+  padding:           0     !important;
+}
+
+.footer-new .footer-brand-legal .brands-heading h2 {
+  display:           inline-block;
+  margin:            0 0 1rem;
+  padding-bottom:    0.25rem;
+  border-bottom:     2px solid var(--color-dark-blue);
+  color:             var(--color-dark-blue);
+  font-size:         1.25rem;
+  font-weight:       600;
+}
+
+/* Intro text */
+.footer-new .footer-brand-legal .brand-intro {
+  flex:              1 1 100%;
+  margin:            0 0 1.5rem;
+  color:             var(--color-dark-blue);
+  font-size:         1rem;
+  line-height:       1.4;
+  max-width:         600px;
+  margin-left:       auto;
+  margin-right:      auto;
+}
+
+/* Logos row */
+.footer-new .footer-brand-legal .brands-logos {
+  flex:              1 1 100%;
+  display:           flex;
+  justify-content:   center;
+  align-items:       center;
+  gap:               2rem;
+  margin-bottom:     1.5rem;
+}
+
+/* inline SVGs will pick up currentColor */
+.footer-new .footer-brand-legal .brands-logos svg {
+  color:             var(--color-dark-blue);
+  width:             90px;
+  height:            auto;
+  transition:        opacity .3s ease;
+}
+
+.footer-new .footer-brand-legal .brands-logos svg:hover {
+  opacity:           .75;
+}
+
+/* Legal line */
+.footer-new .footer-brand-legal .legal-text {
+  flex:              1 1 100%;
+  text-align:        center;
+  color:             var(--color-dark-blue);
+  font-size:         0.85rem;
+  line-height:       1.2;
+}
+
+.footer-new .footer-brand-legal .legal-text a {
+  color:             var(--color-dark-blue);
+  text-decoration:   none;
+  transition:        text-decoration .2s;
+}
+
+.footer-new .footer-brand-legal .legal-text a:hover {
+  text-decoration:   underline;
+}
+
+
+/* —— Hide footer widgets & brands on mobile —— */
+@media (max-width: 599px) {
+  .footer-new .footer-widgets,
+  .footer-new .footer-brand-legal {
+    display: none;
+  }
+}
+
+
+/* ===================================================================
+ Hero “Shop now” overrides: give it MD3 ripple/shadow but keep clamps
+ =================================================================== */
+.hero-button.m3-btn {
+  /* re-apply your hero colors */
+  background: var(--color-dark-blue);
+  color: #fff;
+  /* *your* clamp() padding (overrides the generic .m3-btn defaults) */
+  padding: clamp(0.25rem, 0.5vw, 0.5rem)
+           clamp(0.5rem, 1vw, 0.75rem);
+  /* keep your existing border-radius & font sizing */
+  border-radius: 4px;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+/* =====
+   BUTTON
+========*/
+
+/* Hero button: retain the clamp() sizing & positioning
+ but add MD3 elevation + ripple */
+
+/* 1) Make sure it can show a pseudo-element ripple */
+.hero-button.m3-btn {
+  position: relative;
+  overflow: hidden;
+
+  /* MD3 resting elevation */
+  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  transition: box-shadow .2s;
+}
+
+/* 2) Hover elevation (you already have your hover padding/font elsewhere) */
+.hero-button.m3-btn:hover {
+  box-shadow:
+    0 2px 1px -1px rgba(0,0,0,0.2),
+    0 1px 1px  0 rgba(0,0,0,0.14),
+    0 1px 3px  0 rgba(0,0,0,0.12);
+}
+
+/* 3) The ripple pseudo-element */
+.hero-button.m3-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: inherit;     /* match your 4px corners */
+  transform: scale(0);
+  opacity: 1;
+  transition: transform .3s, opacity .3s;
+  pointer-events: none;
+}
+
+/* 4) Trigger ripple on press */
+.hero-button.m3-btn:active::after {
+  transform: scale(1);
+  opacity: 0;
+  transition: none;
+}
+
+/* -----------------------------
+ Refine Swiper arrows per breakpoint
+ ----------------------------- */
+
+/* 1) MOBILE (≤767px): slightly smaller arrows, nudged down */
+@media (max-width: 767px) {
+  .hero-section.split-hero .swiper-container {
+    padding: 0 1.5rem;     /* tighten the inset on mobile */
+  }
+
+  .hero-section.split-hero .swiper-button-prev,
+  .hero-section.split-hero .swiper-button-next {
+    width: 1.5rem;
+    height: 1.5rem;
+    top: 60%;              /* nudge them lower */
+    transform: translateY(-60%);
+  }
+}
+
+/* 2) TABLET & UP (≥768px): anchor to the image wrapper, not the split container */
+@media (min-width: 768px) {
+  /* make the image wrapper the positioning context */
+  .hero-section.split-hero .hero-main {
+    position: relative;
+  }
+  /* then absolutely position arrows against that wrapper */
+  .hero-section.split-hero .swiper-button-prev,
+  .hero-section.split-hero .swiper-button-next {
+    width: 2.5rem;
+    height: 2.5rem;
+    /* remove the container inset we used on mobile */
+    left: auto;
+    right: auto;
+    /* centre them over the hero-main’s midline */
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  /* now place “prev” & “next” inside the hero-main, side-by-side */
+  .hero-section.split-hero .swiper-button-prev {
+    left: 1rem;
+  }
+  .hero-section.split-hero .swiper-button-next {
+    right: 1rem;
+  }
+}
+
+/* ----------------------------------------
+   7. Featured Products spacing
+   ---------------------------------------- */
+
+/* Only add a top gap when a hero appears earlier on the page */
+.hero-section ~ main .featured-products {
+  margin-top: clamp(16px, 3vw, 32px);
+}
+
+/* A little space between the orange pill and the card grid */
+.featured-products .pill.pill--full {
+  margin-bottom: 0.75rem;
+}
+
+
+
+  
+

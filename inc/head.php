@@ -12,7 +12,9 @@ $__title = $pageTitle ?? 'Sports Warehouse';
 
 <!-- Web fonts -->
 <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/swiper@10/swiper-bundle.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/photoswipe@5/dist/photoswipe.css">
 
 <!-- Shared CSS stack -->
 <link rel="stylesheet" href="css/base.css">
