@@ -1,0 +1,179 @@
+/* components/button.css */
+/* ==============================
+   Material Design 3 Button (MD3)
+   ============================== */
+
+   .m3-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(0.5rem, 1vw, 0.75rem)
+             clamp(1rem,   2vw, 1.5rem);
+    font-family: Roboto, sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.75;
+    color: var(--md-sys-on-primary, #fff);
+    background-color: var(--md-sys-primary, #6750A4);
+    border: none;
+    border-radius: .5rem;
+  
+    /* elevation */
+    box-shadow: var(--shadow-surface-resting);
+  
+    /* smooth transitions */
+    transition: background-color .2s, box-shadow .2s;
+  
+    /* enable ripple */
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  
+  /* Hover state: tint + lift */
+  .m3-btn:hover {
+    background-color: var(--md-sys-primary-container);
+    box-shadow: var(--shadow-surface-hover);  
+  }
+  
+  /* Ripple effect */
+  .m3-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.2); /* or var(--ripple-primary) if you add it */
+    border-radius: inherit;
+    transform: scale(0);
+    opacity: 1;
+    transition: transform .3s, opacity .3s;
+    pointer-events: none;
+  }
+  
+  .m3-btn:active::after {
+    transform: scale(1);
+    opacity: 0;
+    transition: none;
+  }
+  
+  /* ----------------------------------------
+   Search icon circle: MD3 elevation & ripple
+   ---------------------------------------- */
+.search-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background-color: var(--color-dark-blue);
+  border-radius: 50%;
+
+  /* for ripple */
+  position: relative;
+  overflow: hidden;
+
+  /* resting elevation */
+  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+
+  /* smooth transitions when tinting & lifting */
+  transition: background-color .2s, box-shadow .2s;
+  cursor: pointer;
+}
+
+.search-icon-circle:hover {
+  /* same “primary-container” tint as .m3-btn */
+  background-color: var(--md-sys-primary-container, #D0BCFF);
+
+  /* same lift as .m3-btn:hover */
+  box-shadow:
+    0 2px 1px -1px rgba(0,0,0,0.2),
+    0 1px 1px  0 rgba(0,0,0,0.14),
+    0 1px 3px  0 rgba(0,0,0,0.12);
+}
+
+/* ripple overlay */
+.search-icon-circle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: inherit;
+  transform: scale(0);
+  opacity: 1;
+  transition: transform .3s, opacity .3s;
+  pointer-events: none;
+}
+
+/* trigger ripple on press */
+.search-icon-circle:active::after {
+  transform: scale(1);
+  opacity: 0;
+  transition: none;
+}
+
+/* ===================================================
+   Category-bar buttons: dark bar defaults + MD3 behaviors
+   =================================================== */
+
+/* 1) Make sure they get the same ripple & lift as all other .m3-btn */
+.desktop-category-nav .m3-btn {
+  /* pick up the base .m3-btn position & overflow */
+  /* (your button.css already sets position:relative;overflow:hidden) */
+
+  /* override the default primary fill */
+  background-color: var(--color-dark-blue);
+  color:            var(--color-on-primary);
+
+  /* tighten spacing for this small nav bar */
+  margin: 0 clamp(0.5rem, 1vw, 0.75rem);
+}
+
+/* 2) Hover state: same tint + lift you use everywhere else */
+.desktop-category-nav .m3-btn:hover {
+  /* MD3 “primary container” tint */
+  background-color: var(--md-sys-primary-container);
+
+  /* MD3 hover elevation */
+  box-shadow:
+    0 2px 1px -1px rgba(0,0,0,0.2),
+    0 1px 1px  0 rgba(0,0,0,0.14),
+    0 1px 3px  0 rgba(0,0,0,0.12);
+}
+
+/* 3) Ripple overlay */
+.desktop-category-nav .m3-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: inherit;
+  transform: scale(0);
+  opacity: 1;
+  transition: transform .3s, opacity .3s;
+  pointer-events: none;
+}
+
+/* 4) Trigger ripple on press */
+.desktop-category-nav .m3-btn:active::after {
+  transform: scale(1);
+  opacity: 0;
+  transition: none;
+}
+
+/* 5) “Active” state (e.g. when you add .active dynamically) */
+.desktop-category-nav .m3-btn.active {
+  /* real primary fill */
+  background-color: var(--md-sys-primary);
+  color:            var(--md-sys-on-primary);
+
+  /* boost elevation to match hover */
+  box-shadow:
+    0 2px 1px -1px rgba(0,0,0,0.2),
+    0 1px 1px  0 rgba(0,0,0,0.14),
+    0 1px 3px  0 rgba(0,0,0,0.12);
+}
+
+  
+
+
+
+
+  

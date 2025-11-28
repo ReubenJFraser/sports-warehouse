@@ -1,0 +1,50 @@
+/* Product Card — Swiper/zoom layer
+   Adds padding/rounded bg around media to avoid clipping PNGs
+   and confines Swiper controls to the card. */
+
+/* Media wrapper (sits around the .card-media or injected .card-media-swiper) */
+.product-card .card-media-wrap {
+  --card-media-bg: rgba(0,0,0,0.04);
+  --card-media-pad: 10px;
+  background: var(--card-media-bg);
+  border-radius: 12px;
+  padding: var(--card-media-pad);
+}
+
+/* Swiper container inside a card */
+.product-card .card-media-swiper.swiper {
+  background: var(--card-media-bg);
+  border-radius: 12px;
+  padding: var(--card-media-pad);
+  overflow: hidden; /* hide edges/bullets within rounded box */
+}
+
+/* Keep bullets compact and keyboard-visible */
+.product-card .swiper-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+}
+.product-card .swiper-pagination-bullet:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Confine nav buttons and make them tappable */
+.product-card .swiper-button-prev,
+.product-card .swiper-button-next {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.08);
+  backdrop-filter: blur(2px);
+}
+.product-card .swiper-button-prev:focus-visible,
+.product-card .swiper-button-next:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Optional: when focusing on imagery, hide info for a cleaner look */
+.product-card.card--focus .product-info { display: none; }
+
+

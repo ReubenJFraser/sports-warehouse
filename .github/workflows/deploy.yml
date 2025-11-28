@@ -1,14 +1,39 @@
 ﻿name: Deploy to Hostinger (SSH)
+
 on:
   push:
     branches: [ main ]
+
 jobs:
-  scp-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Upload the whole site (with excludes)
+      # Optional: quick PHP syntax lint of changed PHP files before upload
+      - name: Lint PHP (changed files)
+        run: |
+          set -e
+          PHPS=$(git ls-files '*.php')
+          [ -z "$PHPS" ] || php -l $PHPS >/dev/null
+
+      # 0) Create a dated backup on the server (lightweight tar.gz)
+      - name: Backup current release (server)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 109.106.254.43
+          username: u642727376
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 65002
+          script: |
+            set -e
+            ROOT=/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
+            BKDIR=/home/u642727376/domains/sports-warehouse.reubenfraser.com/_backups
+            mkdir -p "$BKDIR"
+            TS=$(date -u +'%Y%m%d-%H%M%S')
+            tar -czf "$BKDIR/site-$TS.tgz" -C "$ROOT" .
+
+      # 1) Upload site (with excludes)
       - name: Upload site via SCP
         uses: appleboy/scp-action@v1
         with:
@@ -35,7 +60,7 @@ jobs:
             !**/Thumbs.db
           target: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
 
-      # One-time cleanup of the probe file
+      # 2) One-time cleanup of old probe (kept from your file)
       - name: Remove probe file
         uses: appleboy/ssh-action@v1
         with:
@@ -44,3 +69,34 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           script: rm -f /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
+
+      # 3) Write a health marker
+      - name: Write deploy health marker
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 109.106.254.43
+          username: u642727376
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 65002
+          script: |
+            set -e
+            ROOT=/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
+            mkdir -p "$ROOT/_deploy"
+            echo "deployed=$(date -u +'%Y-%m-%dT%H:%M:%SZ') sha=${GITHUB_SHA}" > "$ROOT/_deploy/health.txt"
+
+      # 4) Smoke tests (fail the deploy if any check fails)
+      - name: Smoke test – homepage
+        run: curl -fsSL https://sports-warehouse.reubenfraser.com/ >/dev/null
+      - name: Smoke test – women (imgdebug off)
+        run: curl -fsSL "https://sports-warehouse.reubenfraser.com/women" >/dev/null
+      - name: Smoke test – women (imgdebug on)
+        run: curl -fsSL "https://sports-warehouse.reubenfraser.com/women?imgdebug=1" >/dev/null
+      - name: Smoke test – health marker
+        run: curl -fsSL https://sports-warehouse.reubenfraser.com/_deploy/health.txt
+      - name: Smoke test – 404
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "https://sports-warehouse.reubenfraser.com/__nope__.txt")
+          if [ "$code" != "404" ]; then
+            echo "Expected 404, got $code"
+            exit 1
+          fi
