@@ -1,4 +1,4 @@
-﻿name: Deploy to Hostinger (SSH)
+name: Deploy to Hostinger (SSH)
 
 on:
   push:
@@ -100,3 +100,4 @@ jobs:
             echo "Expected 404, got $code"
             exit 1
           fi
+
