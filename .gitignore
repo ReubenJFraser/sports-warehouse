@@ -15,9 +15,15 @@ Thumbs.db
 *.mp4
 *.mov
 *.zip
-online_website/
+
+online_website/
 _audit*/
 _audit_min_*/
 
 index_live.php
 footer_live.php
+
+# Local & production DB credentials (never commit)
+inc/db.local.php
+inc/db.production.php
+
