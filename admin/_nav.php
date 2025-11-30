@@ -61,6 +61,13 @@ function admin_render_nav(): string
                 "label"     => "Sync Tool",
                 "localOnly" => true
             ],
+            [
+                "href"  => "/admin/db-test.php",
+                "icon"  => "fa-solid fa-database",
+                "label" => "DB Test",
+                "localOnly" => false
+            ],
+
         ],
     ];
 
