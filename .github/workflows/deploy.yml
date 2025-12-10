@@ -11,11 +11,16 @@ jobs:
       - uses: actions/checkout@v4
 
       # Optional: quick PHP syntax lint of changed PHP files before upload
-      - name: Lint PHP (changed files)
+      - name: Lint PHP
         run: |
           set -e
-          PHPS=$(git ls-files '*.php')
-          [ -z "$PHPS" ] || php -l $PHPS >/dev/null
+          PHPS=$(find . -type f -name "*.php")
+          if [ -n "$PHPS" ]; then
+            for f in $PHPS; do
+              php -l "$f"
+            done
+          fi
+
 
       # 0) Create a dated backup on the server (lightweight tar.gz)
       - name: Backup current release (server)
