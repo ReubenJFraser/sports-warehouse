@@ -1,29 +1,78 @@
-﻿.env
-/_exports/
+﻿# -------------------------------------------------------------------
+# Environment files (never commit)
+# -------------------------------------------------------------------
+.env
+inc/db.local.php
+inc/db.production.php
+
+# -------------------------------------------------------------------
+# System / OS metadata
+# -------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------------------------------------------------
+# IDE / Editor files
+# -------------------------------------------------------------------
+.vscode/
+.idea/
+.devcontainer/
+
+# -------------------------------------------------------------------
+# Dependency and environment directories
+# -------------------------------------------------------------------
+node_modules/
+vendor/
+.venv/
+
+# -------------------------------------------------------------------
+# Cache, logs, runtime artefacts
+# -------------------------------------------------------------------
 logs/
 tmp/
 storage/
 cache/
-vendor/
-node_modules/
-.venv/
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-.devcontainer/
-*.mp4
-*.mov
-*.zip
 
+# -------------------------------------------------------------------
+# Export / archive / audit folders
+# -------------------------------------------------------------------
+/_exports/
 online_website/
 _audit*/
 _audit_min_*/
+*_review_*/
+*-review_*
+archive/
+archives/
+handover/
+handover_swiper/
 
+# -------------------------------------------------------------------
+# Large auto-generated binary bundles (safe to ignore)
+# -------------------------------------------------------------------
+*.zip     # keep ignoring ZIP because we create many temporary ones
+
+# -------------------------------------------------------------------
+# Local-only test and debug utilities
+# -------------------------------------------------------------------
+test_db.php
+example.php
+tests/local-only/
+
+# -------------------------------------------------------------------
+# Hostinger live overrides (NOT tracked)
+# -------------------------------------------------------------------
 index_live.php
 footer_live.php
 
-# Local & production DB credentials (never commit)
-inc/db.local.php
-inc/db.production.php
+# -------------------------------------------------------------------
+# Generated helper files (manual tools, filelists)
+# -------------------------------------------------------------------
+clean-project-tree.txt
+project_filelist.csv
+project-files.txt
+local_manifest.csv
+local_manifest_filtered.txt
+site-structure.txt
+site-tree.txt
 
