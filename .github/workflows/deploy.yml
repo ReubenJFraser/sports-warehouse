@@ -47,15 +47,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           source: |
-            ./**
-            !.git/**
-            !.github/**
-            !.env
-            !tools-dev/**
-            !_exports/**
-            !logs/**
-            !cache/**
-            !tests/**
+            admin/**
+            css/**
+            js/**
+            inc/**
+            images/**
+            uploads/**
+            scripts/**
+            sql/**
+            src/**
+            *.php
             !**/.DS_Store
             !**/Thumbs.db
           target: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
