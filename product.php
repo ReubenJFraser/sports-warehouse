@@ -122,14 +122,18 @@ if (!in_array($orientation, ['portrait','landscape','square'], true)) {
 $orientationClass = 'is-' . $orientation;
 
 /* -------------------------------------------------------
-   7) Optional PhotoSwipe ratio
+   7) PhotoSwipe display ratio (safe for PHP 8+)
 --------------------------------------------------------*/
 $ratio = $item['hero_ratio'] ?? null;
+
 if (!is_numeric($ratio) || $ratio <= 0) {
-  $ratio = ($orientation === 'landscape') ? 1.3 :
-           ($orientation === 'square')    ? 1.0 :
-                                            0.75;
+  $ratio = match ($orientation) {
+    'landscape' => 1.3,
+    'square'    => 1.0,
+    default     => 0.75,
+  };
 }
+
 $pswpW = 1600;
 $pswpH = (int)round($pswpW / max(0.05, $ratio));
 
@@ -262,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
