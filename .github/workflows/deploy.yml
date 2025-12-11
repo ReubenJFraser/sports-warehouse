@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # -------------------------------------------------------
+      # PHP SYNTAX LINT
+      # -------------------------------------------------------
       - name: Lint PHP
         run: |
           set -e
@@ -19,6 +22,9 @@ jobs:
             for f in $PHPS; do php -l "$f"; done
           fi
 
+      # -------------------------------------------------------
+      # 0) BACKUP EXISTING SERVER CONTENT
+      # -------------------------------------------------------
       - name: Backup current release (server)
         uses: appleboy/ssh-action@v1
         with:
@@ -34,6 +40,22 @@ jobs:
             TS=$(date -u +'%Y%m%d-%H%M%S')
             tar -czf "$BKDIR/site-$TS.tgz" -C "$ROOT" .
 
+      # -------------------------------------------------------
+      # 1) ENSURE _deploy EXISTS BEFORE UPLOAD
+      # -------------------------------------------------------
+      - name: Ensure _deploy exists on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 109.106.254.43
+          username: u642727376
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 65002
+          script: |
+            mkdir -p /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/_deploy
+
+      # -------------------------------------------------------
+      # 2) UPLOAD VIA SCP
+      # -------------------------------------------------------
       - name: Upload site via SCP
         uses: appleboy/scp-action@v1
         with:
@@ -52,13 +74,16 @@ jobs:
             scripts/**
             sql/**
             src/**
-            deploy/**
+            _deploy/.gitkeep
             *.php
             !**/.DS_Store
             !**/Thumbs.db
 
           target: /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
 
+      # -------------------------------------------------------
+      # 3) REMOVE OLD PROBE
+      # -------------------------------------------------------
       - name: Remove probe file
         uses: appleboy/ssh-action@v1
         with:
@@ -66,8 +91,12 @@ jobs:
           username: u642727376
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
-          script: rm -f /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
+          script: |
+            rm -f /home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/gha_probe.txt
 
+      # -------------------------------------------------------
+      # 4) WRITE DEPLOY HEALTH MARKER
+      # -------------------------------------------------------
       - name: Write deploy health marker
         uses: appleboy/ssh-action@v1
         with:
@@ -76,11 +105,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 65002
           script: |
-            set -e
-            ROOT=/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html
-            mkdir -p "$ROOT/_deploy"
-            echo "deployed=$(date -u +'%Y-%m-%dT%H:%M:%SZ') sha=${GITHUB_SHA}" > "$ROOT/_deploy/health.txt"
+            ROOT=/home/u642727376/domains/sports-warehouse.reubenfraser.com/public_html/_deploy
+            echo "deployed=$(date -u +'%Y-%m-%dT%H:%M:%SZ') sha=${GITHUB_SHA}" > "$ROOT/health.txt"
 
+      # -------------------------------------------------------
+      # 5) SMOKE TESTS
+      # -------------------------------------------------------
       - name: Smoke test – homepage
         run: curl -fsSL https://sports-warehouse.reubenfraser.com/ >/dev/null
 
@@ -100,6 +130,5 @@ jobs:
             echo "Expected 404, got $code"
             exit 1
           fi
-
 
 
