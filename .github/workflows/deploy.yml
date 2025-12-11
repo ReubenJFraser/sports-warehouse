@@ -65,6 +65,7 @@ jobs:
             scripts/**
             sql/**
             src/**
+            _deploy/**
             *.php
             !**/.DS_Store
             !**/Thumbs.db
