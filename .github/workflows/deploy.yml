@@ -52,11 +52,8 @@ jobs:
             scripts/**
             sql/**
             src/**
+            deploy/**
             *.php
-
-            # FORCE include of _deploy folder
-            _deploy/.gitkeep:/_deploy/.gitkeep
-
             !**/.DS_Store
             !**/Thumbs.db
 
