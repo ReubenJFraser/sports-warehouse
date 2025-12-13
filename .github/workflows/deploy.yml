@@ -11,9 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-        # --------------------------------------
-        # Debug SSH key fingerprint (temporary)
-        # --------------------------------------
+      # --------------------------------------
+      # Debug SSH key fingerprint (temporary)
+      # --------------------------------------
       - name: Debug SSH Key Fingerprint
         run: |
           echo "$SSH_PRIVATE_KEY" > /tmp/id_rsa
