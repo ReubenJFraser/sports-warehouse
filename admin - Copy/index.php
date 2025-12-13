@@ -51,23 +51,33 @@ admin_page_header("Dashboard", "Welcome to the Sports Warehouse admin console.")
     </a>
 
     <!-- Developer Functions -->
-    <div class="dashboard-card dashboard-formcard">
+    <div class="card dashboard-card dashboard-formcard">
         <i class="fa-solid fa-terminal dashboard-icon"></i>
         <h2>Developer Functions</h2>
         <p>Trigger deployment scripts directly from the admin panel.</p>
 
-        <div class="split-button">
-            <button class="main" onclick="runDeployDefault()">Deploy</button>
-            <button class="menu" aria-label="More deploy options" aria-expanded="false">▼</button>
+        <!-- Deploy via AJAX -->
+        <button class="btn btn-primary" data-run-function="deploy_cloudways">
+            Deploy to Cloudways
+        </button>
 
-            <div class="dropdown">
-                <button type="button" onclick="runDeployDefault()">Without Commit Message</button>
-                <button type="button" onclick="promptCommit(this)">With Commit Message</button>
-            </div>
-        </div>
+        <!-- Deploy without commit message -->
+        <form method="post" action="run_function.php" class="form-field">
+            <input type="hidden" name="function" value="sports-warehouse-deploy" />
+            <button type="submit" class="btn btn-primary">Deploy Without Commit Message</button>
+        </form>
+
+        <!-- Deploy with commit message -->
+        <form method="post" action="run_function.php" class="form-field">
+            <input type="hidden" name="function" value="sports-warehouse-deploy-message" />
+            <input type="text" name="message" placeholder="Commit message" required />
+            <button type="submit" class="btn btn-primary">Deploy With Commit Message</button>
+        </form>
     </div>
 
 </div>
+
+<script src="/js/admin/functions.js"></script>
 
 <?php
 admin_layout_end();

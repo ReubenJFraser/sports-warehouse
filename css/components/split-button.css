@@ -1,0 +1,89 @@
+/* ===============================
+   Material 3 Split Button (Dark)
+   =============================== */
+
+.split-button {
+  display: inline-flex;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: var(--md-sys-primary, #6750A4);
+  box-shadow: var(--shadow-surface-resting);
+  position: relative; /* required for dropdown positioning */
+}
+
+.split-button .main,
+.split-button .menu {
+  font-family: Roboto, sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--md-sys-on-primary, #fff);
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.split-button .menu {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.6rem 0.9rem;
+}
+
+.split-button:hover {
+  background-color: var(--md-sys-primary-container, #D0BCFF);
+  box-shadow: var(--shadow-surface-hover);
+}
+
+.split-button .main:active::after,
+.split-button .menu:active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: inherit;
+  transform: scale(1);
+  opacity: 0;
+  transition: none;
+}
+
+.split-button .dropdown {
+  display: none !important;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--panel, #141b2d);
+  color: var(--text-main, #fff);
+  border-radius: 0.5rem;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  min-width: 240px;
+}
+
+.split-button .dropdown.active {
+  display: block;
+}
+
+.split-button .dropdown button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.split-button .dropdown button:hover {
+  background-color: var(--panel-hover, #1c243a);
+}
+
+/* Optional: Stretch to full width inside a dashboard card */
+.dashboard-formcard .split-button {
+  width: 100%;
+}
+
+
+

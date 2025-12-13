@@ -17,12 +17,11 @@
     --panel-border: #2a3550;
 
     --card-bg: #141b2d;
-    --card-border: #2a3550;    
+    --card-border: #2a3550;
 
     --text-main: #f9fafc;
     --text-muted: #9ba4c6;
     --text-faint: #6d7698;
-    --icon-color: #a9b8ff;
 
     --accent: #ff7f32;
     --accent-soft: rgba(255,127,50,0.18);
@@ -146,18 +145,18 @@ a:hover {
     opacity: 0.9;
 }
 
+/* Primary (accent) */
 .btn-primary,
 .btn--primary {
-  background: linear-gradient(135deg, #ff7f32, #ff6b5f);
-  color: #0b1020;
-  font-weight: 600;
-  box-shadow: 0 6px 16px rgba(255,127,50,0.4);
+    background: var(--accent);
+    color: #0b1020;
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(255,127,50,0.45);
 }
-
 .btn-primary:hover,
 .btn--primary:hover {
-  background: linear-gradient(135deg, #ff9552, #ff7f8f);
-  box-shadow: 0 0 12px rgba(255,127,50,0.6);
+    background: #ff9552;
+    box-shadow: var(--shadow-glow);
 }
 
 /* Ghost (outlined) */
@@ -255,68 +254,41 @@ code {
 }
 
 /* -----------------------------------------------------------------------
-   9. DASHBOARD CARD HEADINGS + PARAGRAPHS
+   9. DASHBOARD CARDS — Developer Functions Extension
    ----------------------------------------------------------------------- */
 
-.dashboard-card h2 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin: 0 0 6px;
-}
-
-.dashboard-card p {
-    font-size: 0.88rem;
-    color: var(--text-muted);
-    line-height: 1.45;
-    margin-bottom: 12px;
-}
-
-.dashboard-icon {
-    font-size: 1.45rem;
-    color: var(--icon-color);
-    margin-bottom: 12px;
-}
-
-/* Form styling inside dashboard cards */
-.dashboard-card form {
+.dashboard-formcard {
+  padding: 20px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 10px;
-  margin-top: 12px;
 }
 
-.dashboard-card input[type="text"] {
-  padding: 9px 12px;
-  font-size: 0.88rem;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  background: #0f1424;
+.dashboard-formcard h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 6px;
   color: var(--text-main);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.dashboard-card input[type="text"]::placeholder {
-  color: var(--text-faint);
-  opacity: 0.8;
+.dashboard-formcard p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 6px;
 }
 
-.dashboard-card input[type="text"]:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-
-.dashboard-card .btn {
+.dashboard-formcard input[type="text"].input-commit {
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: #0f1424;
+  color: #e6edff;
+  font-size: 0.88rem;
   width: 100%;
 }
-
-/* Ensure form buttons in dashboard cards span full width */
-.dashboard-card form,
-.dashboard-card > button.btn {
-  display: block;
-  width: 100%;
-}
-
-
 

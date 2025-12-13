@@ -2,7 +2,7 @@
 // -------------------------------------------------------------------------
 // SPORTS WAREHOUSE — ADMIN LAYOUT
 // Sidebar + mobile drawer + page wrapper + header helpers
-// Version: 2025-12-13
+// Version: 2025-11-20
 // -------------------------------------------------------------------------
 
 require_once __DIR__ . '/_nav.php';
@@ -28,9 +28,6 @@ if (!function_exists('admin_layout_start')) {
             <!-- Icons (Font Awesome) -->
             <link rel="stylesheet"
                   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-            <!-- Split-Button -->
-            <link rel="stylesheet" href="../css/components/split-button.css">
         </head>
         <body>
 
@@ -93,9 +90,7 @@ if (!function_exists('admin_layout_start')) {
         }
         </script>
 
-        <script src="../js/admin/functions.js"></script>
-        <script src="../js/components/split-button.js"></script>
-
+        <script src="/js/admin/functions.js"></script>
 
         </body>
         </html>
@@ -155,9 +150,7 @@ if (!function_exists('admin_layout_start')) {
         // NOTE: we intentionally do NOT close .admin-wrapper here.
         // The page can close it when it finishes its main content.
     }
+
 }
 ?>
-
-
-
 
