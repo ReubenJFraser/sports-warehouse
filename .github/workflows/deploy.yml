@@ -1,90 +1,31 @@
-name: Deploy to Cloudways (SSH)
+name: Deploy to Cloudways
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      # --------------------------------------
-      # Debug SSH key fingerprint (temporary)
-      # --------------------------------------
-      - name: Debug SSH Key Fingerprint
-        run: |
-          echo "$SSH_PRIVATE_KEY" > /tmp/id_rsa
-          chmod 600 /tmp/id_rsa
-          ssh-keygen -lf /tmp/id_rsa || echo "Invalid SSH private key"
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
-
-      # --------------------------------------
-      # PHP SYNTAX LINT
-      # --------------------------------------
-      - name: Lint PHP
-        run: |
-          set -e
-          PHPS=$(find . -type f -name "*.php")
-          if [ -n "$PHPS" ]; then
-            for f in $PHPS; do php -l "$f"; done
-          fi
-
-      # --------------------------------------
-      # Ensure _deploy exists
-      # --------------------------------------
-      - name: Ensure _deploy exists on server
-        uses: appleboy/ssh-action@v1
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 170.64.195.171
-          username: reuben.fraser1
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.CLOUDWAYS_HOST }}
+          username: ${{ secrets.CLOUDWAYS_USER }}
+          key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
+          port: 22
           script: |
-            mkdir -p /home/1562247.cloudwaysapps.com/zgwnbhruuy/public_html/_deploy
-
-      # --------------------------------------
-      # Upload everything except excluded files
-      # --------------------------------------
-      - name: Upload entire project (with safe excludes)
-        uses: appleboy/scp-action@v1
-        with:
-          host: 170.64.195.171
-          username: reuben.fraser1
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-          source: ./
-          target: /home/1562247.cloudwaysapps.com/zgwnbhruuy/public_html
-          strip_components: 1
-
-          rm: true  # deletes existing remote files not in repo (optional)
-
-          # Globally exclude unnecessary files/folders
-          exclude: |
-            .git/
-            .github/
-            .vscode/
-            node_modules/
-            vendor/
-            .DS_Store
-            Thumbs.db
-            README.md
-            deploy.yml
-
-      # --------------------------------------
-      # Write deploy health marker
-      # --------------------------------------
-      - name: Write deploy health marker
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 170.64.195.171
-          username: reuben.fraser1
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            ROOT=/home/1562247.cloudwaysapps.com/zgwnbhruuy/public_html/_deploy
-            echo "deployed=$(date -u +'%Y-%m-%dT%H:%M:%SZ') sha=${GITHUB_SHA}" > "$ROOT/health.txt"
+            mkdir -p ${{ secrets.CLOUDWAYS_PATH }}
+            rm -rf ${{ secrets.CLOUDWAYS_PATH }}/*
+            cd ${{ secrets.CLOUDWAYS_PATH }}
+            git init
+            git remote add origin https://github.com/ReubenJFraser/sports-warehouse.git
+            git fetch origin
+            git checkout origin/main -ft
 
 
