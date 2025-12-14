@@ -24,5 +24,6 @@ jobs:
           strip_components: 1
           rm: true
           overwrite: true
+          debug: true
 
 
