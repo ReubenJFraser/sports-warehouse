@@ -13,26 +13,38 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy via SCP
+      - name: Create deploy.tar.gz (with excludes)
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.vscode' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='README.md' \
+            --exclude='deploy.yml' \
+            -czf deploy.tar.gz .
+
+      - name: Upload archive via SCP
         uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.CLOUDWAYS_HOST }}
           username: ${{ secrets.CLOUDWAYS_USER }}
           key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
           port: 22
-          source: "./*"
+          source: "deploy.tar.gz"
           target: ${{ secrets.CLOUDWAYS_PATH }}
-          strip_components: 1
-          rm: true
           overwrite: true
-          exclude: |
-            .git/
-            .github/
-            .vscode/
-            node_modules/
-            vendor/
-            .DS_Store
-            Thumbs.db
-            README.md
-            deploy.yml
+
+      - name: Extract on server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.CLOUDWAYS_HOST }}
+          username: ${{ secrets.CLOUDWAYS_USER }}
+          key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ${{ secrets.CLOUDWAYS_PATH }}
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
 
