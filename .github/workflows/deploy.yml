@@ -12,20 +12,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Deploy via SCP
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.CLOUDWAYS_HOST }}
           username: ${{ secrets.CLOUDWAYS_USER }}
           key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
           port: 22
-          script: |
-            mkdir -p ${{ secrets.CLOUDWAYS_PATH }}
-            rm -rf ${{ secrets.CLOUDWAYS_PATH }}/*
-            cd ${{ secrets.CLOUDWAYS_PATH }}
-            git init
-            git remote add origin https://github.com/ReubenJFraser/sports-warehouse.git
-            git fetch origin
-            git checkout origin/main -ft
+          source: "./"
+          target: ${{ secrets.CLOUDWAYS_PATH }}
+          strip_components: 1
+          rm: true
+          overwrite: true
+          exclude: |
+            .git/
+            .github/
+            .vscode/
+            node_modules/
+            vendor/
+            .DS_Store
+            Thumbs.db
+            README.md
+            deploy.yml
 
 
