@@ -22,7 +22,6 @@ jobs:
           source: "./*"
           target: ${{ secrets.CLOUDWAYS_PATH }}
           strip_components: 1
-          rm: true
           overwrite: true
           debug: true
 
