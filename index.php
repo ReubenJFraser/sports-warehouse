@@ -1,3 +1,5 @@
+<?php // dummy comment to trigger deploy ?>
+
 <?php
 // index.php — very first lines
 if (isset($_GET['sw_debug']) && $_GET['sw_debug'] !== '0') {
