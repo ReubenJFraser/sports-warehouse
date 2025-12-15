@@ -19,10 +19,9 @@ jobs:
           username: ${{ secrets.CLOUDWAYS_USER }}
           key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
           port: 22
-          source: "./*"
+          source: "./"
           target: ${{ secrets.CLOUDWAYS_PATH }}
-          strip_components: 1
           overwrite: true
-          debug: true
+          rm: true
 
 

@@ -1,5 +1,5 @@
 <?php
-// inc/env.php — simplified loader for Cloudways
+// inc/env.php — cross-platform environment loader
 
 if (!function_exists('sw_env')) {
   function sw_env(string $key, $default = null) {
@@ -11,27 +11,45 @@ if (!function_exists('sw_env')) {
     if (isset($_ENV[$key]))    return $_ENV[$key];
     if (isset($_SERVER[$key])) return $_SERVER[$key];
 
-    // 2) Load ~/env file once (Cloudways convention)
-    if (!$loaded) {
-      $file = $_SERVER['HOME'] . '/env';
-      if (is_readable($file)) {
-        foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-          if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
-          [$k, $val] = array_map('trim', explode('=', $line, 2));
-          $val = trim($val, " \t\"'");
-          $vars[$k] = $val;
+    // 2) Load local .env (Laragon, GitHub dev, manual config)
+    $localEnvFile = __DIR__ . '/../.env';
+    if (!$loaded && is_readable($localEnvFile)) {
+      foreach (file($localEnvFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+        [$k, $val] = array_map('trim', explode('=', $line, 2));
+        $val = trim($val, " \t\"'");
+        $vars[$k] = $val;
 
-          // Also expose to environment
-          putenv("$k=$val");
-          $_ENV[$k] = $_SERVER[$k] = $val;
+        putenv("$k=$val");
+        $_ENV[$k] = $_SERVER[$k] = $val;
+      }
+      $loaded = true;
+    }
+
+    // 3) Cloudways environment file (/home/xxxxxx/env)
+    if (!$loaded) {
+      $home = $_SERVER['HOME'] ?? null;
+      if ($home) {
+        $cloudwaysFile = $home . '/env';
+        if (is_readable($cloudwaysFile)) {
+          foreach (file($cloudwaysFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
+            [$k, $val] = array_map('trim', explode('=', $line, 2));
+            $val = trim($val, " \t\"'");
+            $vars[$k] = $val;
+
+            putenv("$k=$val");
+            $_ENV[$k] = $_SERVER[$k] = $val;
+          }
         }
       }
       $loaded = true;
     }
 
-    // 3) Return from cache or default
+    // 4) Return value or default
     return $vars[$key] ?? $default;
   }
 }
+
 
 
