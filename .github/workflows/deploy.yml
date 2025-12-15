@@ -8,20 +8,22 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy via SCP
+      - name: Deploy via SCP to Cloudways
         uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.CLOUDWAYS_HOST }}
-          username: ${{ secrets.CLOUDWAYS_USER }}
-          key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }}
+          username: ${{ secrets.CLOUDWAYS_USER }}        # MUST be reuben.fraser1
+          key: ${{ secrets.CLOUDWAYS_SSH_PRIVATE_KEY }} # Private key for master user
           port: 22
-          source: "./"
-          target: ${{ secrets.CLOUDWAYS_PATH }}
+          source: "./*"
+          target: ${{ secrets.CLOUDWAYS_PATH }}         # /home/.../public_html
+          strip_components: 1
           overwrite: true
-          rm: true
+          debug: true
 
 
