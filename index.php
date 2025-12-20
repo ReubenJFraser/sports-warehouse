@@ -1,4 +1,4 @@
-<?php /* SW_FRONTEND_FINGERPRINT_2025_01 */ ?>
+<?php echo "FRONTEND INDEX HIT"; exit;
 
 <?php
 // index.php — very first lines
