@@ -1,4 +1,4 @@
-<?php // dummy comment to trigger deploy ?>
+<?php /* SW_FRONTEND_FINGERPRINT_2025_01 */ ?>
 
 <?php
 // index.php — very first lines

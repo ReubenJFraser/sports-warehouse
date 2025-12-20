@@ -1,6 +1,9 @@
 RewriteEngine On
+
 RewriteBase /
 Options -MultiViews
+
+RewriteRule ^htaccess-test$ - [F]
 
 # Pretty route: /men | /women | /kids
 RewriteRule ^(men|women|kids)/?$ index.php?section=$1&gender=$1 [QSA,L]

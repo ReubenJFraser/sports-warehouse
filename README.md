@@ -1,4 +1,27 @@
-# Sports Warehouse – Category Sync Runbook (Agent‑Safe)
+# Sports Warehouse
+
+## Architecture (Read First)
+
+This project is governed by explicit **Architecture Invariants** that define non-negotiable constraints around routing, filesystem structure, asset loading, and admin/frontend boundaries.
+
+Before making changes to:
+- routing or rewrite rules
+- asset paths (CSS / JS / images)
+- admin UI structure
+- shared design system files
+- deployment or environment assumptions
+
+**Read first:**
+
+docs/architecture/ARCHITECTURE_INVARIANTS.md
+
+The Markdown file mirrors the canonical Word document used for formal reference.
+
+The above defines constraints that override assumptions made in older project documentation below, which reflects earlier phases of the project.
+
+---
+
+## Legacy Operational Documentation
 
 This repository contains the **safe, automatable workflow** to keep `sportswh.item.categoryId` in sync with `sportswh.item_import.categoryId` using strict matching rules and **hard safety rails**. It is designed so a VS Code agent (ChatGPT) can run it repeatably without risking bulk data loss.
 
@@ -614,8 +637,6 @@ This helps the VS Code agent “see” the repository layout.
 ## 📣 License / Ownership
 
 Internal operational runbook. Distribute within your organization only unless cleared.
-
-Blank
 
 
 
