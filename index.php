@@ -1,6 +1,7 @@
-<?php echo "FRONTEND INDEX HIT"; exit;
-
 <?php
+define('SW_FRONTEND_VERSION', '2025-01-DEPLOY-' . substr(sha1(__FILE__), 0, 8));
+header('X-SW-Frontend: ' . SW_FRONTEND_VERSION);
+
 // index.php — very first lines
 if (isset($_GET['sw_debug']) && $_GET['sw_debug'] !== '0') {
   ini_set('display_errors', '1');
