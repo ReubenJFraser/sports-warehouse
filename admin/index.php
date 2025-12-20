@@ -1,3 +1,5 @@
+<?php echo "ADMIN INDEX HIT"; exit;
+
 <?php
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/_header.php';  // for page headers + breadcrumbs
