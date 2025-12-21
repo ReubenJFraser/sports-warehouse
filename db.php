@@ -10,7 +10,7 @@ require_once __DIR__ . '/inc/env.php';
 $DB_HOST = sw_env('DB_HOST', '127.0.0.1');
 $DB_NAME = sw_env('DB_NAME', 'sportswh');
 $DB_USER = sw_env('DB_USER', 'root');
-$DB_PASS = sw_env('DB_PASS', '');
+$DB_PASS = sw_env('DB_PASS', sw_env('DB_PASSWORD', ''));
 $DB_CHAR = sw_env('DB_CHARSET', 'utf8mb4');
 $DB_PORT = (int) sw_env('DB_PORT', '3306');
 
