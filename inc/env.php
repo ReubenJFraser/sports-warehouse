@@ -11,6 +11,19 @@ if (!function_exists('sw_env')) {
     if (isset($_ENV[$key]))    return $_ENV[$key];
     if (isset($_SERVER[$key])) return $_SERVER[$key];
 
+    // 1.5) Cloudways-provided PHP constants (production)
+    $cloudwaysMap = [
+      'DB_HOST' => 'DB_HOST',
+      'DB_NAME' => 'DB_DATABASE',
+      'DB_USER' => 'DB_USERNAME',
+      'DB_PASS' => 'DB_PASSWORD',
+      'DB_PORT' => 'DB_PORT',
+    ];
+
+    if (isset($cloudwaysMap[$key]) && defined($cloudwaysMap[$key])) {
+      return constant($cloudwaysMap[$key]);
+    }
+
     // 2) Load local .env (Laragon, GitHub dev, manual config)
     $localEnvFile = __DIR__ . '/../.env';
     if (!$loaded && is_readable($localEnvFile)) {
@@ -26,7 +39,7 @@ if (!function_exists('sw_env')) {
       $loaded = true;
     }
 
-    // 3) Cloudways environment file (/home/xxxxxx/env)
+    // 3) Cloudways environment file (/home/xxxxxx/env) — rarely used but safe
     if (!$loaded) {
       $home = $_SERVER['HOME'] ?? null;
       if ($home) {
@@ -50,6 +63,7 @@ if (!function_exists('sw_env')) {
     return $vars[$key] ?? $default;
   }
 }
+
 
 
 
