@@ -2,11 +2,12 @@
 /**
  * Unified Database Loader — Sports Warehouse
  *
- * Rules:
- * - NEVER hardcode production credentials in Git
- * - Cloudways uses a file-based config in private_html
- * - Local dev uses inc/env.php
- * - One loader, deterministic behavior
+ * CONTRACT:
+ * - This file MUST be identical on local and production.
+ * - Production secrets live OUTSIDE Git in private_html/db.production.php
+ * - Local dev uses inc/env.php (.env or real env vars)
+ * - No framework assumptions (plain PHP + PDO)
+ * - Debug output must be opt-in and explicit
  */
 
 // --------------------------------------------------
@@ -53,18 +54,27 @@ $dsn = sprintf(
 );
 
 try {
-    $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => true,
-    ]);
+    $pdo = new PDO(
+        $dsn,
+        $DB_USER,
+        $DB_PASS,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => true,
+        ]
+    );
 } catch (Throwable $e) {
 
-    // Debug-friendly output ONLY when explicitly enabled
-    if (
-        (function_exists('sw_env') && sw_env('SW_DEBUG', '0') === '1') ||
-        (!empty($_GET['sw_debug']) && $_GET['sw_debug'] !== '0')
-    ) {
+    // --------------------------------------------------
+    // 4) Explicit, opt-in debug output only
+    // --------------------------------------------------
+
+    $debugEnabled =
+        (!empty($_GET['sw_debug']) && $_GET['sw_debug'] !== '0') ||
+        (function_exists('sw_env') && sw_env('SW_DEBUG', '0') === '1');
+
+    if ($debugEnabled) {
         header('Content-Type: text/plain; charset=utf-8');
         echo "DATABASE CONNECTION FAILED\n\n";
         echo "Host: {$DB_HOST}\n";
@@ -79,6 +89,7 @@ try {
 
     exit;
 }
+
 
 
 
