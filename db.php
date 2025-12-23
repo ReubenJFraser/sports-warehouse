@@ -1,43 +1,78 @@
 <?php
 /**
- * Unified Database Loader
- * Uses environment variables for BOTH local and production.
+ * Unified Database Loader — Sports Warehouse
+ *
+ * Rules:
+ * - NEVER hardcode production credentials in Git
+ * - Cloudways uses a file-based config in private_html
+ * - Local dev uses inc/env.php
+ * - One loader, deterministic behavior
  */
 
-require_once __DIR__ . '/inc/env.php';
+// --------------------------------------------------
+// 1) Detect Cloudways production config (preferred)
+// --------------------------------------------------
 
-// Load DB settings from environment
-$DB_HOST = sw_env('DB_HOST', '127.0.0.1');
-$DB_NAME = sw_env('DB_NAME', 'sportswh');
-$DB_USER = sw_env('DB_USER', 'root');
-$DB_PASS = sw_env('DB_PASS', sw_env('DB_PASSWORD', ''));
-$DB_CHAR = sw_env('DB_CHARSET', 'utf8mb4');
-$DB_PORT = (int) sw_env('DB_PORT', '3306');
+$prodConfig = dirname(__DIR__) . '/private_html/db.production.php';
 
-// Prepare DSN
-$dsn = "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset={$DB_CHAR}";
+if (is_readable($prodConfig)) {
+    // ---- Cloudways / production path ----
+    $cfg = require $prodConfig;
+
+    $DB_HOST = $cfg['host'];
+    $DB_PORT = (int) ($cfg['port'] ?? 3306);
+    $DB_NAME = $cfg['dbname'];
+    $DB_USER = $cfg['user'];
+    $DB_PASS = $cfg['password'];
+    $DB_CHAR = $cfg['charset'] ?? 'utf8mb4';
+
+} else {
+    // --------------------------------------------------
+    // 2) Local development fallback (Laragon, etc.)
+    // --------------------------------------------------
+    require_once __DIR__ . '/inc/env.php';
+
+    $DB_HOST = sw_env('DB_HOST', '127.0.0.1');
+    $DB_PORT = (int) sw_env('DB_PORT', '3306');
+    $DB_NAME = sw_env('DB_NAME', 'sportswh');
+    $DB_USER = sw_env('DB_USER', 'root');
+    $DB_PASS = sw_env('DB_PASS', sw_env('DB_PASSWORD', ''));
+    $DB_CHAR = sw_env('DB_CHARSET', 'utf8mb4');
+}
+
+// --------------------------------------------------
+// 3) Create PDO connection
+// --------------------------------------------------
+
+$dsn = sprintf(
+    'mysql:host=%s;port=%d;dbname=%s;charset=%s',
+    $DB_HOST,
+    $DB_PORT,
+    $DB_NAME,
+    $DB_CHAR
+);
 
 try {
-    // Create PDO
     $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => true,
     ]);
-
 } catch (Throwable $e) {
 
-    // Emit clear diagnostic message when debugging is enabled
-    if (sw_env('SW_DEBUG', '0') == '1') {
+    // Debug-friendly output ONLY when explicitly enabled
+    if (
+        (function_exists('sw_env') && sw_env('SW_DEBUG', '0') === '1') ||
+        (!empty($_GET['sw_debug']) && $_GET['sw_debug'] !== '0')
+    ) {
         header('Content-Type: text/plain; charset=utf-8');
-        echo "DATABASE CONNECTION FAILED\n";
-        echo "Host: $DB_HOST\n";
-        echo "DB:   $DB_NAME\n";
-        echo "User: $DB_USER\n";
-        echo "Port: $DB_PORT\n";
-        echo "\nError message:\n" . $e->getMessage();
+        echo "DATABASE CONNECTION FAILED\n\n";
+        echo "Host: {$DB_HOST}\n";
+        echo "Port: {$DB_PORT}\n";
+        echo "DB:   {$DB_NAME}\n";
+        echo "User: {$DB_USER}\n\n";
+        echo "Error:\n" . $e->getMessage();
     } else {
-        // Generic message in production
         header('HTTP/1.1 500 Internal Server Error');
         echo 'Database connection failed.';
     }
@@ -45,7 +80,8 @@ try {
     exit;
 }
 
-// Do NOT return — let $pdo exist in scope
+
+
 
 
 
