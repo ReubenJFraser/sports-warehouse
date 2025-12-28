@@ -123,8 +123,23 @@ foreach ($rows as $r) {
     $row = array_combine($header, $r);
     if (!$row) continue;
 
-    $img = $row['path'] ?? '';
-    if (!$img || !file_exists($root . '/' . $img)) continue;
+    // --------------------------------------------------
+    // NORMALIZE CSV IMAGE PATH (CRITICAL FIX)
+    // --------------------------------------------------
+    $img = trim((string)($row['path'] ?? ''));
+    if ($img === '') continue;
+
+    // Convert backslashes → forward slashes
+    $img = str_replace('\\', '/', $img);
+
+    // Normalize to web-relative path
+    $img = ltrim($img, '/');
+    if (stripos($img, 'images/') !== 0) {
+        $img = 'images/' . $img;
+    }
+
+    // Disk existence check (Windows-safe)
+    if (!is_file($root . '/' . $img)) continue;
 
     // Compute hero metrics
     [$score, $ratio] = compute_hero_score($row);

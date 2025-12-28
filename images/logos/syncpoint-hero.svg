@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="900" height="260" viewBox="0 0 900 260" role="img"
+     aria-label="Syncpoint logo with tagline">
+
+  <defs>
+    <style>
+      .ink {
+        stroke: #0A1A2F;
+        fill: rgba(10,26,47,0.02); /* Option A2: tiny fill */
+        stroke-width: 6;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .brand {
+        fill: #0A1A2F;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-weight: 600;
+      }
+      .tag {
+        fill: #5A6A7C;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-weight: 400;
+      }
+    </style>
+
+    <!-- True continuous fade-out gradient for divider -->
+    <linearGradient id="dividerFade"
+                    gradientUnits="userSpaceOnUse"
+                    x1="100" y1="99"
+                    x2="344" y2="99">
+      <stop offset="0%"   stop-color="#0A1A2F" stop-opacity="0.95"/>
+      <stop offset="60%"  stop-color="#0A1A2F" stop-opacity="0.55"/>
+      <stop offset="85%"  stop-color="#0A1A2F" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0A1A2F" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- LOGO MARK -->
+  <g transform="translate(24 44) scale(0.55)">
+    <polygon class="ink"
+      points="100,33.3726 122.6274,56 100,78.6274 77.3726,56" />
+    <polygon class="ink"
+      points="100,121.3726 122.6274,144 100,166.6274 77.3726,144" />
+    <polygon class="ink"
+      points="56,77.3726 78.6274,100 56,122.6274 33.3726,100" />
+    <polygon class="ink"
+      points="100,86.4235 113.5765,100 100,113.5765 86.4235,100" />
+  </g>
+
+  <!-- WORDMARK -->
+  <text class="brand" x="124" y="72" font-size="40" letter-spacing="0.1">
+    Syncpoint
+  </text>
+
+  <!-- DIVIDER — single continuous signal fading into noise -->
+  <line
+    x1="100"
+    y1="99"
+    x2="344"
+    y2="99"
+    stroke="url(#dividerFade)"
+    stroke-width="6"
+    stroke-dasharray="6 10"
+    stroke-linecap="round"
+  />
+
+  <!-- TAGLINE -->
+  <text class="tag" x="124" y="128" font-size="18">
+    <tspan x="124" dy="0">I don’t just build websites.</tspan>
+    <tspan x="124" dy="26">
+      I build maintainable systems where development and production stay in sync.
+    </tspan>
+  </text>
+
+</svg>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

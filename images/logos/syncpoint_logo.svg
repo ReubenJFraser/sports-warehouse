@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="220" height="220"
+     viewBox="0 0 200 200"
+     role="img"
+     aria-label="Syncpoint logo mark">
+
+  <defs>
+    <style>
+      .ink {
+        stroke: #0A1A2F;
+        fill: rgba(10,26,47,0.02);
+        stroke-width: 6;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .enclosure {
+        stroke: #0A1A2F;
+        fill: none;
+        stroke-width: 4;
+        stroke-opacity: 0.14;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- Enclosing diamond (structural boundary) -->
+  <polygon class="enclosure"
+    points="100,8 192,100 100,192 8,100" />
+
+  <!-- Logo mark (unchanged geometry) -->
+  <polygon class="ink"
+    points="100,33.3726 122.6274,56 100,78.6274 77.3726,56" />
+
+  <polygon class="ink"
+    points="100,121.3726 122.6274,144 100,166.6274 77.3726,144" />
+
+  <polygon class="ink"
+    points="56,77.3726 78.6274,100 56,122.6274 33.3726,100" />
+
+  <polygon class="ink"
+    points="100,86.4235 113.5765,100 100,113.5765 86.4235,100" />
+
+</svg>
+
+
+
