@@ -4,6 +4,7 @@
  * ----------------------------------
  * Reads image_audit.csv (from /tools/ folder).
  * For each row:
+ *   - normalize image path
  *   - compute hero metrics
  *   - find matching item via chosen_image or thumbnails_json
  *   - update: hero_image, hero_score, hero_ratio, hero_orientation
@@ -20,7 +21,7 @@ require_once __DIR__ . '/../db.php';
 // --------------------------------------------------
 // Paths
 // --------------------------------------------------
-$root = dirname(__DIR__);
+$root    = dirname(__DIR__);
 $csvPath = $root . '/tools/image_audit.csv';
 
 if (!file_exists($csvPath)) {
@@ -28,7 +29,7 @@ if (!file_exists($csvPath)) {
 }
 
 // --------------------------------------------------
-// DB connection (uses credentials resolved in db.php)
+// DB connection
 // --------------------------------------------------
 $mysqli = new mysqli(
     $DB_HOST,
@@ -42,9 +43,28 @@ if ($mysqli->connect_errno) {
 }
 
 // --------------------------------------------------
-// Helper: compute orientation
+// DIAGNOSTIC BLOCK (permanent sanity check)
 // --------------------------------------------------
-function orientation_class_from_ratio($ratio)
+header('Content-Type: text/plain; charset=utf-8');
+
+$whoDb = $mysqli->query("SELECT DATABASE() AS db")->fetch_assoc()['db'] ?? '(unknown)';
+$whoMe = $mysqli->query("SELECT USER() AS u")->fetch_assoc()['u'] ?? '(unknown)';
+$whoHo = $mysqli->query("SELECT @@hostname AS h")->fetch_assoc()['h'] ?? '(unknown)';
+
+echo "=== SW HERO UPDATE DIAGNOSTICS ===\n";
+echo "Time: " . date('Y-m-d H:i:s') . "\n";
+echo "DB: {$whoDb}\n";
+echo "User: {$whoMe}\n";
+echo "Host: {$whoHo}\n";
+echo "CSV: {$csvPath}\n";
+echo "CSV exists: " . (file_exists($csvPath) ? "YES" : "NO") . "\n";
+echo "Project root: {$root}\n";
+echo "==================================\n\n";
+
+// --------------------------------------------------
+// Helper: orientation from ratio
+// --------------------------------------------------
+function orientation_class_from_ratio(float $ratio): string
 {
     if ($ratio < 0.95) return 'P'; // portrait
     if ($ratio > 1.05) return 'L'; // landscape
@@ -58,16 +78,14 @@ function compute_hero_score(array $r): array
 {
     $w = (int)$r['width'];
     $h = (int)$r['height'];
-    $ratio = $w > 0 ? ($w / $h) : 1;
+    $ratio = ($w > 0 && $h > 0) ? ($w / $h) : 1.0;
 
     $left   = (int)$r['bbox_left'];
     $right  = (int)$r['bbox_right'];
     $top    = (int)$r['bbox_top'];
     $bottom = (int)$r['bbox_bottom'];
+    $faceY  = (int)$r['face_y'];
 
-    $faceY = (int)$r['face_y'];
-
-    $bboxWidth  = $right - $left;
     $bboxHeight = $bottom - $top;
 
     // 1) Horizontal centering (50%)
@@ -77,12 +95,7 @@ function compute_hero_score(array $r): array
     $horizontal   = max(0, 100 - ($offset * 1.8));
 
     // 2) Vertical face alignment (30%)
-    if ($bboxHeight > 0) {
-        $faceRel = ($faceY - $top) / $bboxHeight;
-    } else {
-        $faceRel = 0.22;
-    }
-
+    $faceRel = ($bboxHeight > 0) ? (($faceY - $top) / $bboxHeight) : 0.22;
     $idealMin = 0.18;
     $idealMax = 0.27;
 
@@ -90,8 +103,8 @@ function compute_hero_score(array $r): array
         $vertical = 100;
     } else {
         $dist = ($faceRel < $idealMin)
-            ? $idealMin - $faceRel
-            : $faceRel - $idealMax;
+            ? ($idealMin - $faceRel)
+            : ($faceRel - $idealMax);
         $vertical = max(0, 100 - ($dist * 300));
     }
 
@@ -100,14 +113,14 @@ function compute_hero_score(array $r): array
     elseif ($ratio < 1.05)  $ratioScore = 85;
     else                    $ratioScore = 10;
 
-    // 4) Coverage (5%)
-    $coverage = ($bboxHeight > 0) ? ($bboxHeight / $h) : 0.85;
+    // 4) Coverage score (5%)
+    $coverage = ($bboxHeight > 0 && $h > 0) ? ($bboxHeight / $h) : 0.85;
     $coverageScore = max(0, 100 - (abs($coverage - 0.85) * 220));
 
     $final =
-        ($horizontal * 0.50) +
-        ($vertical   * 0.30) +
-        ($ratioScore * 0.15) +
+        ($horizontal    * 0.50) +
+        ($vertical      * 0.30) +
+        ($ratioScore    * 0.15) +
         ($coverageScore * 0.05);
 
     return [$final, $ratio];
@@ -116,30 +129,38 @@ function compute_hero_score(array $r): array
 // --------------------------------------------------
 // Load CSV
 // --------------------------------------------------
-$rows = array_map('str_getcsv', file($csvPath));
+$rows   = array_map('str_getcsv', file($csvPath));
 $header = array_shift($rows);
 
+// --------------------------------------------------
+// Counters (end the guessing forever)
+// --------------------------------------------------
+$seen    = 0;
+$diskOk  = 0;
+$matched = 0;
+$updated = 0;
+
+// --------------------------------------------------
+// Process rows
+// --------------------------------------------------
 foreach ($rows as $r) {
     $row = array_combine($header, $r);
     if (!$row) continue;
 
-    // --------------------------------------------------
-    // NORMALIZE CSV IMAGE PATH (CRITICAL FIX)
-    // --------------------------------------------------
+    $seen++;
+
+    // Normalize CSV image path
     $img = trim((string)($row['path'] ?? ''));
     if ($img === '') continue;
 
-    // Convert backslashes → forward slashes
     $img = str_replace('\\', '/', $img);
-
-    // Normalize to web-relative path
     $img = ltrim($img, '/');
     if (stripos($img, 'images/') !== 0) {
         $img = 'images/' . $img;
     }
 
-    // Disk existence check (Windows-safe)
     if (!is_file($root . '/' . $img)) continue;
+    $diskOk++;
 
     // Compute hero metrics
     [$score, $ratio] = compute_hero_score($row);
@@ -158,8 +179,9 @@ foreach ($rows as $r) {
     $res = $stmt->get_result();
 
     if ($res->num_rows === 0) continue;
+    $matched++;
 
-    $item = $res->fetch_assoc();
+    $item   = $res->fetch_assoc();
     $itemId = (int)$item['itemId'];
 
     // Update item
@@ -171,20 +193,24 @@ foreach ($rows as $r) {
             hero_orientation = ?
         WHERE itemId = ?
     ");
-
-    $up->bind_param(
-        'sddsi',
-        $img,
-        $score,
-        $ratio,
-        $orientation,
-        $itemId
-    );
+    $up->bind_param('sddsi', $img, $score, $ratio, $orientation, $itemId);
     $up->execute();
+
+    if ($up->affected_rows > 0) {
+        $updated++;
+    }
 }
 
-echo "<h1>Hero Image Update Complete</h1>";
-echo "<p>Hero images, scores, ratios, and orientations updated.</p>";
+// --------------------------------------------------
+// Final summary
+// --------------------------------------------------
+echo "\n=== SUMMARY ===\n";
+echo "Rows read: {$seen}\n";
+echo "Disk OK: {$diskOk}\n";
+echo "Matched items: {$matched}\n";
+echo "Updated rows: {$updated}\n";
+echo "=============\n";
+
 
 
 
