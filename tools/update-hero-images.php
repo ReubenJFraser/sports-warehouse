@@ -1,4 +1,8 @@
 <?php
+/* SW_DIAG_BUILD: 2025-12-29T13:xx AEDT (change this stamp every edit) */
+echo "<pre>SW_DIAG_BUILD=2025-12-29T13:xx AEDT\nFILE=".__FILE__."\nPWD=".(getcwd() ?: '(unknown)')."\n</pre>";
+if (function_exists('opcache_reset')) { @opcache_reset(); echo "<pre>OPCACHE_RESET=YES</pre>"; }
+
 /**
  * Batch Update: Hero Image Selection
  * ----------------------------------
