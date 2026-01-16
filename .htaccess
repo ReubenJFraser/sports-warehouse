@@ -9,5 +9,6 @@ RewriteRule ^htaccess-test$ - [F]
 RewriteRule ^(men|women|kids)/?$ index.php?section=$1&gender=$1 [QSA,L]
 
 # Pretty route: /plus-size
-RewriteRule ^plus-size/?$ index.php?size_type=Plus%20Size [QSA,L]
+RewriteRule ^plus-size/?$ index.php?section=plus&size_type=plus [QSA,L]
+
 

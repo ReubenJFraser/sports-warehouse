@@ -47,16 +47,18 @@ if (!$mappingsSheet) {
 $subcategoryToSeason = [];
 
 $row = 2;
-while ($subcategory = trim((string)$mappingsSheet->getCell("C{$row}")->getValue())) {
+while ($subCategory = trim((string)$mappingsSheet->getCell("C{$row}")->getValue())) {
+
     $defaultSeason = trim((string)$mappingsSheet->getCell("E{$row}")->getValue());
 
     if ($defaultSeason === '') {
-        $subcategoryToSeason[$subcategory] = null;
+        $subcategoryToSeason[$subCategory] = null;
     } elseif (in_array($defaultSeason, $ALLOWED_SEASONAL, true)) {
-        $subcategoryToSeason[$subcategory] = $defaultSeason;
+        $subcategoryToSeason[$subCategory] = $defaultSeason;
     } else {
         exit("ERROR: Invalid seasonal_context '{$defaultSeason}' in Mappings row {$row}\n");
     }
+
     $row++;
 }
 
@@ -64,66 +66,35 @@ while ($subcategory = trim((string)$mappingsSheet->getCell("C{$row}")->getValue(
 // READ PRODUCTDB
 // --------------------
 
-$productSheet = $spreadsheet->getSheetByName('ProductDB');
+$productSheet = $spreadsheet->getSheetByName('SportWarehouse_ProductDB');
 if (!$productSheet) {
-    exit("ERROR: ProductDB worksheet missing\n");
+    exit("ERROR: SportWarehouse_ProductDB worksheet missing\n");
 }
+
+$stmt = $pdo->prepare("
+    UPDATE item
+    SET seasonal_context = :seasonal_context
+    WHERE itemId = :itemId
+");
 
 $row = 2;
 $updated = 0;
 
-while ($externalCode = trim((string)$productSheet->getCell("A{$row}")->getValue())) {
+while ($itemId = (int)$productSheet->getCell("Y{$row}")->getValue()) {
 
-    $subcategory = trim((string)$productSheet->getCell("D{$row}")->getValue());
-
-    $seasonalContext = $subcategoryToSeason[$subcategory] ?? null;
-
-    $stmt = $pdo->prepare("
-        INSERT INTO item (
-            external_product_code,
-            brand,
-            category,
-            subcategory,
-            price,
-            sale_price,
-            is_active,
-            seasonal_context
-        ) VALUES (
-            :external_product_code,
-            :brand,
-            :category,
-            :subcategory,
-            :price,
-            :sale_price,
-            :is_active,
-            :seasonal_context
-        )
-        ON DUPLICATE KEY UPDATE
-            brand = VALUES(brand),
-            category = VALUES(category),
-            subcategory = VALUES(subcategory),
-            price = VALUES(price),
-            sale_price = VALUES(sale_price),
-            is_active = VALUES(is_active),
-            seasonal_context = VALUES(seasonal_context)
-    ");
+    $subCategory = trim((string)$productSheet->getCell("C{$row}")->getValue());
+    $seasonalContext = $subcategoryToSeason[$subCategory] ?? null;
 
     $stmt->execute([
-        ':external_product_code' => $externalCode,
-        ':brand'        => trim((string)$productSheet->getCell("B{$row}")->getValue()),
-        ':category'     => trim((string)$productSheet->getCell("C{$row}")->getValue()),
-        ':subcategory'  => $subcategory,
-        ':price'        => $productSheet->getCell("E{$row}")->getValue(),
-        ':sale_price'   => $productSheet->getCell("F{$row}")->getValue(),
-        ':is_active'    => (int)$productSheet->getCell("G{$row}")->getValue(),
+        ':itemId'           => $itemId,
         ':seasonal_context' => $seasonalContext
     ]);
 
-    $updated++;
+    $updated += $stmt->rowCount();
     $row++;
 }
 
-echo "SUCCESS: {$updated} products imported\n";
+echo "SUCCESS: {$updated} rows updated\n";
 
 
 

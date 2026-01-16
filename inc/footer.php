@@ -1,19 +1,28 @@
 <?php
-// Footer preamble — must be the first thing in the file
-$section   = $_GET['section']   ?? '';
-$gender    = $_GET['gender']    ?? '';
-$size_type = $_GET['size_type'] ?? '';
+// Routing state (authoritative; set by index.php)
+$section   = $sectionLower ?? '';
+$gender    = $gender       ?? '';
+$size_type = $size_type    ?? '';
 
-function active_link($targetSection, $targetGender = null, $targetSizeType = null) {
+function active_link(
+  string $targetSection,
+  ?string $targetGender = null,
+  ?string $targetSizeType = null
+): string {
   global $section, $gender, $size_type;
-  $isActive = ($targetSection === 'plus_size')
-    ? ($section === 'plus_size' || $size_type === 'plus')
-    : ($section === $targetSection && ($targetGender === null || $gender === $targetGender));
-  return $isActive ? ' selected" aria-current="page' : '';
+
+  $isActive =
+    ($section === $targetSection)
+    && ($targetGender === null || $gender === $targetGender)
+    && ($targetSizeType === null || $size_type === $targetSizeType);
+
+  return $isActive ? ' selected' : '';
 }
 
-// (optional) alias so your new markup can keep using shop_active()
-function shop_active($a, $b = null, $c = null) { return active_link($a, $b, $c); }
+// Backward-compatible alias
+function shop_active($a, $b = null, $c = null) {
+  return active_link($a, $b, $c);
+}
 ?>
 
 <footer class="footer-new">
@@ -38,14 +47,23 @@ function shop_active($a, $b = null, $c = null) { return active_link($a, $b, $c);
             <h4>Shop by</h4>
             <nav class="footer-filters" aria-label="Shop by">
               <ul class="footer-list footer-list--filters">
+
                 <li><a class="link<?php echo shop_active('men','men'); ?>"
-                        href="index.php?section=men&gender=men">Men</a></li>
+                    <?php if ($section === 'men' && $gender === 'men') echo ' aria-current="page"'; ?>
+                    href="index.php?section=men&gender=men">Men</a></li>
+
                 <li><a class="link<?php echo shop_active('women','women'); ?>"
-                        href="index.php?section=women&gender=women">Women</a></li>
+                    <?php if ($section === 'women' && $gender === 'women') echo ' aria-current="page"'; ?>
+                    href="index.php?section=women&gender=women">Women</a></li>
+
                 <li><a class="link<?php echo shop_active('kids','kids'); ?>"
-                        href="index.php?section=kids&gender=kids">Kids</a></li>
+                    <?php if ($section === 'kids' && $gender === 'kids') echo ' aria-current="page"'; ?>
+                    href="index.php?section=kids&gender=kids">Kids</a></li>
+
                 <li><a class="link<?php echo shop_active('plus_size', null, 'plus'); ?>"
-                        href="index.php?section=plus_size&size_type=plus">Plus-Size</a></li>
+                    <?php if ($section === 'plus_size' && $size_type === 'plus') echo ' aria-current="page"'; ?>
+                    href="index.php?section=plus_size&size_type=plus">Plus-Size</a></li>
+                    
               </ul>
             </nav>
           </div>
@@ -559,4 +577,4 @@ function shop_active($a, $b = null, $c = null) { return active_link($a, $b, $c);
 
   </footer>
 
-<!-- deploy 2025-09-29T21:59:04 -->
+

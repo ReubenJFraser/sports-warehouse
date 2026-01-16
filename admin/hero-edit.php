@@ -5,6 +5,7 @@
 require __DIR__ . '/../db.php';
 require __DIR__ . '/image-helper.php';
 require_once __DIR__ . '/_layout.php';
+require_once __DIR__ . '/../inc/hero/hero-authority.php';
 
 // --------------------------------------------------------
 // Guard: require ?id=ITEM_ID
@@ -254,7 +255,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flashMessage = 'Please select a candidate tile before saving an override.';
             $flashType    = 'error';
         } else {
-            // NOTE: assumes hero_override has column `chosen_image`
+
+            // ============================================================
+            // HERO AUTHORITY GUARD — MANUAL EDITORIAL
+            // ============================================================
+            if (!HeroAuthority::canWrite($item, HeroAuthority::SOURCE_MANUAL)) {
+                throw new RuntimeException('Manual hero write rejected by authority guard');
+            }
+
             $sql = "
                 INSERT INTO hero_override (itemId, chosen_image)
                 VALUES (:id, :img)

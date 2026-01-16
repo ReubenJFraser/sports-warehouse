@@ -4,6 +4,7 @@
 
 require __DIR__ . '/../db.php';
 require __DIR__ . '/image-helper.php';
+require_once __DIR__ . '/../inc/hero/hero-authority.php';
 
 // Admin Layout Wrapper
 require_once __DIR__ . '/_layout.php';
@@ -158,6 +159,13 @@ if (!function_exists('sw_recalc_hero_for_item')) {
         if ($ratio !== null && $ratio > 0) {
             if (abs($ratio - 1.0) < 0.05) $orient = 'S';
             elseif ($ratio > 1.05) $orient = 'L';
+        }
+
+        // ============================================================
+        // HERO AUTHORITY GUARD — MECHANICAL ENFORCEMENT
+        // ============================================================
+        if (!HeroAuthority::canWrite($item, HeroAuthority::SOURCE_ADMIN_AUTO)) {
+            throw new RuntimeException('Manual hero write rejected by authority guard');
         }
 
         $sqlU = "

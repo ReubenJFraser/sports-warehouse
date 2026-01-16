@@ -2,7 +2,9 @@
 define('SW_FRONTEND_VERSION', '2025-01-DEPLOY-' . substr(sha1(__FILE__), 0, 8));
 header('X-SW-Frontend: ' . SW_FRONTEND_VERSION);
 
-// index.php — very first lines
+// ------------------------------------------------------------
+// Debug bootstrap (early, safe)
+// ------------------------------------------------------------
 if (isset($_GET['sw_debug']) && $_GET['sw_debug'] !== '0') {
   ini_set('display_errors', '1');
   ini_set('display_startup_errors', '1');
@@ -18,14 +20,14 @@ File: {$e['file']} @ line {$e['line']}
   });
 }
 
-// --- Canonicalize index.php?section=men&gender=men → /men (etc.) ---
-// Only triggers when the *requested URL* was .../index.php, so no loops with /men.
+// ------------------------------------------------------------
+// Canonicalize index.php?section=men&gender=men → /men
+// ------------------------------------------------------------
 $reqPath   = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
-$scriptDir = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/'); // e.g. /sports-warehouse-home-page
-$base      = $scriptDir === '/' ? '' : $scriptDir; // normalize
+$scriptDir = rtrim(str_replace('\\','/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+$base      = $scriptDir === '/' ? '' : $scriptDir;
 
 if (preg_match('#^' . preg_quote($base, '#') . '/index\.php$#i', $reqPath)) {
-  // ↓↓↓ CHANGED: make the comparison case-insensitive
   $section = $_GET['section'] ?? null;
   $gender  = $_GET['gender']  ?? null;
 
@@ -34,120 +36,113 @@ if (preg_match('#^' . preg_quote($base, '#') . '/index\.php$#i', $reqPath)) {
   $valid    = ['men','women','kids'];
 
   if ($secLower && $secLower === $genLower && in_array($secLower, $valid, true)) {
-    // Preserve any *other* query params, drop section/gender (they’re encoded in the path)
     $others = $_GET;
     unset($others['section'], $others['gender']);
-    // RFC3986 encoding avoids spaces becoming '+'
     $qs   = http_build_query($others, '', '&', PHP_QUERY_RFC3986);
     $dest = ($base ?: '') . '/' . $secLower . ($qs ? ('?' . $qs) : '');
-
     header('Location: ' . $dest, true, 302);
     exit;
   }
 }
 
-// Safe to load the rest of your app after the redirect guard.
+// ------------------------------------------------------------
+// Core includes
+// ------------------------------------------------------------
 require __DIR__ . '/db.php';
-require_once __DIR__ . '/inc/color-groups.php'; // <-- NEW: shared color group helpers
+require_once __DIR__ . '/inc/color-groups.php';
+require_once __DIR__ . '/inc/sort-normalize.php';
 
-// index.php — unified homepage + filterable catalog (uses existing hero/config files)
-//
-// Behavior:
-// - Homepage: shows hero + Featured Products.
-// - Catalog mode: triggered by any of these GET params (or section=catalog):
-//     brand, gender, age_group, size_type, q, categoryID (+ colors & multi)
-//   Renders product cards via inc/product-grid.php using chosen_image.
-//
-// Deep links you can use in existing UI (brand logos/menu/footer):
-//   index.php?brand=Adidas
-//   index.php?brand=Adidas&gender=women
-//   index.php?categoryID=7
-//   index.php?q=tee
-
-// ---------------------------
-// Router / flags
-// ---------------------------
-
-// --- Debug toggle (URL: ?SW_DEBUG=1) ---
-// Back-compat: ?debug=1 still works but maps to SW_DEBUG internally.
+// ------------------------------------------------------------
+// Debug + logging
+// ------------------------------------------------------------
 $SW_DEBUG = (
   (isset($_GET['SW_DEBUG']) && $_GET['SW_DEBUG'] === '1') ||
   (isset($_GET['debug'])    && $_GET['debug']    === '1')
 );
 
-// --- Minimal logger ---
 if (!function_exists('sw_log')) {
   function sw_log($msg) {
     static $fp = null;
     $logDir = __DIR__ . '/logs';
     if (!is_dir($logDir)) @mkdir($logDir, 0777, true);
     $file = $logDir . '/sw-debug.log';
-    if ($fp === null) { $fp = @fopen($file, 'ab'); }
+    if ($fp === null) $fp = @fopen($file, 'ab');
     if ($fp) {
-      $ts = date('Y-m-d H:i:s');
-      if (!is_string($msg)) { $msg = print_r($msg, true); }
-      fwrite($fp, "[$ts] $msg\n");
-    } else {
-      error_log(is_string($msg) ? $msg : print_r($msg, true));
+      fwrite($fp, '[' . date('Y-m-d H:i:s') . '] ' . print_r($msg, true) . "\n");
     }
   }
 }
 
-// Back-compat alias: remove after migrating all references
-$DEBUG = $SW_DEBUG;
-
-// Breadcrumb to confirm logger boots
 if ($SW_DEBUG) sw_log('bootstrap OK (index.php)');
 
+// ------------------------------------------------------------
+// Raw routing inputs
+// ------------------------------------------------------------
 $section    = $_GET['section'] ?? 'homepage';
-
-// --- TEMP: disable videos sitewide while we focus on product cards ---
-$VIDEOS_ENABLED = isset($_GET['videos'])
-  ? in_array(strtolower($_GET['videos']), ['1','on','true','yes'], true)
-  : false; // default OFF for now
-
-// Catalog filters (links will set these)
 $brand      = isset($_GET['brand'])      ? trim((string)$_GET['brand'])      : '';
 $gender     = isset($_GET['gender'])     ? trim((string)$_GET['gender'])     : '';
 $age_group  = isset($_GET['age_group'])  ? trim((string)$_GET['age_group'])  : '';
 $size_type  = isset($_GET['size_type'])  ? trim((string)$_GET['size_type'])  : '';
 $q          = isset($_GET['q'])          ? trim((string)$_GET['q'])          : '';
-$sort       = isset($_GET['sort'])       ? trim((string)$_GET['sort'])       : 'relevance'; // optional
+$sort       = sw_normalize_sort($_GET['sort'] ?? null);
 $categoryID = filter_input(INPUT_GET, 'categoryID', FILTER_VALIDATE_INT) ?: null;
 
-// Defensive normalization for gender (+ support pretty /men|/women|/kids even if rewrite missed gender)
-$validGenders = ['men','women','kids'];
-$gender = strtolower($gender);
-$sectionLower = strtolower($section);
+// ------------------------------------------------------------
+// Canonical routing vocab (AUTHORITATIVE)
+// ------------------------------------------------------------
+$validGenders         = ['men','women','kids'];
+$validCatalogSections = ['men','women','kids','plus_size'];
+$validSections        = array_merge(['homepage','catalog'], $validCatalogSections);
 
-// If section itself is a gender and gender param is empty/invalid, inherit it
+// ------------------------------------------------------------
+// Normalize + validate
+// ------------------------------------------------------------
+$sectionLower = strtolower($section);
+$gender       = strtolower($gender);
+
+// size_type — strict
+if ($size_type !== '' && $size_type !== 'plus') {
+  sw_log("Invalid size_type rejected: {$size_type}");
+  $size_type = '';
+}
+
+// section — strict
+if (!in_array($sectionLower, $validSections, true)) {
+  sw_log("Invalid section rejected: {$sectionLower}");
+  $sectionLower = 'homepage';
+}
+
+// gender inheritance (after section validation)
 if (in_array($sectionLower, $validGenders, true) && !in_array($gender, $validGenders, true)) {
   $gender = $sectionLower;
 }
-// If gender provided but invalid, drop it
+
+// gender — strict
 if ($gender !== '' && !in_array($gender, $validGenders, true)) {
   $gender = '';
 }
 
-/* Color filters */
+// ------------------------------------------------------------
+// Color filters
+// ------------------------------------------------------------
 $colors = array_values(array_filter(array_map(
   fn($c) => preg_replace('/[^a-z]/', '', strtolower((string)$c)),
   (array)($_GET['color'] ?? [])
 )));
+
 $multiOnly = isset($_GET['multi']) && in_array(strtolower((string)$_GET['multi']), ['1','true','yes','on'], true);
 
-/* NEW: Color group (dark|light|color) */
 $group = '';
 if (isset($_GET['group'])) {
   $group = preg_replace('/[^a-z]/','', strtolower((string)$_GET['group']));
-  $validGroups = array_keys(sw_color_groups());
-  if (!in_array($group, $validGroups, true)) $group = '';
+  if (!in_array($group, array_keys(sw_color_groups()), true)) $group = '';
 }
 
-// hero.php expects $page
-$page = $_GET['section'] ?? 'homepage';
+// ------------------------------------------------------------
+// Hero / page key
+// ------------------------------------------------------------
+$page = $sectionLower;
 
-// Normalize brand → $page key for hero/config (e.g., "Under Armour" => "underarmour")
 function normalize_key(string $s): string {
   return strtolower(preg_replace('/[^a-z0-9]+/', '', $s));
 }
@@ -155,84 +150,87 @@ if ($brand !== '') {
   $page = normalize_key($brand);
 }
 
-// Enter catalog mode if any filter is present, section=catalog, or section is a gender
-$isCatalog = ($sectionLower === 'catalog')
-          || in_array($sectionLower, $validGenders, true)
-          || ($brand !== '' || $gender !== '' || $age_group !== '' || $size_type !== '' || $q !== '' || $categoryID
-              || !empty($colors) || !empty($group) || $multiOnly);
+// ------------------------------------------------------------
+// Catalog mode detection
+// ------------------------------------------------------------
+$isCatalog = (
+  $sectionLower === 'catalog'
+  || in_array($sectionLower, $validCatalogSections, true)
+  || $brand !== ''
+  || $gender !== ''
+  || $age_group !== ''
+  || $size_type !== ''
+  || $q !== ''
+  || $categoryID
+  || !empty($colors)
+  || !empty($group)
+  || $multiOnly
+);
 
-// ---------------------------
-// Pagination numbers (used by catalog query)
-// ---------------------------
+// ------------------------------------------------------------
+// Pagination
+// ------------------------------------------------------------
 $pageNum  = max(1, (int)($_GET['page'] ?? 1));
 $pageSize = 48;
 $offset   = ($pageNum - 1) * $pageSize;
 
-// Optional: initial debug snapshot (logs only; do not echo here)
+// ------------------------------------------------------------
+// Debug snapshot
+// ------------------------------------------------------------
 if ($SW_DEBUG) {
-  error_log('[SW DEBUG] Incoming filters snapshot: ' . json_encode([
-    'section'    => $section,
+  sw_log([
+    'section'    => $sectionLower,
     'gender'     => $gender,
     'brand'      => $brand,
-    'age_group'  => $age_group,
     'size_type'  => $size_type,
-    'q'          => $q,
-    'categoryID' => $categoryID,
-    'group'      => $group,     // <-- NEW
-    'colors'     => $colors,
-    'multiOnly'  => $multiOnly,
+    'sort'       => $sort,
     'isCatalog'  => $isCatalog,
-  ]));
+  ]);
 }
 
-// Run the unified catalog query (populates $total, $items, $catalogQueryRan)
+// ------------------------------------------------------------
+// Catalog query
+// ------------------------------------------------------------
 require __DIR__ . '/inc/catalog-query.php';
 
-// NOTE: DO NOT echo or include the grid here; render later inside the template.
-
-// ---------------------------
-// Site config (hero, etc.)
-// ---------------------------
-
-// 2) Load your slides/videos config
+// ------------------------------------------------------------
+// Site config / hero
+// ------------------------------------------------------------
 $config = include __DIR__ . '/inc/site-config.php';
+if (!isset($config[$page])) $page = 'homepage';
 
-// If the computed $page has no config, fall back to homepage for hero
-if (!isset($config[$page])) {
-  $page = 'homepage';
-}
-
-// (compat) inc/hero.php uses $db->query(...); alias it to $pdo
 $db = $pdo;
 
-// ---------------------------
-// Optional: resolve category name for UI (breadcrumb/title)
-// ---------------------------
+// ------------------------------------------------------------
+// Category name
+// ------------------------------------------------------------
 $categoryNameForUI = '';
 if ($categoryID) {
-  $stmtCat = $pdo->prepare('SELECT categoryName FROM category WHERE categoryId = :cid');
-  $stmtCat->execute([':cid' => $categoryID]);
-  $categoryNameForUI = (string)($stmtCat->fetchColumn() ?: '');
+  $stmt = $pdo->prepare('SELECT categoryName FROM category WHERE categoryId = :cid');
+  $stmt->execute([':cid' => $categoryID]);
+  $categoryNameForUI = (string)($stmt->fetchColumn() ?: '');
 }
 
-// Load optional helpers used by product-grid (data-images, legacy primary image)
+// ------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------
 require_once __DIR__ . '/inc/cards/utils.php';
 
-// ---------------------------
+// ------------------------------------------------------------
 // Page title
-// ---------------------------
+// ------------------------------------------------------------
 $titleParts = [];
-if ($brand)               $titleParts[] = $brand;
-if ($gender)              $titleParts[] = ucfirst($gender);
-if ($age_group)           $titleParts[] = ucfirst($age_group);
-if ($size_type)           $titleParts[] = ucfirst($size_type);
-if ($categoryNameForUI)   $titleParts[] = $categoryNameForUI;
-if ($q)                   $titleParts[] = "“$q”";
+if ($brand)             $titleParts[] = $brand;
+if ($gender)            $titleParts[] = ucfirst($gender);
+if ($size_type)         $titleParts[] = ucfirst($size_type);
+if ($categoryNameForUI) $titleParts[] = $categoryNameForUI;
+if ($q)                 $titleParts[] = "“$q”";
+
 $pageTitle = $isCatalog
   ? (($titleParts ? implode(' • ', $titleParts).' | ' : '').'Browse Products | Sports Warehouse')
   : 'Sports Warehouse';
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

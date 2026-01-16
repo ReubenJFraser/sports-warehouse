@@ -21,6 +21,7 @@ error_reporting(E_ALL);
 // Unified DB loader (local + production safe)
 // --------------------------------------------------
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../inc/hero/hero-authority.php';
 
 // --------------------------------------------------
 // Paths
@@ -143,6 +144,7 @@ $seen    = 0;
 $diskOk  = 0;
 $matched = 0;
 $updated = 0;
+$skippedByAuthority = 0;
 
 // --------------------------------------------------
 // Process rows
@@ -172,7 +174,7 @@ foreach ($rows as $r) {
 
     // Find matching item
     $stmt = $mysqli->prepare("
-        SELECT itemId
+        SELECT itemId, hero_image
         FROM item
         WHERE chosen_image = ?
            OR thumbnails_json LIKE CONCAT('%', ?, '%')
@@ -187,6 +189,14 @@ foreach ($rows as $r) {
 
     $item   = $res->fetch_assoc();
     $itemId = (int)$item['itemId'];
+
+    // ============================================================
+    // HERO AUTHORITY GUARD — MAINTENANCE
+    // ============================================================
+    if (!HeroAuthority::canWrite($item, HeroAuthority::SOURCE_MAINTENANCE)) {
+        $skippedByAuthority++;
+        continue;
+    }
 
     // Update item
     $up = $mysqli->prepare("
@@ -212,6 +222,7 @@ echo "\n=== SUMMARY ===\n";
 echo "Rows read: {$seen}\n";
 echo "Disk OK: {$diskOk}\n";
 echo "Matched items: {$matched}\n";
+echo "Skipped by authority: {$skippedByAuthority}\n";
 echo "Updated rows: {$updated}\n";
 echo "=============\n";
 

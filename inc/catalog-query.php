@@ -97,10 +97,10 @@ if ($age_group !== '') {
     $params[':age_group'] = $age_group;
 }
 
-// Size type
-if ($size_type !== '') {
-    $where[] = "LOWER(i.size_type) = LOWER(:size_type)";
-    $params[':size_type'] = $size_type;
+// Size type (canonical only)
+if ($size_type === 'plus') {
+    $where[] = 'i.size_type = :size_type';
+    $params[':size_type'] = 'plus';
 }
 
 // Search
