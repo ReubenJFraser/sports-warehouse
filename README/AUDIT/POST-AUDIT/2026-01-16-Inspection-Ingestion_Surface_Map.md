@@ -83,3 +83,60 @@ Any future ingestion enforcement requires:
 
 Until such a phase is declared, this document remains a **read-only reference map** and is considered **closed for inspection purposes**.
 
+---
+
+## Phase 6A Closure — Admin Visibility Surfaces
+
+**Phase:** 6A  
+**Scope:** Admin diagnostic visibility (read-only)  
+**Status:** Closed
+
+Phase 6A extended the post-audit inspection model into the admin system by
+introducing **explicit, read-only diagnostic surfaces** for system and catalog state.
+
+This phase includes:
+
+- Admin Dashboard system status reporting
+- Environment visibility (host, PHP version, DB connectivity)
+- Hero coverage, override presence, and legacy hero detection
+- Extraction of shared diagnostic logic into `/admin/inc/`
+  - `environment-status.php`
+  - `hero-status.php`
+
+### Explicit guarantees
+
+Phase 6A introduced **no enforcement, no mutation, and no automation**.
+
+Specifically:
+
+- No database writes were added
+- No heuristics were introduced
+- No authority rules were activated
+- No existing ingestion or admin behavior was modified
+
+All new logic is:
+- read-only
+- deterministic
+- callable from multiple admin surfaces
+- guarded by `ADMIN_CONTEXT`
+
+### Relationship to Ingestion Inspection
+
+Phase 6A does **not** alter the Ingestion Surface Register above.
+
+It operates **downstream** of ingestion and exists solely to:
+- make system state visible
+- support human inspection
+- prepare the ground for future enforcement phases
+
+### Closure statement
+
+Phase 6A is hereby declared **complete and closed**.
+
+No further Phase 6A changes are authorized.
+
+Any future admin changes must declare a new phase
+(e.g. Phase 7 — Enforcement or Phase 7 — Tooling),
+and must not retroactively modify Phase 6A behavior or intent.
+
+

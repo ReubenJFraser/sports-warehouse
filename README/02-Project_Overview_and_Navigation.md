@@ -142,6 +142,55 @@ These tools exist because **real systems require observability**.
 
 They are not “nice extras”; they are essential to safely evolving a live site.
 
+### 3.5.1 Admin Diagnostic Helpers (`/admin/inc/`)
+
+As the admin system evolved beyond simple tooling into an authoritative diagnostic surface, shared authoritative,read-only logic was extracted into `/admin/inc/`.
+
+This folder contains **admin-only, non-UI helpers** whose purpose is to:
+
+- report system state and catalog health
+- provide consistent, authoritative diagnostics
+- avoid duplication between admin tools (e.g. Dashboard and Hero Manager)
+- preserve strict separation between visibility and enforcement
+
+Examples include:
+
+- `hero-status.php` — canonical read-only hero coverage and state reporting
+
+These helpers:
+- perform no writes
+- introduce no automation
+- are consumed by multiple admin interfaces
+- exist to ensure observability without triggering enforcement
+
+This mirrors the frontend `/inc/` pattern, while remaining strictly admin-scoped.
+
+### 3.5.2 Admin Evolution Model (Visibility → Enforcement → Automation)
+
+Admin tooling in Sports Warehouse is developed under a strict progression model:
+
+1. **Visibility**
+   - Admin surfaces report system state truthfully
+   - No writes, no heuristics, no automation
+   - Purpose: establish trust and observability
+
+2. **Enforcement**
+   - Rules and authority checks may be introduced
+   - Still no automation
+   - Purpose: prevent invalid or unsafe writes
+
+3. **Automation**
+   - Batch operations, recomputation, or sync jobs
+   - Introduced only after visibility and enforcement are proven stable
+
+This progression is intentional.
+Admin systems must never skip directly to automation.
+
+Phase 6A operates entirely in the Visibility stage and is now **closed**.
+It established the admin dashboard as a truthful, read-only diagnostic surface.
+
+This model applies equally to hero selection, image auditing, and future admin extensions.
+
 ---
 
 ## 4. Experimental & Research Components

@@ -1,76 +1,149 @@
 <?php
-require_once __DIR__ . '/_layout.php';
-require_once __DIR__ . '/_header.php';  // for page headers + breadcrumbs
+// ============================================================
+// Admin Dashboard — Phase 6A
+// Orientation & Visibility Only
+// ============================================================
 
+define('ADMIN_CONTEXT', true);
+
+require_once __DIR__ . '/_layout.php';
+require_once __DIR__ . '/_header.php';
+require_once __DIR__ . '/db.php'; // provides $pdo
+
+// ------------------------------------------------------------
+// Admin diagnostic helpers (read-only)
+// ------------------------------------------------------------
+require_once __DIR__ . '/inc/environment-status.php';
+require_once __DIR__ . '/inc/hero-status.php';
+
+// ------------------------------------------------------------
+// Fetch status blocks (single source of truth)
+// ------------------------------------------------------------
+$envStatus  = sw_environment_status($pdo);
+$heroStatus = sw_hero_status($pdo);
+
+// ------------------------------------------------------------
+// Render
+// ------------------------------------------------------------
 admin_layout_start("Dashboard");
-admin_page_header("Dashboard", "Welcome to the Sports Warehouse admin console.");
+admin_page_header("Dashboard", "System overview and operational controls.");
 ?>
 
-<div class="grid grid-3">
+<!-- =========================================================
+     SYSTEM STATUS
+     Orientation / visibility only (Phase 6A)
+========================================================= -->
+<section class="dashboard-section">
+    <h2>System Status</h2>
 
-    <!-- Hero Manager -->
-    <a href="/admin/hero-manager.php" class="card dashboard-card">
-        <i class="fa-solid fa-images dashboard-icon"></i>
-        <h2>Hero Manager</h2>
-        <p>View hero images, scores, overrides, and regenerate hero frames.</p>
-    </a>
+    <ul class="status-list">
+        <li>
+            <strong>Environment:</strong>
+            <?= htmlspecialchars($envStatus['environment']) ?>
+        </li>
 
-    <!-- Hero Editor -->
-    <a href="/admin/hero-edit.php" class="card dashboard-card">
-        <i class="fa-solid fa-wand-magic-sparkles dashboard-icon"></i>
-        <h2>Hero Editor</h2>
-        <p>Inspect candidate frames and select the best hero image manually.</p>
-    </a>
+        <li>
+            <strong>Host:</strong>
+            <?= htmlspecialchars($envStatus['host']) ?>
+        </li>
 
-    <!-- Debug Tools -->
-    <a href="/admin/debug/index.php" class="card dashboard-card">
-        <i class="fa-solid fa-bug dashboard-icon"></i>
-        <h2>Debug Tools</h2>
-        <p>Run diagnostics, view environment info, detect duplicate site trees.</p>
-    </a>
+        <li>
+            <strong>PHP version:</strong>
+            <?= htmlspecialchars($envStatus['php_version']) ?>
+        </li>
 
-    <!-- File Browser -->
-    <a href="/admin/debug/file-tree.php" class="card dashboard-card">
-        <i class="fa-solid fa-folder-tree dashboard-icon"></i>
-        <h2>File Browser</h2>
-        <p>Explore the server filesystem for troubleshooting and cleanup.</p>
-    </a>
+        <li>
+            <strong>Database:</strong>
+            <?= $envStatus['db_connected']
+                ? '<span class="ok">Connected</span>'
+                : '<span class="warn">Not connected</span>' ?>
+        </li>
 
-    <!-- Duplicate Site Trees -->
-    <a href="/admin/debug/duplicate-trees.php" class="card dashboard-card">
-        <i class="fa-solid fa-clone dashboard-icon"></i>
-        <h2>Duplicate Site Trees</h2>
-        <p>Scan for redundant folder trees inside public_html.</p>
-    </a>
+        <li>
+            <strong>Status checked:</strong>
+            <?= htmlspecialchars($envStatus['checked_at']) ?>
+        </li>
 
-    <!-- PHP Info -->
-    <a href="/admin/debug/php-info.php" class="card dashboard-card">
-        <i class="fa-solid fa-server dashboard-icon"></i>
-        <h2>PHP Info</h2>
-        <p>Inspect the PHP configuration used on the Hostinger server.</p>
-    </a>
+        <li><hr></li>
 
-    <!-- Developer Functions -->
-    <div class="dashboard-card dashboard-formcard">
-        <i class="fa-solid fa-terminal dashboard-icon"></i>
-        <h2>Developer Functions</h2>
-        <p>Trigger deployment scripts directly from the admin panel.</p>
+        <li>
+            <strong>Catalog items:</strong>
+            <?= number_format($heroStatus['total_items']) ?>
+        </li>
 
-        <div class="split-button">
-            <button class="main" onclick="runDeployDefault()">Deploy</button>
-            <button class="menu" aria-label="More deploy options" aria-expanded="false">▼</button>
+        <li>
+            <strong>Hero coverage:</strong>
+            <?= number_format($heroStatus['with_hero']) ?>
+            /
+            <?= number_format($heroStatus['total_items']) ?>
+            (<?= $heroStatus['coverage_pct'] ?>%)
+        </li>
 
-            <div class="dropdown">
-                <button type="button" onclick="runDeployDefault()">Without Commit Message</button>
-                <button type="button" onclick="promptCommit(this)">With Commit Message</button>
+        <li>
+            <strong>Missing hero images:</strong>
+            <?= number_format($heroStatus['missing_hero']) ?>
+        </li>
+
+        <li>
+            <strong>Overrides present:</strong>
+            <?= number_format($heroStatus['with_override']) ?>
+        </li>
+
+        <li>
+            <strong>Legacy hero values:</strong>
+            <?= number_format($heroStatus['legacy_hero']) ?>
+        </li>
+    </ul>
+
+    <p class="muted">
+        This dashboard reports current system and catalog state only.
+        No enforcement, recomputation, or automation occurs here.
+        Sidebar navigation remains authoritative for workflows.
+    </p>
+</section>
+
+<!-- =========================================================
+     SYSTEM & ENVIRONMENT
+     Dashboard-only operational tools
+========================================================= -->
+<section class="dashboard-section">
+    <h2>System &amp; Environment</h2>
+
+    <div class="grid grid-3">
+
+        <!-- PHP Info -->
+        <a href="/admin/debug/php-info.php" class="card dashboard-card">
+            <i class="fa-solid fa-server dashboard-icon"></i>
+            <h3>PHP Info</h3>
+            <p>Inspect the PHP configuration used on the server.</p>
+        </a>
+
+        <!-- Developer Functions / Deploy -->
+        <div class="card dashboard-card dashboard-formcard">
+            <i class="fa-solid fa-terminal dashboard-icon"></i>
+            <h3>Developer Functions</h3>
+            <p>Trigger deployment scripts directly from the admin panel.</p>
+
+            <div class="split-button">
+                <button class="main" onclick="runDeployDefault()">Deploy</button>
+                <button class="menu"
+                        aria-label="More deploy options"
+                        aria-expanded="false">▼</button>
+
+                <div class="dropdown">
+                    <button type="button" onclick="runDeployDefault()">
+                        Without Commit Message
+                    </button>
+                    <button type="button" onclick="promptCommit(this)">
+                        With Commit Message
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-</div>
+    </div>
+</section>
 
 <?php
 admin_layout_end();
 ?>
-
-
