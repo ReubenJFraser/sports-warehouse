@@ -1,6 +1,7 @@
 <?php
 // /admin/hero-manager.php
 // View hero images, scores, overrides, and allow recalculation.
+// Enforcement boundaries are defined in /admin/ENFORCEMENT_CANDIDATE_REGISTER.md; do not add enforcement logic here.
 
 require __DIR__ . '/../db.php';
 require __DIR__ . '/image-helper.php';
@@ -442,7 +443,4 @@ admin_layout_start("Hero Manager");
 <script src="/js/admin/hero.js"></script>
 
 <?php admin_layout_end();
-
-
-
 

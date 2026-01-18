@@ -17,6 +17,8 @@
    - Codex must always propose or run SELECT queries before UPDATE or ALTER.
    - No assumptions about production state are allowed.
 
+---
+
 ## Identity Rules (Critical)
 
 4. **`external_item_id`**
@@ -31,6 +33,8 @@
    - Must come from the canonical list defined in Excel.
    - Codex must not invent new series slugs.
 
+---
+
 ## Importer Constraints
 
 6. **Importers are transport only**
@@ -41,6 +45,8 @@
 7. **Importer failure is a signal, not a bug**
    - Failure indicates unresolved editorial ambiguity.
    - Codex must stop and report, not patch around failures.
+
+---
 
 ## Schema Change Discipline
 
@@ -53,6 +59,27 @@
    - ALTER statements must be explicit and reversible.
    - Codex must present SQL before execution.
 
+---
+
+## Enforcement Awareness (Admin System)
+
+10. **Enforcement is governed by an explicit register**
+   - All enforcement decisions, candidates, and prohibitions are defined in:
+     ```
+     /admin/ENFORCEMENT_CANDIDATE_REGISTER.md
+     ```
+   - Codex must treat this register as authoritative when:
+     - writing or modifying admin code
+     - touching mutation paths
+     - proposing guards, checks, or constraints
+   - If a file or behavior is not listed in the register, Codex must assume:
+     **enforcement is not authorized**.
+   - Codex must not introduce enforcement unless:
+     - a visibility source already exists, and
+     - the register is updated first.
+
+---
+
 ## What Codex Is Allowed To Do
 
 - Generate **read-only audit queries**
@@ -60,6 +87,8 @@
 - Validate **consistency between Excel and DB**
 - Flag **ambiguities or contract violations**
 - Execute **approved, mechanical changes**
+
+---
 
 ## What Codex Must Never Do
 
@@ -69,6 +98,9 @@
 - Create new series or identifiers
 - “Clean up” data without instruction
 - Assume production state
+- Introduce enforcement outside the register
+
+---
 
 ## Golden Rule
 

@@ -6,68 +6,73 @@
 
 function admin_render_nav(): string
 {
-    $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+
+    if (preg_match('#^(.*?/admin)(?:/|$)#', $path, $m)) {
+        $adminBase = rtrim($m[1], '/');   // e.g. /sports-warehouse-home-page/admin OR /admin
+    } else {
+        $adminBase = '/admin';            // fallback
+    }
 
     $normalize = function (string $path): string {
         return ($path === '/') ? $path : rtrim($path, '/');
     };
 
-    $currentPath = $normalize($currentPath);
+    $currentPath = $normalize($path);
 
     $sections = [
         'General' => [
             [
-                'href'  => '/admin/index.php',
+                'href'  => $adminBase . '/index.php',
                 'icon'  => 'fa-solid fa-gauge',
                 'label' => 'Dashboard',
             ],
         ],
         'Hero Tools' => [
             [
-                'href'  => '/admin/hero-manager.php',
+                'href'  => $adminBase . '/hero-manager.php',
                 'icon'  => 'fa-solid fa-images',
                 'label' => 'Hero Manager',
             ],
             [
-                'href'  => '/admin/hero-edit.php',
+                'href'  => $adminBase . '/hero-edit.php',
                 'icon'  => 'fa-solid fa-wand-magic-sparkles',
                 'label' => 'Hero Editor',
             ],
         ],
         'Diagnostics' => [
             [
-                'href'  => '/admin/debug/index.php',
+                'href'  => $adminBase . '/debug/index.php',
                 'icon'  => 'fa-solid fa-bug',
                 'label' => 'Debug Tools',
             ],
             [
-                'href'  => '/admin/debug/file-tree.php',
+                'href'  => $adminBase . '/debug/file-tree.php',
                 'icon'  => 'fa-solid fa-folder-tree',
                 'label' => 'File Tree',
             ],
             [
-                'href'  => '/admin/debug/duplicate-trees.php',
+                'href'  => $adminBase . '/debug/duplicate-trees.php',
                 'icon'  => 'fa-solid fa-clone',
                 'label' => 'Duplicate Site Trees',
             ],
             [
-                "href"  => "/admin/debug/hero-analysis.php",
-                "icon"  => "fa-solid fa-chart-column",
-                "label" => "Hero Analysis"
+                'href'  => $adminBase . '/debug/hero-analysis.php',
+                'icon'  => 'fa-solid fa-chart-column',
+                'label' => 'Hero Analysis'
             ],
             [
-                "href"      => "/admin/sync-tool.php",
-                "icon"      => "fa-solid fa-shuffle",
-                "label"     => "Sync Tool",
-                "localOnly" => true
+                'href'      => $adminBase . '/sync-tool.php',
+                'icon'      => 'fa-solid fa-shuffle',
+                'label'     => 'Sync Tool',
+                'localOnly' => true
             ],
             [
-                "href"  => "/admin/db-test.php",
-                "icon"  => "fa-solid fa-database",
-                "label" => "DB Test",
-                "localOnly" => false
+                'href'      => $adminBase . '/db-test.php',
+                'icon'      => 'fa-solid fa-database',
+                'label'     => 'DB Test',
+                'localOnly' => false
             ],
-
         ],
     ];
 
@@ -89,7 +94,11 @@ function admin_render_nav(): string
             $hrefNorm = $normalize($item['href']);
             $isActive = ($hrefNorm === $currentPath);
 
-            if (!$isActive && $hrefNorm === '/admin/index.php' && $currentPath === '/admin') {
+            if (
+                !$isActive &&
+                $hrefNorm === $normalize($adminBase . '/index.php') &&
+                $currentPath === $normalize($adminBase)
+            ) {
                 $isActive = true;
             }
 
