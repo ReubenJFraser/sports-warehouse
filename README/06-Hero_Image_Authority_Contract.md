@@ -33,8 +33,81 @@ Hero state exists **only** in the following columns:
 - `item.hero_ratio`
 - `item.hero_orientation`
 
-No parallel hero state is permitted.
+No parallel hero state is permitted.  
 No derived hero state is permitted at read time.
+
+---
+
+## Hero Control States (Interpretive Clarification)
+
+Hero behavior in the system is determined by **persisted database fields**, not by inference, heuristics, or UI context.
+
+At any point in time, each item is in **exactly one** of the following hero control states.
+
+### State A — Automatic Hero (Computed)
+
+**Definition**  
+Hero selected by the automatic selector with no manual override.
+
+**Persisted Conditions**
+- `hero_override IS NULL`
+- `hero_image` populated by automation
+
+**Characteristics**
+- Automation is authoritative
+- `hero_score`, `hero_ratio`, and `hero_orientation` are meaningful
+- Rejections may or may not be present
+
+**Authority**
+- Subordinate to manual editorial authority
+- May be replaced only by explicit recomputation or override
+
+---
+
+### State B — Manual Hero Override (Editorial)
+
+**Definition**  
+Hero image explicitly chosen by a human.
+
+**Persisted Conditions**
+- `hero_override IS NOT NULL`
+- `hero_image` reflects the override
+
+**Characteristics**
+- Human intent is authoritative
+- Automation is suppressed
+- `hero_score` is historical and informational only
+
+**Authority**
+- Terminal
+- Must never be overwritten by automation or maintenance processes
+
+---
+
+### State C — Governance-Constrained Automatic Hero
+
+**Definition**  
+Hero selected automatically, but within explicit governance constraints.
+
+**Persisted Conditions**
+- `hero_override IS NULL`
+- One or more entries exist in `hero_rejections`
+
+**Characteristics**
+- Automation remains active
+- Candidate pool is explicitly restricted
+- Rejections persist across recomputation
+
+**Authority**
+- Subordinate to manual editorial authority
+- Constrained by governance decisions
+
+---
+
+**Interpretive Rule**
+
+Hero control state is determined **only** by persisted fields.
+UI presentation, selector behavior, or score values must never be used to infer state.
 
 ---
 
@@ -155,4 +228,5 @@ Silent correction is forbidden.
 > If hero authority is unclear, no write is permitted.
 
 Clarity precedes automation.
+
 

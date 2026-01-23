@@ -24,13 +24,23 @@ This project is guided by four principles:
 
 Wherever possible, the system makes an intelligent default decision — but never locks the human out.
 
+Importantly, automation in Sports Warehouse is **explicitly governed**.  
+Automated decisions exist to assist, not to replace, editorial judgment.
+
 ### 2.2 Data is editorial, not incidental
 
 Product data is treated as authored content with clear rules, naming conventions, and contracts between systems.
 
+This includes image selection state, which is treated as **persisted editorial data**, not a transient UI concern.
+
 ### 2.3 Architecture over features
 
 The value of the project lies more in *how* things are structured than in the sheer number of visible features.
+
+Subsystems are intentionally separated into:
+- authority (what may write)
+- governance (how humans intervene)
+- presentation (what may only read)
 
 ### 2.4 Showcase over minimal compliance
 
@@ -62,9 +72,12 @@ At a conceptual level, the system consists of five interacting layers:
 - Designed to support:
   - deterministic product identity
   - image metadata storage
-  - hero image scoring
-  - admin overrides without data loss
+  - hero image persistence
+  - explicit admin overrides without data loss
 - Schema evolution is intentional and checklist-driven
+
+Hero image state is persisted and authoritative at this layer.
+No hero selection or substitution occurs implicitly at read time.
 
 📄 See: **Codex — Architecture Invariants**
 
@@ -78,7 +91,7 @@ Each product can have multiple images, which are:
 
 - automatically analyzed
 - scored and ranked for hero suitability
-- presented to an admin user in ranked order
+- written to persisted hero fields
 
 Scoring criteria include (but are not limited to):
 
@@ -87,15 +100,17 @@ Scoring criteria include (but are not limited to):
 - crop safety
 - image completeness
 
-Importantly:
+Crucially, hero selection in Sports Warehouse operates under an **explicit authority and governance model**:
 
-- automated ranking is *advisory*
-- a human can override the chosen hero image at any time
-- overrides are persistent and explicit
+- Automated selection produces a default hero
+- Human editorial intent may override automation
+- Governance constraints may restrict future automation
+- No frontend or UI layer may reinterpret hero authority
 
-This system exists to explore **how automation and editorial judgment can coexist**, especially when visual quality is subjective.
+Automation, override, and governance are deliberately separated to ensure that hero behavior is **deterministic, auditable, and explainable**.
 
-📄 See: *Hero Selection documentation*
+📄 See: **Hero Image Authority Contract**  
+📄 See: **Hero Image Governance — Admin Workflow**
 
 ---
 
@@ -124,6 +139,9 @@ Important clarification:
 - Filters refine the active segment; they do not redefine it
 - Routing semantics are governed by **Codex — Routing Invariants**
 
+The frontend is strictly **non-authoritative** with respect to hero images.
+It renders exactly what is stored and never computes alternatives.
+
 📄 See: **Codex — Routing Invariants**
 
 ---
@@ -142,15 +160,15 @@ These tools exist because **real systems require observability**.
 
 They are not “nice extras”; they are essential to safely evolving a live site.
 
-### 3.5.1 Admin Diagnostic Helpers (`/admin/inc/`)
+#### 3.5.1 Admin Diagnostic Helpers (`/admin/inc/`)
 
-As the admin system evolved beyond simple tooling into an authoritative diagnostic surface, shared authoritative,read-only logic was extracted into `/admin/inc/`.
+As the admin system evolved beyond simple tooling into an authoritative diagnostic surface, shared read-only logic was extracted into `/admin/inc/`.
 
 This folder contains **admin-only, non-UI helpers** whose purpose is to:
 
 - report system state and catalog health
 - provide consistent, authoritative diagnostics
-- avoid duplication between admin tools (e.g. Dashboard and Hero Manager)
+- avoid duplication between admin tools
 - preserve strict separation between visibility and enforcement
 
 Examples include:
@@ -160,36 +178,28 @@ Examples include:
 These helpers:
 - perform no writes
 - introduce no automation
-- are consumed by multiple admin interfaces
 - exist to ensure observability without triggering enforcement
 
-This mirrors the frontend `/inc/` pattern, while remaining strictly admin-scoped.
+#### 3.5.2 Admin Evolution Model (Visibility → Enforcement → Automation)
 
-### 3.5.2 Admin Evolution Model (Visibility → Enforcement → Automation)
-
-Admin tooling in Sports Warehouse is developed under a strict progression model:
+Admin tooling follows a strict progression:
 
 1. **Visibility**
-   - Admin surfaces report system state truthfully
-   - No writes, no heuristics, no automation
-   - Purpose: establish trust and observability
+   - Truthful reporting of persisted state
+   - No writes, no heuristics
+   - Purpose: establish trust
 
 2. **Enforcement**
-   - Rules and authority checks may be introduced
+   - Authority checks and guardrails
    - Still no automation
-   - Purpose: prevent invalid or unsafe writes
+   - Purpose: prevent invalid writes
 
 3. **Automation**
-   - Batch operations, recomputation, or sync jobs
+   - Batch operations and recomputation
    - Introduced only after visibility and enforcement are proven stable
 
-This progression is intentional.
-Admin systems must never skip directly to automation.
-
-Phase 6A operates entirely in the Visibility stage and is now **closed**.
-It established the admin dashboard as a truthful, read-only diagnostic surface.
-
-This model applies equally to hero selection, image auditing, and future admin extensions.
+Hero image tooling follows this model explicitly.
+Governance precedes automation.
 
 ---
 
@@ -199,7 +209,7 @@ Some parts of the project are explicitly exploratory.
 
 ### 4.1 AI-Generated Shadows for Product Images
 
-A major research thread investigates whether **AI or 3D rendering can generate realistic floor-and-wall shadows** for transparent PNG product images at scale.
+A research thread investigates whether **AI or 3D rendering can generate realistic shadows** for transparent PNG product images at scale.
 
 Approaches explored include:
 
@@ -207,38 +217,31 @@ Approaches explored include:
 - AI relighting tools
 - SaaS shadow generators
 
-The goal is to create a **virtual studio look**:
-
-- consistent lighting
-- realistic grounding
-- scalable across hundreds of images
-
-This work is documented separately and should be considered **experimental**, not production-locked.
-
-📄 See: *Blender Shadow-Catcher Research*
+This work is documented separately and is **not production-locked**.
 
 ---
 
 ## 5. Navigation Guide (Where to Look)
 
-### 5.1 If you want to understand rules and constraints
+### 5.1 If you want to understand rules and authority
 
+→ **Hero Image Authority Contract**  
 → **Codex — Architecture Invariants**  
 → **Codex — Routing Invariants**
 
-### 5.2 If you want to modify or import data
+### 5.2 If you want to understand admin behavior
 
-→ **Excel — Database Contract**  
-→ **Importer Design Constraints**
+→ **Hero Image Governance — Admin Workflow**  
+→ `/admin/hero-*`
 
-### 5.3 If you want to change visuals or layout
+### 5.3 If you want to modify or import data
+
+→ **Excel — Database Contract**
+
+### 5.4 If you want to change visuals or layout
 
 → `/css/`, `/inc/`, `/js/`  
 (Check Architecture Invariants first)
-
-### 5.4 If you want to understand image logic
-
-→ `/tools/`, `/admin/hero-*`, image analysis scripts
 
 ### 5.5 If you are an AI agent (Codex)
 
@@ -250,7 +253,7 @@ This work is documented separately and should be considered **experimental**, no
 
 - It is not a minimal tutorial solution
 - It is not frozen or “finished”
-- It is not optimized for speed of delivery over correctness
+- It is not optimized for speed over correctness
 - It is not designed to hide complexity
 
 Complexity here is intentional, surfaced, and documented.
@@ -263,10 +266,11 @@ Recommended reading order:
 
 1. Codex — Behavioural Rules
 2. Project Overview & Navigation (this document)
-3. Codex — Architecture Invariants
-4. Codex — Routing Invariants
-5. Excel — Database Contract
-6. Specific subsystem documentation as needed
+3. Hero Image Authority Contract
+4. Hero Image Governance — Admin Workflow
+5. Codex — Architecture Invariants
+6. Codex — Routing Invariants
+7. Excel — Database Contract
 
 This order exists to prevent accidental misuse or incorrect assumptions.
 
@@ -274,8 +278,8 @@ This order exists to prevent accidental misuse or incorrect assumptions.
 
 ## Conclusion
 
-Sports Warehouse is best understood as a **learning-driven, architecture-first retail platform** built around a single-page, state-driven navigation model.
+Sports Warehouse is best understood as a **learning-driven, architecture-first retail platform**.
 
-Its value lies not only in what it displays, but in how carefully each system is defined, constrained, and allowed to evolve.
+Its distinguishing feature is not visual polish alone, but the care taken to define **authority, governance, and evolution paths** — especially in areas where automation and human judgment intersect.
 
 
