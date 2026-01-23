@@ -477,10 +477,11 @@ admin_layout_start("Hero Editor");
                         </div>
 
                         <div class="candidate-score">
-                            <div>Score: <?= number_format($score, 1) ?></div>
+                            Score: <?= number_format($score, 2) ?>
+                            <span class="micro-label">(historical)</span>
                             <div>Ratio: <?= $ratio !== null ? number_format($ratio, 3) : '—' ?></div>
                         </div>
-
+                        
                         <button
                             type="button"
                             class="btn btn-ghost"
@@ -524,9 +525,4 @@ admin_layout_start("Hero Editor");
 
 <?php
 admin_layout_end();
-
-
-
-
-
 

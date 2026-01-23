@@ -242,12 +242,68 @@ $sql = "
 $items = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 /* ============================================================
+   HERO STATE SUMMARY — READ ONLY
+   ============================================================ */
+
+$sqlSummary = "
+    SELECT
+        COUNT(*) AS total_items,
+
+        SUM(CASE
+            WHEN ho.itemId IS NOT NULL THEN 1
+            ELSE 0
+        END) AS manual_overrides,
+
+        SUM(CASE
+            WHEN ho.itemId IS NULL
+             AND COALESCE(r.reject_count, 0) > 0 THEN 1
+            ELSE 0
+        END) AS governed_automation,
+
+        SUM(CASE
+            WHEN ho.itemId IS NULL
+             AND COALESCE(r.reject_count, 0) = 0 THEN 1
+            ELSE 0
+        END) AS pure_automatic
+    FROM item i
+    LEFT JOIN hero_override ho ON ho.itemId = i.itemId
+    LEFT JOIN (
+        SELECT itemId, COUNT(*) AS reject_count
+        FROM hero_rejections
+        GROUP BY itemId
+    ) r ON r.itemId = i.itemId
+    WHERE i.is_active = 1
+";
+
+$summary = $pdo->query($sqlSummary)->fetch(PDO::FETCH_ASSOC);
+
+/* ============================================================
+   HERO STATE SUMMARY — MISSING IMAGE CHECK
+   ============================================================ */
+
+$missingImages = 0;
+
+foreach ($items as $row) {
+    $autoImg = $row['auto_hero_image'] ?: $row['chosen_image'];
+    $overrideImg = $row['override_image'] ?? '';
+
+    if ($autoImg && !admin_image_exists($autoImg)) {
+        $missingImages++;
+        continue;
+    }
+
+    if ($overrideImg && !admin_image_exists($overrideImg)) {
+        $missingImages++;
+    }
+}
+
+/* ============================================================
    5. LAYOUT START
    ============================================================ */
 admin_layout_start("Hero Manager");
 ?>
 
-<link rel="stylesheet" href="/css/admin/hero.css">
+<link rel="stylesheet" href="<?= BASE_URL ?>/css/admin/hero.css">
 
 <!-- ============================================================
      Breadcrumbs
@@ -275,6 +331,39 @@ admin_layout_start("Hero Manager");
             <span class="btn__dot"></span> Show details
         </button>
     </header>
+
+    <!-- ========================================================
+         Context Panel
+         ======================================================== -->
+
+    <div class="context-panel hero-context">
+        <strong>Persisted hero state.</strong>
+        This view reflects stored hero selections.
+        No images are recomputed automatically here.
+    </div>
+
+     <!-- ========================================================
+         Hero State Summary
+         ======================================================== -->
+
+    <div class="context-panel">
+        <strong>Hero state summary.</strong>
+
+        <div class="mt-2">
+            <span class="hero-badge hero-badge--governed">Total items: <?= (int)$summary['total_items'] ?></span>
+            <span class="hero-badge hero-badge--manual">Manual overrides: <?= (int)$summary['manual_overrides'] ?></span>
+            <span class="hero-badge hero-badge--governed">Governed automation: <?= (int)$summary['governed_automation'] ?></span>
+            <span class="hero-badge hero-badge--auto">Pure automatic: <?= (int)$summary['pure_automatic'] ?></span>
+            <span class="hero-badge <?= $missingImages > 0 ? 'hero-badge--missing' : '' ?>">
+                Missing images: <?= $missingImages ?>
+            </span>
+        </div>
+
+        <div class="context-note">
+            Counts reflect persisted hero state.
+            No recomputation or scoring occurs here.
+        </div>
+    </div>
 
     <!-- ========================================================
          Collapsible Info Panel
@@ -341,12 +430,18 @@ admin_layout_start("Hero Manager");
                         <?php endif; ?>
 
                         <!-- badges -->
-                        <div class="hero-card__badges">
+                        <div class="hero-card__badges">                            
+                            <?php if ($override): ?>
+                                <span class="hero-badge hero-badge--manual">Manual override</span>
+                            <?php elseif ($rejects > 0): ?>
+                                <span class="hero-badge hero-badge--governed">Governed automation</span>
+                            <?php else: ?>
+                                <span class="hero-badge hero-badge--auto">Automatic</span>
+                            <?php endif; ?>
 
                             <span class="hero-badge">
                                 <?= $score !== null ? "Score: " . number_format($score, 1) : "No score" ?>
                             </span>
-
                             <span class="hero-badge"><?= $orientLabel ?></span>
 
                             <?php if ($override): ?>
@@ -425,6 +520,10 @@ admin_layout_start("Hero Manager");
                     <a class="btn btn-ghost" href="hero-manager.php?recalc=<?= $itemId ?>">
                         Recalculate
                     </a>
+                </div>
+                <div class="context-note">
+                    Recalculate runs the automatic selector only.
+                    It does not override manual hero selections.
                 </div>
 
             </section>

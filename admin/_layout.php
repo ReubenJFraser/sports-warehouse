@@ -5,6 +5,16 @@
 // Version: 2025-12-13
 // -------------------------------------------------------------------------
 
+// Admin bootstrap invariants
+
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', dirname(__DIR__));
+}
+
+if (!defined('BASE_URL')) {
+    define('BASE_URL', '/sports-warehouse-home-page');
+}
+
 require_once __DIR__ . '/_nav.php';
 
 if (!function_exists('admin_layout_start')) {

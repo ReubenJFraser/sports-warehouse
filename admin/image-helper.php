@@ -29,19 +29,22 @@ if (!function_exists('admin_normalize_image_url')) {
             $p = substr($p, 1);
         }
 
-        return '/' . $p;
+        return BASE_URL . '/' . $p;
     }
 }
 
 /**
  * Resolve absolute filesystem path
+ *
+ * IMPORTANT:
+ * Uses PROJECT_ROOT defined in admin bootstrap (_layout.php).
+ * Do NOT recompute root here.
  */
 if (!function_exists('admin_image_fs_path')) {
     function admin_image_fs_path(string $url): string
     {
-        $root = dirname(__DIR__); // project root
         $clean = ltrim($url, '/');
-        return $root . '/' . $clean;
+        return PROJECT_ROOT . '/' . $clean;
     }
 }
 
@@ -145,15 +148,10 @@ if (!function_exists('admin_render_thumbnail_safe')) {
     function admin_render_thumbnail_safe(string $path, string $alt = '', array $attrs = []): string
     {
         if (!admin_image_exists($path)) {
-            $path = 'images/placeholders/missing_admin.png';
+            $path = 'images/placeholders/product_missing.svg';
         }
 
         return admin_render_thumbnail($path, $alt, $attrs);
     }
 }
-
-
-
-
-
 
