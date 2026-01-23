@@ -256,6 +256,33 @@
     color: var(--text-muted);
 }
 
+/* =========================================================
+   HERO GOVERNANCE SEMANTICS
+========================================================= */
+
+.hero-context {
+    margin-bottom: 14px;
+}
+
+/* Base badge already exists; these are semantic variants */
+
+.hero-badge--manual {
+    border-color: rgba(255, 127, 50, 0.9);
+    background: var(--accent-soft);
+    color: #ffd9bd;
+}
+
+.hero-badge--governed {
+    border-color: rgba(148, 163, 235, 0.9);
+    background: rgba(148, 163, 235, 0.15);
+    color: #dfe6ff;
+}
+
+.hero-badge--auto {
+    border-color: rgba(70, 195, 123, 0.8);
+    background: var(--success-soft);
+    color: #d4ffe6;
+}
 
 /* =========================================================
    hero-edit.php — candidate image tiles
