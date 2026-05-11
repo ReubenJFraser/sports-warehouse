@@ -5,7 +5,7 @@
 require __DIR__ . '/../db.php';
 require __DIR__ . '/image-helper.php';
 require_once __DIR__ . '/_layout.php';
-require_once __DIR__ . '/../inc/hero/hero-authority.php';
+require_once __DIR__ . '/../inc/hero/authority.php';
 
 // --------------------------------------------------------
 // Guard: require ?id=ITEM_ID

@@ -4,11 +4,12 @@
 // Enforcement boundaries are defined in /admin/ENFORCEMENT_CANDIDATE_REGISTER.md; do not add enforcement logic here.
 
 require __DIR__ . '/../db.php';
-require __DIR__ . '/image-helper.php';
-require_once __DIR__ . '/../inc/hero/hero-authority.php';
 
 // Admin Layout Wrapper
 require_once __DIR__ . '/_layout.php';
+
+require __DIR__ . '/image-helper.php';
+require_once __DIR__ . '/../inc/hero/authority.php';
 
 /* ============================================================
    1. SCORING LOGIC — UNCHANGED
@@ -287,18 +288,71 @@ foreach ($items as $row) {
     $autoImg = $row['auto_hero_image'] ?: $row['chosen_image'];
     $overrideImg = $row['override_image'] ?? '';
 
+    // Check computed baseline
     if ($autoImg && !admin_image_exists($autoImg)) {
         $missingImages++;
         continue;
     }
 
+    // Check manual override (if present)
     if ($overrideImg && !admin_image_exists($overrideImg)) {
         $missingImages++;
     }
 }
 
 /* ============================================================
-   5. LAYOUT START
+   5. ENFORCEMENT READINESS SUMMARY
+   ============================================================ */
+
+$enforcementSummarySql = "
+    SELECT
+        COUNT(*) AS total_active_items,
+
+        SUM(CASE
+            WHEN ho.itemId IS NOT NULL THEN 1
+            ELSE 0
+        END) AS manual_overrides,
+
+        SUM(CASE
+            WHEN ho.itemId IS NULL
+             AND COALESCE(r.reject_count, 0) > 0 THEN 1
+            ELSE 0
+        END) AS governed_automation,
+
+        SUM(CASE
+            WHEN ho.itemId IS NULL
+             AND COALESCE(r.reject_count, 0) = 0
+             AND i.hero_image IS NOT NULL THEN 1
+            ELSE 0
+        END) AS pure_automatic,
+
+        SUM(CASE
+            WHEN i.hero_image IS NULL THEN 1
+            ELSE 0
+        END) AS no_hero_image,
+
+        SUM(CASE
+            WHEN i.hero_image IS NOT NULL
+             AND i.hero_score IS NULL THEN 1
+            ELSE 0
+        END) AS missing_hero_score
+
+    FROM item i
+    LEFT JOIN hero_override ho ON ho.itemId = i.itemId
+    LEFT JOIN (
+        SELECT itemId, COUNT(*) AS reject_count
+        FROM hero_rejections
+        GROUP BY itemId
+    ) r ON r.itemId = i.itemId
+    WHERE i.is_active = 1
+";
+
+$enforcementSummary = $pdo
+    ->query($enforcementSummarySql)
+    ->fetch(PDO::FETCH_ASSOC);
+
+/* ============================================================
+   6. LAYOUT START
    ============================================================ */
 admin_layout_start("Hero Manager");
 ?>
@@ -382,7 +436,46 @@ admin_layout_start("Hero Manager");
             <li>Score all candidates.</li>
             <li>Write best match to <code>item</code>.</li>
         </ul>
-    </section>
+    </section>   
+    
+    <!-- ========================================================
+         Enforcement Readiness Summary
+         ======================================================== -->
+
+         <section class="context-panel admin-panel--enforcement-readiness">
+            <strong>Phase 8 — Enforcement Readiness Summary (Read-Only)</strong>
+
+            <div class="mt-2">
+                <span class="hero-badge hero-badge--auto">
+                    Total active items: <?= (int)$enforcementSummary['total_active_items'] ?>
+                </span>
+
+                <span class="hero-badge hero-badge--manual">
+                    Manual overrides: <?= (int)$enforcementSummary['manual_overrides'] ?>
+                </span>
+
+                <span class="hero-badge hero-badge--governed">
+                    Governed automation: <?= (int)$enforcementSummary['governed_automation'] ?>
+                </span>
+
+                <span class="hero-badge hero-badge--auto">
+                    Pure automatic: <?= (int)$enforcementSummary['pure_automatic'] ?>
+                </span>
+
+                <span class="hero-badge <?= $enforcementSummary['no_hero_image'] > 0 ? 'hero-badge--missing' : '' ?>">
+                    No hero image: <?= (int)$enforcementSummary['no_hero_image'] ?>
+                </span>
+
+                <span class="hero-badge <?= $enforcementSummary['missing_hero_score'] > 0 ? 'hero-badge--missing' : '' ?>">
+                    Missing hero score: <?= (int)$enforcementSummary['missing_hero_score'] ?>
+                </span>
+            </div>
+
+            <div class="context-note">
+                This panel reports what enforcement <em>would</em> affect if enabled today.
+                No enforcement, recomputation, or mutation occurs here.
+            </div>
+         </section>
 
     <!-- ========================================================
          Flash Message
@@ -416,7 +509,17 @@ admin_layout_start("Hero Manager");
 
                 $orientLabel = $orient === 'L' ? 'Landscape'
                               : ($orient === 'S' ? 'Square' : 'Portrait');
-            ?>
+
+                $hasManual = !empty($override);
+
+                $currentHeroImage = $hasManual
+                    ? $override
+                    : $autoImg;
+
+                $currentHeroSource = $hasManual
+                    ? 'manual'
+                    : 'auto';
+            ?>            
 
             <section class="hero-card">
                 <div class="hero-card__left">
@@ -467,18 +570,23 @@ admin_layout_start("Hero Manager");
                 <!-- Images -->
                 <div class="hero-card__images">
 
-                    <!-- Auto hero -->
-                    <div class="hero-slot">
+                    <!-- Current hero (authoritative) -->
+                    <div class="hero-slot hero-slot--current">
                         <div class="hero-slot__label">
-                            <span>Auto hero</span>
-                            <span class="hero-slot__tag"><?= $orientLabel ?></span>
+                            <span>Current hero</span>
+                            <span class="hero-slot__tag">
+                                <?= $currentHeroSource === 'manual' ? 'Manual' : 'Auto-selected' ?>
+                            </span>
                         </div>
 
                         <div class="hero-slot__imgwrap">
-                            <?php if ($autoImg): ?>
-                                <?= admin_render_thumbnail_safe($autoImg, "$itemName – auto hero") ?>
+                            <?php if ($currentHeroImage): ?>
+                                <?= admin_render_thumbnail_safe(
+                                    $currentHeroImage,
+                                    "$itemName – current hero"
+                                ) ?>
                             <?php else: ?>
-                                <span class="hero-slot__empty">No auto hero</span>
+                                <span class="hero-slot__empty">No hero selected</span>
                             <?php endif; ?>
                         </div>
 
@@ -488,27 +596,53 @@ admin_layout_start("Hero Manager");
                         </div>
                     </div>
 
-                    <!-- Override -->
-                    <div class="hero-slot">
+                    <!-- Computed baseline -->
+                    <div class="hero-slot hero-slot--computed">
                         <div class="hero-slot__label">
-                            <span>Override</span>
-                            <span class="hero-slot__tag"><?= $override ? "Manual" : "None" ?></span>
+                            <span>Computed baseline</span>
+                            <span class="hero-slot__tag">Auto</span>
                         </div>
 
-                        <div class="hero-slot__imgwrap">
-                            <?php if ($override): ?>
-                                <?= admin_render_thumbnail_safe($override, "$itemName – override") ?>
-                            <?php else: ?>
-                                <span class="hero-slot__empty">No override set</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="hero-slot__meta">
-                            <span>rejected:</span>
-                            <span><?= $rejects ?></span>
-                        </div>
+                    <div class="hero-slot__imgwrap">
+                        <?php if ($autoImg): ?>
+                            <?= admin_render_thumbnail_safe(
+                                $autoImg,
+                                "$itemName – computed baseline"
+                            ) ?>
+                        <?php else: ?>
+                            <span class="hero-slot__empty">No computed hero</span>
+                        <?php endif; ?>
                     </div>
 
+                    <div class="hero-slot__meta">
+                        <span>rejected:</span>
+                        <span><?= $rejects ?></span>
+                    </div>
+                </div>
+
+                <?php
+                $candidateMeta = [
+                    'itemId' => $itemId,
+                    'currentHero' => $currentHeroImage,
+                    'currentHeroSource' => $currentHeroSource,
+                ];
+                ?>
+
+                <!-- Candidates -->
+                <div
+                    class="hero-candidates"
+                    data-item-id="<?= $itemId ?>"
+                    data-current-hero="<?= htmlspecialchars($currentHeroImage ?? '') ?>"
+                    data-current-hero-source="<?= $currentHeroSource ?>"
+                >
+                    <button class="hero-candidates__toggle">
+                        ▸ Candidate images (ranked, explainable)
+                    </button>
+                    <div class="hero-candidates__panel" hidden>
+                        <div class="hero-candidates__placeholder">
+                            Loading candidate images…
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Buttons -->
@@ -539,7 +673,10 @@ admin_layout_start("Hero Manager");
     <?php endif; ?>
 </div>
 
-<script src="/js/admin/hero.js"></script>
+<script>
+  window.BASE_URL = "<?= BASE_URL ?>";
+</script>
+<script src="<?= BASE_URL ?>/js/admin/hero.js"></script>
 
 <?php admin_layout_end();
 

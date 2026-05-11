@@ -21,7 +21,7 @@ error_reporting(E_ALL);
 // Unified DB loader (local + production safe)
 // --------------------------------------------------
 require_once __DIR__ . '/../db.php';
-require_once __DIR__ . '/../inc/hero/hero-authority.php';
+require_once __DIR__ . '/../inc/hero/authority.php';
 
 // --------------------------------------------------
 // Paths
