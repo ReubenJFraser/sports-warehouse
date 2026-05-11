@@ -1,8 +1,15 @@
 {
-  "schema": "active_layers.hero_candidates_stage2b.v1",
+  "schema": "active_layers.hero_candidates_stage2d.v1",
   "advisory_only": true,
   "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
   "score_scope": "diagnostic_within_category_not_global_rank",
+  "schema_notes": {
+    "path_classification_confidence": "Confidence in product-type classification based on normalized path/text terms only.",
+    "roi_confidence": "Confidence in the ROI source, not evidence of garment segmentation.",
+    "garment_segmentation": "Not implemented. Current ROIs are body-region bands, alpha subject bounds, or object bounds.",
+    "score_scope": "Final advisory scores are diagnostic and should not be compared globally across product types.",
+    "manual_override_policy": "Automation suggests. Manual Hero Manager selections win."
+  },
   "classification_note": "Product and diagnostic vocabulary are matched against normalized word tokens. Underscores, hyphens, spaces, colons, semicolons, slashes, and repeated whitespace are treated as ordinary separators.",
   "project_root": "project-relative paths only",
   "inputs": [
@@ -44,15 +51,15 @@
   "run_summary": {
     "image_count": 33,
     "product_type_counts": {
-      "full_body": 4,
+      "full_body": 5,
       "lower_body": 8,
       "object": 8,
       "sports_bra": 8,
-      "upper_body": 5
+      "upper_body": 4
     },
     "roi_specificity_counts": {
-      "alpha_object_bbox": 9,
-      "body_region_band": 16,
+      "alpha_subject_bbox": 10,
+      "body_region_band": 15,
       "object_bbox": 8
     },
     "warning_counts": {
@@ -80,7 +87,6 @@
         "jacket": 1,
         "leggings": 3,
         "long sleeve": 1,
-        "longsleeve": 1,
         "playsuit": 1,
         "shoes": 2,
         "shorts": 2,
@@ -89,8 +95,7 @@
         "sports bra": 3,
         "t shirt": 1,
         "tracksuit": 2,
-        "water bottle": 1,
-        "waterbottle": 1
+        "water bottle": 1
       },
       "silhouette_shape": {
         "adira crop": 1,
@@ -119,15 +124,26 @@
         "helmet": 1,
         "shoes": 2,
         "sneakers": 1,
-        "water bottle": 1,
-        "waterbottle": 1
+        "water bottle": 1
       }
     },
-    "classification_confidence_counts": {
-      "high": 31,
-      "medium": 2
+    "path_classification_confidence_counts": {
+      "high": 30,
+      "medium": 3
     },
     "competing_category_signal_records": [
+      {
+        "image_path": "images/brands/adidas/men/poly_linear_full_zip_hoodie_and_pants/01.png",
+        "product_type": "full_body",
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "hoodie"
+            ]
+          }
+        ]
+      },
       {
         "image_path": "images/brands/nike/women/training/full-zip_top Tracksuit/01.png",
         "product_type": "full_body",
@@ -164,7 +180,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "upper_body_model",
-        "face_required": true,
+        "face_requirement": "preferred_for_model_images",
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
@@ -188,8 +204,8 @@
           "jacket"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as upper_body from clear normalized term match: jacket."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as upper_body from clear normalized term match: jacket."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -340,7 +356,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "upper_body_model",
-        "face_required": true,
+        "face_requirement": "preferred_for_model_images",
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
@@ -367,13 +383,12 @@
           "longsleeve"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as upper_body from clear normalized term match: long sleeve, longsleeve."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as upper_body from clear normalized term match: long sleeve, longsleeve."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
-          "long sleeve",
-          "longsleeve"
+          "long sleeve"
         ]
       },
       "image": {
@@ -515,7 +530,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "upper_body_model",
-        "face_required": true,
+        "face_requirement": "preferred_for_model_images",
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
@@ -538,8 +553,8 @@
           "tank"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as upper_body from clear normalized term match: tank."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as upper_body from clear normalized term match: tank."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -682,7 +697,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "upper_body_model",
-        "face_required": true,
+        "face_requirement": "preferred_for_model_images",
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
@@ -707,8 +722,8 @@
           "t shirt"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as upper_body from clear normalized term match: t shirt."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as upper_body from clear normalized term match: t shirt."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -862,14 +877,14 @@
     {
       "item_id": null,
       "image_path": "images/brands/adidas/men/poly_linear_full_zip_hoodie_and_pants/01.png",
-      "product_type": "upper_body",
-      "inferred_roi_type": "upper_body_model",
+      "product_type": "full_body",
+      "inferred_roi_type": "full_body_model",
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
-        "label": "upper_body_model",
-        "face_required": true,
+        "label": "full_body_model",
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
-        "primary_visual_target": "upper_body_model"
+        "primary_visual_target": "full_model_or_outfit"
       },
       "classification_diagnostics": {
         "normalized_tokens": [
@@ -888,14 +903,24 @@
           "png"
         ],
         "matched_terms": [
+          "full zip hoodie and pants",
+          "hoodie and pants",
           "hoodie"
         ],
         "matched_product_type_terms": [
-          "hoodie"
+          "hoodie and pants",
+          "full zip hoodie and pants"
         ],
-        "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as upper_body from clear normalized term match: hoodie."
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "hoodie"
+            ]
+          }
+        ],
+        "path_classification_confidence": "medium",
+        "path_classification_reason": "Classified as full_body from combined outfit/set phrase: hoodie and pants, full zip hoodie and pants."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -1014,31 +1039,31 @@
           "height": 889.0
         },
         "selected_roi": {
-          "x": 0.0,
-          "y": 88.46,
-          "width": 956.0,
-          "height": 648.55
+          "x": 16.0,
+          "y": 13.0,
+          "width": 931.0,
+          "height": 889.0
         },
-        "selected_roi_source": "pose_band"
+        "selected_roi_source": "alpha_bbox"
       },
       "roi_diagnostics": {
-        "roi_source": "pose_band",
-        "roi_specificity": "body_region_band",
+        "roi_source": "alpha_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": false,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
-        "roi_is_body_region_specific": true
+        "roi_is_body_region_specific": false
       },
       "scores": {
-        "roi_fill_score": 88.21,
+        "roi_fill_score": 100.0,
         "crop_safety_score": 90.0,
         "orientation_fit_score": 78.0,
-        "composition_score": 96.44,
+        "composition_score": 99.44,
         "image_quality_score": 96.94,
-        "face_score_if_relevant": 69.18,
+        "face_score_if_relevant": 41.51,
         "irrelevant_region_penalty": 0.0,
         "missing_expected_signal_penalty": 0.0,
-        "final_advisory_score": 86.61
+        "final_advisory_score": 85.99
       },
       "warnings": [],
       "category_specific_warnings": [],
@@ -1057,7 +1082,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "full_body_model",
-        "face_required": false,
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
@@ -1090,8 +1115,8 @@
             ]
           }
         ],
-        "classification_confidence": "medium",
-        "classification_reason": "Selected category has competing product-type signals in the normalized path."
+        "path_classification_confidence": "medium",
+        "path_classification_reason": "Classified as full_body from combined outfit/set phrase: tracksuit."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -1216,7 +1241,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": false,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -1250,7 +1275,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -1275,8 +1300,8 @@
           "bralette"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -1424,7 +1449,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -1449,8 +1474,8 @@
           "bralette"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -1531,7 +1556,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": true,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -1571,7 +1596,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -1594,8 +1619,8 @@
           "strappy crop"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: strappy crop."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: strappy crop."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -1740,7 +1765,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -1764,8 +1789,8 @@
           "v front crop"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: v front crop."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: v front crop."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -1926,7 +1951,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -1949,8 +1974,8 @@
           "adira crop"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: adira crop."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: adira crop."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -2028,7 +2053,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": true,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -2068,7 +2093,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -2091,8 +2116,8 @@
           "sports bra"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -2256,7 +2281,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -2285,8 +2310,8 @@
           "sports bra"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -2442,7 +2467,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "sports_bra_partial_crop",
-        "face_required": false,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
@@ -2466,8 +2491,8 @@
           "sports bra"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -2620,7 +2645,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -2644,8 +2669,8 @@
           "tights"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: tights."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: tights."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -2723,7 +2748,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": true,
         "roi_confidence": "low",
         "roi_is_garment_specific": false,
@@ -2765,7 +2790,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -2789,8 +2814,8 @@
           "tights"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: tights."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: tights."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -2949,7 +2974,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -2975,8 +3000,8 @@
           "leggings"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: leggings."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3139,7 +3164,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -3164,8 +3189,8 @@
           "leggings"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: leggings."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3328,7 +3353,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -3352,8 +3377,8 @@
           "leggings"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: leggings."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3515,7 +3540,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -3540,8 +3565,8 @@
           "shorts"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: shorts."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: shorts."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3622,7 +3647,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": true,
         "roi_confidence": "low",
         "roi_is_garment_specific": false,
@@ -3664,7 +3689,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -3692,8 +3717,8 @@
           "biker"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: shorts, biker."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: shorts, biker."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3774,7 +3799,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": true,
         "roi_confidence": "low",
         "roi_is_garment_specific": false,
@@ -3816,7 +3841,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "lower_body_garment",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
@@ -3839,8 +3864,8 @@
           "skirt"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as lower_body from clear normalized term match: skirt."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as lower_body from clear normalized term match: skirt."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3999,7 +4024,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "full_body_model",
-        "face_required": false,
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
@@ -4022,8 +4047,8 @@
           "bodysuit"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as full_body from clear normalized term match: bodysuit."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as full_body from clear normalized term match: bodysuit."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4148,7 +4173,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": false,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -4182,7 +4207,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "full_body_model",
-        "face_required": false,
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
@@ -4205,8 +4230,8 @@
           "playsuit"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as full_body from clear normalized term match: playsuit."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as full_body from clear normalized term match: playsuit."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4326,7 +4351,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": false,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -4360,7 +4385,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "full_body_model",
-        "face_required": false,
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
@@ -4384,8 +4409,8 @@
           "tracksuit"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as full_body from clear normalized term match: tracksuit."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as full_body from combined outfit/set phrase: tracksuit."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4510,7 +4535,7 @@
       },
       "roi_diagnostics": {
         "roi_source": "alpha_bbox",
-        "roi_specificity": "alpha_object_bbox",
+        "roi_specificity": "alpha_subject_bbox",
         "roi_fallback_used": false,
         "roi_confidence": "medium",
         "roi_is_garment_specific": false,
@@ -4544,7 +4569,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -4566,8 +4591,8 @@
           "sneakers"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: sneakers."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: sneakers."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4686,7 +4711,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -4709,8 +4734,8 @@
           "shoes"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: shoes."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: shoes."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4829,7 +4854,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -4854,8 +4879,8 @@
           "shoes"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: shoes."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: shoes."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4974,7 +4999,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -5001,17 +5026,15 @@
           "waterbottle"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: bottle, water bottle, waterbottle."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: bottle, water bottle, waterbottle."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
-          "water bottle",
-          "waterbottle"
+          "water bottle"
         ],
         "object_controls": [
-          "water bottle",
-          "waterbottle"
+          "water bottle"
         ]
       },
       "image": {
@@ -5123,7 +5146,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -5155,8 +5178,8 @@
             ]
           }
         ],
-        "classification_confidence": "medium",
-        "classification_reason": "Object/product term wins by priority, but competing product-type language is present."
+        "path_classification_confidence": "medium",
+        "path_classification_reason": "Object/product term wins by priority, but competing product-type language is present."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -5275,7 +5298,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -5296,8 +5319,8 @@
           "helmet"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: helmet."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: helmet."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -5416,7 +5439,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -5440,8 +5463,8 @@
           "backpack"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: backpack."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: backpack."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -5560,7 +5583,7 @@
       "score_scope": "diagnostic_within_category_not_global_rank",
       "category_interpretation": {
         "label": "object_product",
-        "face_required": false,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
@@ -5585,8 +5608,8 @@
           "boxing gloves"
         ],
         "competing_product_type_terms": [],
-        "classification_confidence": "high",
-        "classification_reason": "Classified as object from clear normalized term match: gloves, boxing gloves."
+        "path_classification_confidence": "high",
+        "path_classification_reason": "Classified as object from clear normalized term match: gloves, boxing gloves."
       },
       "diagnostic_vocabulary": {
         "core_categories": [

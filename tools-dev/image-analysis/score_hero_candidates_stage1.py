@@ -74,6 +74,19 @@ DEFAULT_INPUTS = [
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
+COMBINED_SET_TERMS = [
+    "hoodie and pants",
+    "top and pants",
+    "crop top and leggings",
+    "sports bra and leggings",
+    "hoodie and track pants",
+    "full zip hoodie and pants",
+    "set",
+    "matching set",
+    "outfit",
+    "tracksuit",
+]
+
 PRODUCT_RULES = {
     "sports_bra": {
         "keywords": [
@@ -98,7 +111,7 @@ PRODUCT_RULES = {
         "expected_pose": False,
     },
     "full_body": {
-        "keywords": ["playsuit", "bodysuit", "one piece", "tracksuit", "matching set"],
+        "keywords": ["playsuit", "bodysuit", "one piece", *COMBINED_SET_TERMS],
         "roi_type": "full_body_model",
         "face_weight": 0.45,
         "expected_pose": True,
@@ -133,10 +146,10 @@ COMPACT_TOKEN_SYNONYMS = {
 
 DIAGNOSTIC_VOCABULARY = {
     "core_categories": [
-        "sports bra", "bralette", "crop top", "tank top", "t shirt", "long sleeve", "longsleeve", "jacket", "hoodie",
+        "sports bra", "bralette", "crop top", "tank top", "t shirt", "long sleeve", "jacket", "hoodie",
         "tracksuit", "track pants", "leggings", "shorts", "skirt", "bodysuit", "one piece",
         "playsuit", "shoes", "sneakers", "trainers", "soccer boots", "backpack", "gym bag",
-        "helmet", "ball", "water bottle", "waterbottle", "boxing gloves",
+        "helmet", "ball", "water bottle", "boxing gloves",
     ],
     "silhouette_shape": [
         "flared", "cross over", "longline", "cropped", "full length", "mini", "backless",
@@ -156,7 +169,7 @@ DIAGNOSTIC_VOCABULARY = {
     ],
     "surface_material_pattern": ["leopard print", "stonewash", "rib", "lyte", "poly", "towelling"],
     "object_controls": [
-        "accessories", "backpack", "helmet", "ball", "water bottle", "waterbottle", "boxing gloves",
+        "accessories", "backpack", "helmet", "ball", "water bottle", "boxing gloves",
         "shoes", "sneakers", "boots", "trainers",
     ],
 }
@@ -168,37 +181,37 @@ SCORE_SCOPE = "diagnostic_within_category_not_global_rank"
 CATEGORY_INTERPRETATIONS = {
     "upper_body": {
         "label": "upper_body_model",
-        "face_required": True,
+        "face_requirement": "preferred_for_model_images",
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model",
     },
     "sports_bra": {
         "label": "sports_bra_partial_crop",
-        "face_required": False,
+        "face_requirement": "optional_context_not_required",
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment",
     },
     "lower_body": {
         "label": "lower_body_garment",
-        "face_required": False,
+        "face_requirement": "not_required",
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles",
     },
     "full_body": {
         "label": "full_body_model",
-        "face_required": False,
+        "face_requirement": "useful_but_not_required",
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit",
     },
     "object": {
         "label": "object_product",
-        "face_required": False,
+        "face_requirement": "not_required",
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object",
     },
     "unknown": {
         "label": "unknown_product_type",
-        "face_required": False,
+        "face_requirement": "not_required",
         "pose_required": "optional_diagnostic",
         "primary_visual_target": "alpha_or_full_image_fallback",
     },
@@ -250,6 +263,10 @@ def normalized_tokens(value: str) -> list[str]:
     return normalize_label(value).split()
 
 
+def canonical_vocab_term(term: str) -> str:
+    return COMPACT_TOKEN_SYNONYMS.get(normalize_label(term).replace(" ", ""), normalize_label(term))
+
+
 def has_normalized_phrase(haystack: str, phrase: str) -> bool:
     normalized_phrase = normalize_label(phrase)
     if not normalized_phrase:
@@ -261,7 +278,11 @@ def matched_diagnostic_vocabulary(image_path: str) -> dict[str, list[str]]:
     normalized = normalize_label(image_path)
     matches: dict[str, list[str]] = {}
     for group, terms in DIAGNOSTIC_VOCABULARY.items():
-        group_matches = [term for term in terms if has_normalized_phrase(normalized, term)]
+        group_matches = sorted({
+            canonical_vocab_term(term)
+            for term in terms
+            if has_normalized_phrase(normalized, term)
+        })
         if group_matches:
             matches[group] = group_matches
     return matches
@@ -279,22 +300,33 @@ def product_type_matches(image_path: str) -> dict[str, list[str]]:
 
 def infer_product_type_with_diagnostics(image_path: str) -> tuple[dict[str, Any], dict[str, Any]]:
     matches = product_type_matches(image_path)
-    selected_type = None
     selected_terms: list[str] = []
+    normalized = normalize_label(image_path)
+    combined_set_terms = [
+        term for term in COMBINED_SET_TERMS if has_normalized_phrase(normalized, term)
+    ]
 
-    for product_type, rule in PRODUCT_RULES.items():
-        if product_type in matches:
-            selected_type = product_type
-            selected_terms = matches[product_type]
-            selected_rule = {"product_type": product_type, **rule}
-            break
+    if "object" in matches:
+        selected_rule = {"product_type": "object", **PRODUCT_RULES["object"]}
+        selected_terms = matches["object"]
+    elif combined_set_terms:
+        selected_rule = {"product_type": "full_body", **PRODUCT_RULES["full_body"]}
+        selected_terms = combined_set_terms
+        matches.setdefault("full_body", [])
+        matches["full_body"] = sorted(set(matches["full_body"] + combined_set_terms))
     else:
-        selected_rule = {
-            "product_type": "unknown",
-            "roi_type": "object_or_unknown",
-            "face_weight": 0.2,
-            "expected_pose": False,
-        }
+        for product_type in ["sports_bra", "full_body", "upper_body", "lower_body"]:
+            if product_type in matches:
+                selected_rule = {"product_type": product_type, **PRODUCT_RULES[product_type]}
+                selected_terms = matches[product_type]
+                break
+        else:
+            selected_rule = {
+                "product_type": "unknown",
+                "roi_type": "object_or_unknown",
+                "face_weight": 0.2,
+                "expected_pose": False,
+            }
 
     competing = {
         product_type: terms
@@ -309,6 +341,9 @@ def infer_product_type_with_diagnostics(image_path: str) -> tuple[dict[str, Any]
     if selected_rule["product_type"] == "unknown":
         confidence = "low"
         reason = "No product-type keyword matched after normalized token comparison."
+    elif selected_rule["product_type"] == "full_body" and combined_set_terms:
+        confidence = "medium" if competing else "high"
+        reason = f"Classified as full_body from combined outfit/set phrase: {', '.join(combined_set_terms)}."
     elif not competing:
         confidence = "high"
         reason = f"Classified as {selected_rule['product_type']} from clear normalized term match: {', '.join(selected_terms)}."
@@ -327,8 +362,8 @@ def infer_product_type_with_diagnostics(image_path: str) -> tuple[dict[str, Any]
         "matched_terms": [term for terms in matches.values() for term in terms],
         "matched_product_type_terms": selected_terms,
         "competing_product_type_terms": competing_terms,
-        "classification_confidence": confidence,
-        "classification_reason": reason,
+        "path_classification_confidence": confidence,
+        "path_classification_reason": reason,
     }
 
     return selected_rule, diagnostics
@@ -654,7 +689,7 @@ def build_roi_diagnostics(rule: dict[str, Any], rois: dict[str, Any], alpha: dic
         roi_confidence = "medium" if alpha.get("has_alpha") and not image_like_full else "low"
         roi_is_garment_specific = False
         roi_is_body_region_specific = False
-        roi_specificity = "alpha_object_bbox"
+        roi_specificity = "alpha_subject_bbox"
     else:
         roi_source = "full_image_fallback"
         roi_fallback_used = True
@@ -668,7 +703,7 @@ def build_roi_diagnostics(rule: dict[str, Any], rois: dict[str, Any], alpha: dic
         roi_confidence = "low"
         roi_is_garment_specific = False
         roi_is_body_region_specific = False
-        roi_specificity = "alpha_object_bbox"
+        roi_specificity = "alpha_subject_bbox"
 
     if product_type == "sports_bra" and roi_source == "alpha_bbox" and alpha.get("has_alpha"):
         roi_confidence = "medium"
@@ -912,7 +947,7 @@ def build_run_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         vocabulary_counts[group] = dict(sorted(counter.items()))
 
     confidence_counts = Counter(
-        r["classification_diagnostics"]["classification_confidence"]
+        r["classification_diagnostics"]["path_classification_confidence"]
         for r in records
     )
     competing_signal_records = [
@@ -928,10 +963,10 @@ def build_run_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         {
             "image_path": r["image_path"],
             "product_type": r["product_type"],
-            "classification_reason": r["classification_diagnostics"]["classification_reason"],
+            "path_classification_reason": r["classification_diagnostics"]["path_classification_reason"],
         }
         for r in records
-        if r["classification_diagnostics"]["classification_confidence"] == "low"
+        if r["classification_diagnostics"]["path_classification_confidence"] == "low"
     ]
 
     return {
@@ -941,7 +976,7 @@ def build_run_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
         "warning_counts": dict(sorted(warning_counts.items())),
         "category_specific_warning_counts": dict(sorted(category_specific_warning_counts.items())),
         "diagnostic_vocabulary_counts": vocabulary_counts,
-        "classification_confidence_counts": dict(sorted(confidence_counts.items())),
+        "path_classification_confidence_counts": dict(sorted(confidence_counts.items())),
         "competing_category_signal_records": competing_signal_records,
         "low_confidence_records": low_confidence_records,
     }
@@ -968,10 +1003,17 @@ def main() -> int:
     run_summary = build_run_summary(records)
 
     payload = {
-        "schema": "active_layers.hero_candidates_stage2b.v1",
+        "schema": "active_layers.hero_candidates_stage2d.v1",
         "advisory_only": True,
         "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
         "score_scope": SCORE_SCOPE,
+        "schema_notes": {
+            "path_classification_confidence": "Confidence in product-type classification based on normalized path/text terms only.",
+            "roi_confidence": "Confidence in the ROI source, not evidence of garment segmentation.",
+            "garment_segmentation": "Not implemented. Current ROIs are body-region bands, alpha subject bounds, or object bounds.",
+            "score_scope": "Final advisory scores are diagnostic and should not be compared globally across product types.",
+            "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
+        },
         "classification_note": "Product and diagnostic vocabulary are matched against normalized word tokens. Underscores, hyphens, spaces, colons, semicolons, slashes, and repeated whitespace are treated as ordinary separators.",
         "project_root": "project-relative paths only",
         "inputs": inputs,
