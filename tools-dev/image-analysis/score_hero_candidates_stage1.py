@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -36,24 +36,74 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = Path("tools-dev/image-analysis/out/hero_candidates_stage1.json")
 
 DEFAULT_INPUTS = [
-    "images/brands/stax/women/airlyte/active_zip_Jacket",
-    "images/brands/stax/women/airlyte/full-length_tights",
-    "images/brands/stax/women/second_left_seamless_campaign/bralette",
+    "images/brands/stax/women/airlyte/active_zip_Jacket/02.png",
+    "images/brands/stax/women/airlyte/wrap-longsleeve/01.png",
+    "images/brands/stax/women/airlyte/ruched_tank/01.png",
+    "images/brands/adidas/kids/marvel-spider_man/t-shirt/01.png",
+    "images/brands/adidas/men/poly_linear_full_zip_hoodie_and_pants/01.png",
+    "images/brands/nike/women/training/full-zip_top Tracksuit/01.png",
+    "images/brands/stax/women/second_left_seamless_campaign/bralette/01.png",
+    "images/brands/stax/women/second_left_seamless_campaign/bralette/03.png",
+    "images/brands/stax/women/nandex/strappy_crop/01.png",
+    "images/brands/stax/women/nandex/v_front-crop/03.png",
+    "images/brands/stax/women/nandex/adira_crop/01.png",
+    "images/brands/aybl/adapt_seamless/sports_bra/01.png",
+    "images/brands/asos/4504-curve/sports_bra/high_support/zip-front-adjustable-straps/01.png",
+    "images/brands/underarmour/women/wordmark_strappy_sports_bra/01.png",
+    "images/brands/stax/women/airlyte/full-length_tights/01.png",
+    "images/brands/stax/women/airlyte/full-length_tights/02.png",
+    "images/brands/nike/women/zenvy/leggings-high_waisted-full_length/01.png",
+    "images/brands/nike/women/zenvy/leggings-high-waisted-flared/01.png",
+    "images/brands/adidas/women/3-stripes/flared_leggings/01.png",
+    "images/brands/nike/women/training/pro_mesh-3inch_shorts/01.png",
+    "images/brands/stax/women/second_left_seamless_campaign/biker_shorts/01.png",
+    "images/brands/stax/women/nandex/venus_skirt/02.png",
+    "images/brands/designer/kate_galliano/bodysuit/bubblegum/01.png",
+    "images/brands/stax/women/airlyte/backless_playsuit/01.png",
+    "images/brands/adidas/kids/marvel-spider_man/tracksuit/01.png",
+    "images/brands/adidas/men/campus_sneakers/01.png",
     "images/brands/asics/unisex/running_shoes/kayano_26.png",
+    "images/brands/reebok/unisex/training_shoes/nano_x3/pure_white.png",
     "images/brands/nike/other/600ml_waterbottle.png",
+    "images/brands/adidas/other/UEFA_Euro16-Top_Glider_Ball.png",
+    "images/brands/other/protec-skate_helmet.png",
+    "images/brands/adidas/kids/marvel-spider_man/backpack/01.png",
+    "images/brands/other/sting-armaplus-boxing_gloves-T3.png",
 ]
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
 PRODUCT_RULES = {
     "sports_bra": {
-        "keywords": ["sports_bra", "bralette", "crop", "strappy_crop", "adira_crop", "flex_crop", "v_front-crop"],
+        "keywords": [
+            "sports bra",
+            "bralette",
+            "strappy crop",
+            "adira crop",
+            "flex crop",
+            "v front crop",
+            "bandeau",
+            "racerback",
+            "underwire",
+        ],
         "roi_type": "upper_body_garment",
         "face_weight": 0.45,
         "expected_pose": True,
     },
+    "object": {
+        "keywords": ["shoe", "shoes", "sneaker", "sneakers", "trainer", "trainers", "boots", "bottle", "water bottle", "waterbottle", "ball", "helmet", "bag", "gym bag", "backpack", "gloves", "boxing gloves"],
+        "roi_type": "object",
+        "face_weight": 0.0,
+        "expected_pose": False,
+    },
+    "full_body": {
+        "keywords": ["playsuit", "bodysuit", "one piece", "tracksuit", "matching set"],
+        "roi_type": "full_body_model",
+        "face_weight": 0.45,
+        "expected_pose": True,
+    },
     "upper_body": {
-        "keywords": ["jacket", "hoodie", "long_sleeve", "longsleeve", "tank", "top", "tee"],
+        "keywords": ["jacket", "hoodie", "long sleeve", "longsleeve", "tank", "tank top", "top", "tee", "t shirt", "crop top"],
         "roi_type": "upper_body_model",
         "face_weight": 0.75,
         "expected_pose": True,
@@ -64,18 +114,34 @@ PRODUCT_RULES = {
         "face_weight": 0.1,
         "expected_pose": True,
     },
-    "full_body": {
-        "keywords": ["playsuit", "set", "tracksuit", "outfit"],
-        "roi_type": "full_body_model",
-        "face_weight": 0.45,
-        "expected_pose": True,
-    },
-    "object": {
-        "keywords": ["shoe", "shoes", "sneaker", "trainer", "bottle", "ball", "helmet", "bag", "backpack"],
-        "roi_type": "object",
-        "face_weight": 0.0,
-        "expected_pose": False,
-    },
+}
+
+
+DIAGNOSTIC_VOCABULARY = {
+    "core_categories": [
+        "sports bra", "bralette", "crop top", "tank top", "t shirt", "long sleeve", "longsleeve", "jacket", "hoodie",
+        "tracksuit", "track pants", "leggings", "shorts", "skirt", "bodysuit", "one piece",
+        "playsuit", "shoes", "sneakers", "trainers", "soccer boots", "backpack", "gym bag",
+        "helmet", "ball", "water bottle", "waterbottle", "boxing gloves",
+    ],
+    "silhouette_shape": [
+        "flared", "cross over", "longline", "cropped", "full length", "mini", "backless",
+        "one shoulder", "asymmetrical", "strapless", "halter", "scoop neck", "square neck",
+        "v neck", "bandeau", "racerback", "straight back", "cross over back",
+        "multi cross over back straps", "centre spine", "cutout", "ruched", "foldover",
+        "high waisted",
+    ],
+    "garment_construction": [
+        "seamless", "scrunch", "underwire", "elastic underbust band", "rib waistband",
+        "foldover ribbed", "waistband", "pocket", "mesh", "brushed fleece",
+        "elastic waistband ankle cuff",
+    ],
+    "sports_bra_support": ["low support", "light support", "medium support", "high support"],
+    "surface_material_pattern": ["leopard print", "stonewash", "rib", "lyte", "poly", "towelling"],
+    "object_controls": [
+        "accessories", "backpack", "helmet", "ball", "water bottle", "waterbottle", "boxing gloves",
+        "shoes", "sneakers", "boots", "trainers",
+    ],
 }
 
 
@@ -146,6 +212,30 @@ def rel_path(path: Path) -> str:
         return path.resolve().relative_to(PROJECT_ROOT).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def normalize_label(value: str) -> str:
+    text = value.lower()
+    text = re.sub(r"[_\-\s:;\\/]+", " ", text)
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def has_normalized_phrase(haystack: str, phrase: str) -> bool:
+    normalized_phrase = normalize_label(phrase)
+    if not normalized_phrase:
+        return False
+    return f" {normalized_phrase} " in f" {haystack} "
+
+
+def matched_diagnostic_vocabulary(image_path: str) -> dict[str, list[str]]:
+    normalized = normalize_label(image_path)
+    matches: dict[str, list[str]] = {}
+    for group, terms in DIAGNOSTIC_VOCABULARY.items():
+        group_matches = [term for term in terms if has_normalized_phrase(normalized, term)]
+        if group_matches:
+            matches[group] = group_matches
+    return matches
 
 
 def collect_image_paths(inputs: list[str], max_images_per_input: int) -> list[Path]:
@@ -360,9 +450,9 @@ def detect_pose(img_bgr: np.ndarray, pose_detector: Any) -> tuple[dict[str, Any]
 
 
 def infer_product_type(image_path: str) -> dict[str, Any]:
-    haystack = image_path.lower().replace("\\", "/")
+    haystack = normalize_label(image_path)
     for product_type, rule in PRODUCT_RULES.items():
-        if any(keyword in haystack for keyword in rule["keywords"]):
+        if any(has_normalized_phrase(haystack, keyword) for keyword in rule["keywords"]):
             return {"product_type": product_type, **rule}
     return {
         "product_type": "unknown",
@@ -669,6 +759,7 @@ def analyse_image(path: Path, fd_short: Any, fd_full: Any, pose_detector: Any) -
     warnings.extend(alpha_warnings)
 
     rule = infer_product_type(image_path)
+    diagnostic_terms = matched_diagnostic_vocabulary(image_path)
     face = detect_face(img_bgr, fd_short, fd_full)
     if rule["expected_pose"] or rule["product_type"] == "unknown":
         pose, pose_warnings = detect_pose(img_bgr, pose_detector)
@@ -699,6 +790,7 @@ def analyse_image(path: Path, fd_short: Any, fd_full: Any, pose_detector: Any) -
         "inferred_roi_type": rule["roi_type"],
         "score_scope": SCORE_SCOPE,
         "category_interpretation": category_interpretation,
+        "diagnostic_vocabulary": diagnostic_terms,
         "image": image,
         "alpha": alpha,
         "face": face,
@@ -732,10 +824,11 @@ def main() -> int:
 
     records = [analyse_image(path, fd_short, fd_full, pose_detector) for path in tqdm(paths, desc="Analysing hero candidates")]
     payload = {
-        "schema": "active_layers.hero_candidates_stage1.v1b",
+        "schema": "active_layers.hero_candidates_stage2a.v1",
         "advisory_only": True,
         "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
         "score_scope": SCORE_SCOPE,
+        "classification_note": "Product and diagnostic vocabulary are matched against normalized word tokens. Underscores, hyphens, spaces, colons, semicolons, slashes, and repeated whitespace are treated as ordinary separators.",
         "project_root": "project-relative paths only",
         "inputs": inputs,
         "image_count": len(records),
