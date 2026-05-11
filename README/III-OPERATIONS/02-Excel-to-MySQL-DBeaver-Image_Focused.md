@@ -6,6 +6,8 @@ This README documents the **exact procedure that was actually executed** to upda
 
 The intent is to record **what was done in practice**, so the same update can be repeated safely without redesigning workflows or re-deriving decisions.
 
+This procedure assumes familiarity with the general Excel → MySQL → Cloudways workflow documented in 01-Excel-to-MySQL-DBeaver.md.
+
 ---
 
 ## Scope

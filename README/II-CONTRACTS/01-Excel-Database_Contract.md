@@ -38,6 +38,133 @@
 - DB enforces allowed set / type
 - Violations should FAIL loudly
 
+## Canonical Axis Alignment (Ryderwear Harmonization Extension)
+
+### Purpose
+
+This section formalizes the relationship between filesystem product axes and Excel column classes.
+
+It exists to ensure that Excel remains the editorial authority while remaining semantically aligned with the Product-First Axis Model and the Ryderwear Women Harmonization Contract.
+
+This is an extension, not a structural rewrite.
+
+---
+
+### Scope
+
+This section governs:
+
+- Canonical axis dependency awareness
+- Fabric-primary vs Construction-primary semantics
+- Bounded attribute taxonomy (support_level, seamless, sports_bra_type)
+- Mapping between filesystem axes and Excel column classes
+
+It does not redefine:
+
+- System column ownership
+- Import mechanics
+- Database authority boundaries
+
+---
+
+### Axis Dependency Awareness
+
+Excel must encode product structure in a way that respects axis dependency rules defined in the filesystem harmonization contract.
+
+Specifically:
+
+- A dependent attribute must not appear without its parent axis being logically present.
+- Example: `invisible_scrunch = true` implies `scrunch = true`.
+- Example: `seamless = true` implies a fabric class that supports seamless construction.
+
+Excel may express this through bounded attributes rather than folder hierarchy.
+
+However:
+
+- The semantic dependency must remain true at the data level.
+- Excel must not encode contradictory states.
+
+This rule preserves axis purity across Excel and filesystem representations.
+
+---
+
+### Fabric-Primary vs Construction-Primary Semantics
+
+Excel must allow Fabric to function as a primary differentiator where contractually valid.
+
+This includes cases where:
+
+- Fabric determines silhouette behavior.
+- Fabric determines seam behavior (e.g., seamless).
+- Fabric determines scrunch visibility classification.
+
+Fabric is not globally primary.
+
+It is contextually primary when it structurally defines the product family.
+
+Where Fabric is not primary, Construction or Rise may function as the primary differentiator.
+
+Excel must reflect this distinction via canonical column positioning and derivation logic defined in:
+
+11-ItemName-Relevant_Columns—Canonical_Semantics_&_Derivation_Rules.md
+
+---
+
+### Canonical Bounded Attributes
+
+The following attributes are bounded and must be treated as controlled-value fields:
+
+- support_level
+- sports_bra_type
+- seamless
+- scrunch
+- scrunch_visibility
+- fabric_class
+
+Rules:
+
+- These fields must use canonical values.
+- These values must align with filesystem axis law.
+- DB may enforce allowed sets.
+- Excel remains editorial authority over selection.
+
+Free-text expansion is prohibited.
+
+These attributes represent semantic axes, not marketing labels.
+
+---
+
+### Filesystem ↔ Excel Mapping Principle
+
+Filesystem folders express product structure hierarchically.
+
+Excel expresses the same structure as columnar bounded attributes.
+
+Mapping rule:
+
+- Filesystem hierarchy defines legal axis combinations.
+- Excel encodes those combinations explicitly.
+- DB stores them without reinterpretation.
+
+Excel is not a mirror of the filesystem.
+
+Excel is the semantic authority that declares the product identity.
+
+The filesystem is a structural projection of that identity.
+
+Both must agree at the level of axis legality.
+
+---
+
+### Invariant
+
+No Excel row may encode a combination of attributes that would violate the filesystem axis dependency rule.
+
+If such a row exists:
+
+- Sync must halt.
+- The row must be corrected editorially.
+
 ## Required invariants (mechanical checks)
 - Before any sync, these must all be true.
 - Identity invariants

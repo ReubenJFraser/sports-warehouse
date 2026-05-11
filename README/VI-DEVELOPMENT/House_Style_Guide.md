@@ -183,6 +183,34 @@ These act as guardrails for future contributors (human or AI).
 
 ---
 
+### 3.9 Handover Address & Operating Mode (Mandatory for Handovers)
+
+Any README intended to function as a **handover between chat sessions** must include, at the very top of the document, a section titled:
+
+**Handover Address & Operating Mode (Mandatory)**
+
+This section must appear **before** Purpose and Scope.
+
+The section must be included verbatim and must not be paraphrased:
+
+> This document is addressed to: **you, ChatGPT, being the new chat session acting as the active operator**.
+>
+> You are not being asked to review, critique, summarize, or reinterpret this document.  
+> You are being asked to treat it as authoritative and resume execution at the stated next step.
+>
+> This handover replaces all prior conversational context.
+
+Rationale:
+- Removes ambiguity about audience (operator vs reviewer)
+- Locks execution mode and prohibits re-interpretation
+- Ensures clean session-to-session continuity for long-running projects
+
+Handovers that omit this section are considered **non-compliant** and must not be used as execution entry points.
+
+This requirement applies only to READMEs that function as handover documents, not to this House Style Guide itself.
+
+---
+
 ## 4. Tone and Language
 
 ### 4.1 Declarative, Not Conversational
