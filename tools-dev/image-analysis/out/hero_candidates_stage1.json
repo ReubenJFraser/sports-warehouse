@@ -1,0 +1,1685 @@
+{
+  "schema": "active_layers.hero_candidates_stage1.v1b",
+  "advisory_only": true,
+  "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
+  "score_scope": "diagnostic_within_category_not_global_rank",
+  "project_root": "project-relative paths only",
+  "inputs": [
+    "images/brands/stax/women/airlyte/active_zip_Jacket",
+    "images/brands/stax/women/airlyte/full-length_tights",
+    "images/brands/stax/women/second_left_seamless_campaign/bralette",
+    "images/brands/asics/unisex/running_shoes/kayano_26.png",
+    "images/brands/nike/other/600ml_waterbottle.png"
+  ],
+  "image_count": 12,
+  "records": [
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/active_zip_Jacket/01.png",
+      "product_type": "upper_body",
+      "inferred_roi_type": "upper_body_model",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "upper_body_model",
+        "face_required": true,
+        "pose_required": "expected",
+        "primary_visual_target": "upper_body_model"
+      },
+      "image": {
+        "width": 428,
+        "height": 1198,
+        "aspect_ratio": 0.3573,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 21.0,
+          "y": 12.0,
+          "width": 392.0,
+          "height": 1166.0
+        },
+        "alpha_occupancy": 0.4445,
+        "padding_pct": {
+          "top": 1.0,
+          "bottom": 1.67,
+          "left": 4.91,
+          "right": 3.5
+        },
+        "object_fill_ratio": 0.8914,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 62.44,
+          "y": 74.24,
+          "width": 104.87,
+          "height": 104.83
+        },
+        "face_visibility_score": 79.84,
+        "headroom_pct": 6.2,
+        "focus_y_pct": 8.0
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.993,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 269.13,
+            "y": 234.24,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 83.78,
+            "y": 253.07,
+            "visibility": 0.996
+          },
+          "left_hip": {
+            "x": 205.16,
+            "y": 571.04,
+            "visibility": 0.999
+          },
+          "right_hip": {
+            "x": 86.27,
+            "y": 564.13,
+            "visibility": 0.998
+          },
+          "left_knee": {
+            "x": 262.94,
+            "y": 841.11,
+            "visibility": 0.985
+          },
+          "right_knee": {
+            "x": 105.86,
+            "y": 825.4,
+            "visibility": 0.992
+          },
+          "left_ankle": {
+            "x": 236.46,
+            "y": 1080.53,
+            "visibility": 0.986
+          },
+          "right_ankle": {
+            "x": 150.48,
+            "y": 1058.95,
+            "visibility": 0.991
+          }
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 21.0,
+          "y": 12.0,
+          "width": 392.0,
+          "height": 1166.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 74.24,
+          "width": 428.0,
+          "height": 685.03
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 471.75,
+          "width": 428.0,
+          "height": 645.92
+        },
+        "object_roi": {
+          "x": 21.0,
+          "y": 12.0,
+          "width": 392.0,
+          "height": 1166.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 74.24,
+          "width": 428.0,
+          "height": 685.03
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 71.48,
+        "crop_safety_score": 90.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 89.35,
+        "image_quality_score": 33.22,
+        "face_score_if_relevant": 59.88,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 71.38
+      },
+      "warnings": [],
+      "category_specific_warnings": [],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/active_zip_Jacket/02.png",
+      "product_type": "upper_body",
+      "inferred_roi_type": "upper_body_model",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "upper_body_model",
+        "face_required": true,
+        "pose_required": "expected",
+        "primary_visual_target": "upper_body_model"
+      },
+      "image": {
+        "width": 782,
+        "height": 1414,
+        "aspect_ratio": 0.553,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 35.0,
+          "y": 29.0,
+          "width": 717.0,
+          "height": 1385.0
+        },
+        "alpha_occupancy": 0.6663,
+        "padding_pct": {
+          "top": 2.05,
+          "bottom": 0.0,
+          "left": 4.48,
+          "right": 3.84
+        },
+        "object_fill_ratio": 0.8981,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 339.24,
+          "y": 154.44,
+          "width": 201.88,
+          "height": 201.88
+        },
+        "face_visibility_score": 94.01,
+        "headroom_pct": 10.92,
+        "focus_y_pct": 12.1
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.799,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 596.98,
+            "y": 494.5,
+            "visibility": 0.995
+          },
+          "right_shoulder": {
+            "x": 187.76,
+            "y": 480.71,
+            "visibility": 0.996
+          },
+          "left_hip": {
+            "x": 553.36,
+            "y": 1070.08,
+            "visibility": 0.972
+          },
+          "right_hip": {
+            "x": 342.8,
+            "y": 1099.06,
+            "visibility": 0.964
+          },
+          "left_knee": {
+            "x": 572.72,
+            "y": 1426.57,
+            "visibility": 0.529
+          },
+          "right_knee": {
+            "x": 449.56,
+            "y": 1553.1,
+            "visibility": 0.335
+          },
+          "left_ankle": null,
+          "right_ankle": null
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 35.0,
+          "y": 29.0,
+          "width": 717.0,
+          "height": 1385.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 154.44,
+          "width": 782.0,
+          "height": 1156.37
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 971.45,
+          "width": 782.0,
+          "height": 442.55
+        },
+        "object_roi": {
+          "x": 35.0,
+          "y": 29.0,
+          "width": 717.0,
+          "height": 1385.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 154.44,
+          "width": 782.0,
+          "height": 1156.37
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 90.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 98.73,
+        "image_quality_score": 18.42,
+        "face_score_if_relevant": 70.51,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 78.95
+      },
+      "warnings": [],
+      "category_specific_warnings": [],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/active_zip_Jacket/03.png",
+      "product_type": "upper_body",
+      "inferred_roi_type": "upper_body_model",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "upper_body_model",
+        "face_required": true,
+        "pose_required": "expected",
+        "primary_visual_target": "upper_body_model"
+      },
+      "image": {
+        "width": 506,
+        "height": 1210,
+        "aspect_ratio": 0.4182,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 20.0,
+          "y": 16.0,
+          "width": 466.0,
+          "height": 1169.0
+        },
+        "alpha_occupancy": 0.4706,
+        "padding_pct": {
+          "top": 1.32,
+          "bottom": 2.07,
+          "left": 3.95,
+          "right": 3.95
+        },
+        "object_fill_ratio": 0.8897,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 116.53,
+          "y": 77.16,
+          "width": 111.4,
+          "height": 111.42
+        },
+        "face_visibility_score": 92.92,
+        "headroom_pct": 6.38,
+        "focus_y_pct": 8.0
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.99,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 345.65,
+            "y": 242.1,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 121.49,
+            "y": 267.65,
+            "visibility": 1.0
+          },
+          "left_hip": {
+            "x": 283.33,
+            "y": 562.22,
+            "visibility": 1.0
+          },
+          "right_hip": {
+            "x": 147.22,
+            "y": 558.93,
+            "visibility": 1.0
+          },
+          "left_knee": {
+            "x": 379.82,
+            "y": 811.65,
+            "visibility": 0.961
+          },
+          "right_knee": {
+            "x": 170.39,
+            "y": 806.92,
+            "visibility": 0.992
+          },
+          "left_ankle": {
+            "x": 371.24,
+            "y": 1091.53,
+            "visibility": 0.977
+          },
+          "right_ankle": {
+            "x": 176.42,
+            "y": 1076.26,
+            "visibility": 0.989
+          }
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 20.0,
+          "y": 16.0,
+          "width": 466.0,
+          "height": 1169.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 77.16,
+          "width": 506.0,
+          "height": 677.02
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 463.78,
+          "width": 506.0,
+          "height": 668.52
+        },
+        "object_roi": {
+          "x": 20.0,
+          "y": 16.0,
+          "width": 466.0,
+          "height": 1169.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 77.16,
+          "width": 506.0,
+          "height": 677.02
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 69.94,
+        "crop_safety_score": 90.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 89.05,
+        "image_quality_score": 23.15,
+        "face_score_if_relevant": 69.69,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 70.93
+      },
+      "warnings": [],
+      "category_specific_warnings": [],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/active_zip_Jacket/04.png",
+      "product_type": "upper_body",
+      "inferred_roi_type": "upper_body_model",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "upper_body_model",
+        "face_required": true,
+        "pose_required": "expected",
+        "primary_visual_target": "upper_body_model"
+      },
+      "image": {
+        "width": 488,
+        "height": 1198,
+        "aspect_ratio": 0.4073,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 17.0,
+          "y": 14.0,
+          "width": 450.0,
+          "height": 1163.0
+        },
+        "alpha_occupancy": 0.4734,
+        "padding_pct": {
+          "top": 1.17,
+          "bottom": 1.75,
+          "left": 3.48,
+          "right": 4.3
+        },
+        "object_fill_ratio": 0.8952,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 193.34,
+          "y": 72.71,
+          "width": 110.84,
+          "height": 110.85
+        },
+        "face_visibility_score": 91.39,
+        "headroom_pct": 6.07,
+        "focus_y_pct": 8.0
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.992,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 360.52,
+            "y": 241.76,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 139.95,
+            "y": 261.57,
+            "visibility": 1.0
+          },
+          "left_hip": {
+            "x": 271.13,
+            "y": 556.64,
+            "visibility": 1.0
+          },
+          "right_hip": {
+            "x": 134.57,
+            "y": 545.01,
+            "visibility": 1.0
+          },
+          "left_knee": {
+            "x": 365.05,
+            "y": 829.05,
+            "visibility": 0.978
+          },
+          "right_knee": {
+            "x": 144.21,
+            "y": 803.57,
+            "visibility": 0.988
+          },
+          "left_ankle": {
+            "x": 370.7,
+            "y": 1083.61,
+            "visibility": 0.985
+          },
+          "right_ankle": {
+            "x": 151.33,
+            "y": 1058.96,
+            "visibility": 0.984
+          }
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 17.0,
+          "y": 14.0,
+          "width": 450.0,
+          "height": 1163.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 72.71,
+          "width": 488.0,
+          "height": 669.8
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 454.99,
+          "width": 488.0,
+          "height": 664.22
+        },
+        "object_roi": {
+          "x": 17.0,
+          "y": 14.0,
+          "width": 450.0,
+          "height": 1163.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 72.71,
+          "width": 488.0,
+          "height": 669.8
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 69.89,
+        "crop_safety_score": 90.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 88.82,
+        "image_quality_score": 24.68,
+        "face_score_if_relevant": 68.54,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 70.94
+      },
+      "warnings": [],
+      "category_specific_warnings": [],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/full-length_tights/01.png",
+      "product_type": "lower_body",
+      "inferred_roi_type": "lower_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "lower_body_garment",
+        "face_required": false,
+        "pose_required": "expected_for_garment_roi",
+        "primary_visual_target": "hips_to_knees_or_ankles"
+      },
+      "image": {
+        "width": 845,
+        "height": 1834,
+        "aspect_ratio": 0.4607,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 14.0,
+          "y": 0.0,
+          "width": 808.0,
+          "height": 1810.0
+        },
+        "alpha_occupancy": 0.4943,
+        "padding_pct": {
+          "top": 0.0,
+          "bottom": 1.31,
+          "left": 1.66,
+          "right": 2.72
+        },
+        "object_fill_ratio": 0.9437,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": false,
+        "pose_confidence": 0.0,
+        "landmarks": {
+          "left_shoulder": null,
+          "right_shoulder": null,
+          "left_hip": null,
+          "right_hip": null,
+          "left_knee": null,
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 14.0,
+          "y": 0.0,
+          "width": 808.0,
+          "height": 1810.0
+        },
+        "upper_body_roi": null,
+        "lower_body_roi": null,
+        "object_roi": {
+          "x": 14.0,
+          "y": 0.0,
+          "width": 808.0,
+          "height": 1810.0
+        },
+        "selected_roi": {
+          "x": 14.0,
+          "y": 0.0,
+          "width": 808.0,
+          "height": 1810.0
+        },
+        "selected_roi_source": "alpha_bbox"
+      },
+      "roi_diagnostics": {
+        "roi_source": "alpha_bbox",
+        "roi_specificity": "alpha_object_bbox",
+        "roi_fallback_used": true,
+        "roi_confidence": "low",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": false
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 45.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 98.96,
+        "image_quality_score": 6.43,
+        "face_score_if_relevant": 2.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 12.0,
+        "final_advisory_score": 47.61
+      },
+      "warnings": [
+        "expected_pose_missing",
+        "lower_body_roi_uncertain",
+        "pose_not_detected"
+      ],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "lower_body_pose_missing_roi_not_garment_specific",
+        "lower_body_roi_fallback_to_alpha_bbox"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": true,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": true,
+      "needs_manual_review": true
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/airlyte/full-length_tights/02.png",
+      "product_type": "lower_body",
+      "inferred_roi_type": "lower_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "lower_body_garment",
+        "face_required": false,
+        "pose_required": "expected_for_garment_roi",
+        "primary_visual_target": "hips_to_knees_or_ankles"
+      },
+      "image": {
+        "width": 392,
+        "height": 1198,
+        "aspect_ratio": 0.3272,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 16.0,
+          "y": 22.0,
+          "width": 354.0,
+          "height": 1157.0
+        },
+        "alpha_occupancy": 0.5764,
+        "padding_pct": {
+          "top": 1.84,
+          "bottom": 1.59,
+          "left": 4.08,
+          "right": 5.61
+        },
+        "object_fill_ratio": 0.8722,
+        "crop_safety_estimate": "safe"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 59.62,
+          "y": 167.28,
+          "width": 252.22,
+          "height": 252.22
+        },
+        "face_visibility_score": 51.86,
+        "headroom_pct": 13.96,
+        "focus_y_pct": 18.5
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.993,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 79.77,
+            "y": 270.79,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 297.1,
+            "y": 259.99,
+            "visibility": 1.0
+          },
+          "left_hip": {
+            "x": 123.42,
+            "y": 589.92,
+            "visibility": 1.0
+          },
+          "right_hip": {
+            "x": 265.08,
+            "y": 588.06,
+            "visibility": 1.0
+          },
+          "left_knee": {
+            "x": 124.81,
+            "y": 856.28,
+            "visibility": 0.995
+          },
+          "right_knee": {
+            "x": 255.88,
+            "y": 852.97,
+            "visibility": 0.986
+          },
+          "left_ankle": {
+            "x": 120.14,
+            "y": 1116.44,
+            "visibility": 0.986
+          },
+          "right_ankle": {
+            "x": 266.86,
+            "y": 1115.56,
+            "visibility": 0.975
+          }
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 16.0,
+          "y": 22.0,
+          "width": 354.0,
+          "height": 1157.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 167.28,
+          "width": 392.0,
+          "height": 613.39
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 493.15,
+          "width": 392.0,
+          "height": 670.77
+        },
+        "object_roi": {
+          "x": 16.0,
+          "y": 22.0,
+          "width": 354.0,
+          "height": 1157.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 493.15,
+          "width": 392.0,
+          "height": 670.77
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 69.99,
+        "crop_safety_score": 88.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 86.59,
+        "image_quality_score": 40.41,
+        "face_score_if_relevant": 5.19,
+        "irrelevant_region_penalty": 8.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 55.62
+      },
+      "warnings": [],
+      "category_specific_warnings": [],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/second_left_seamless_campaign/bralette/01.png",
+      "product_type": "sports_bra",
+      "inferred_roi_type": "upper_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "sports_bra_partial_crop",
+        "face_required": false,
+        "pose_required": "helpful_not_required",
+        "primary_visual_target": "upper_body_garment"
+      },
+      "image": {
+        "width": 464,
+        "height": 595,
+        "aspect_ratio": 0.7798,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 464.0,
+          "height": 595.0
+        },
+        "alpha_occupancy": 0.722,
+        "padding_pct": {
+          "top": 0.0,
+          "bottom": 0.0,
+          "left": 0.0,
+          "right": 0.0
+        },
+        "object_fill_ratio": 1.0,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.852,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 379.99,
+            "y": 108.94,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 121.04,
+            "y": 141.89,
+            "visibility": 0.997
+          },
+          "left_hip": {
+            "x": 294.21,
+            "y": 539.64,
+            "visibility": 0.952
+          },
+          "right_hip": {
+            "x": 138.22,
+            "y": 513.98,
+            "visibility": 0.859
+          },
+          "left_knee": {
+            "x": 278.64,
+            "y": 849.08,
+            "visibility": 0.451
+          },
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 464.0,
+          "height": 595.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 18.31,
+          "width": 464.0,
+          "height": 576.68
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 479.21,
+          "width": 464.0,
+          "height": 115.79
+        },
+        "object_roi": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 464.0,
+          "height": 595.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 18.31,
+          "width": 464.0,
+          "height": 576.68
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 45.0,
+        "orientation_fit_score": 92.0,
+        "composition_score": 98.92,
+        "image_quality_score": 22.65,
+        "face_score_if_relevant": 9.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 65.1
+      },
+      "warnings": [],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "sports_bra_partial_body_crop"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": true,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/second_left_seamless_campaign/bralette/02.png",
+      "product_type": "sports_bra",
+      "inferred_roi_type": "upper_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "sports_bra_partial_crop",
+        "face_required": false,
+        "pose_required": "helpful_not_required",
+        "primary_visual_target": "upper_body_garment"
+      },
+      "image": {
+        "width": 565,
+        "height": 722,
+        "aspect_ratio": 0.7825,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 565.0,
+          "height": 722.0
+        },
+        "alpha_occupancy": 0.867,
+        "padding_pct": {
+          "top": 0.0,
+          "bottom": 0.0,
+          "left": 0.0,
+          "right": 0.0
+        },
+        "object_fill_ratio": 1.0,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.943,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 528.33,
+            "y": 228.63,
+            "visibility": 0.995
+          },
+          "right_shoulder": {
+            "x": 128.98,
+            "y": 163.79,
+            "visibility": 1.0
+          },
+          "left_hip": {
+            "x": 440.42,
+            "y": 764.95,
+            "visibility": 0.856
+          },
+          "right_hip": {
+            "x": 186.77,
+            "y": 761.17,
+            "visibility": 0.92
+          },
+          "left_knee": null,
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 565.0,
+          "height": 722.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 66.25,
+          "width": 565.0,
+          "height": 655.75
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 705.3,
+          "width": 565.0,
+          "height": 16.7
+        },
+        "object_roi": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 565.0,
+          "height": 722.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 66.25,
+          "width": 565.0,
+          "height": 655.75
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 45.0,
+        "orientation_fit_score": 92.0,
+        "composition_score": 96.79,
+        "image_quality_score": 12.32,
+        "face_score_if_relevant": 9.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 63.36
+      },
+      "warnings": [],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "sports_bra_partial_body_crop"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": true,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/second_left_seamless_campaign/bralette/03.png",
+      "product_type": "sports_bra",
+      "inferred_roi_type": "upper_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "sports_bra_partial_crop",
+        "face_required": false,
+        "pose_required": "helpful_not_required",
+        "primary_visual_target": "upper_body_garment"
+      },
+      "image": {
+        "width": 830,
+        "height": 1405,
+        "aspect_ratio": 0.5907,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 19.0,
+          "y": 0.0,
+          "width": 779.0,
+          "height": 1405.0
+        },
+        "alpha_occupancy": 0.7189,
+        "padding_pct": {
+          "top": 0.0,
+          "bottom": 0.0,
+          "left": 2.29,
+          "right": 3.86
+        },
+        "object_fill_ratio": 0.9386,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": false,
+        "pose_confidence": 0.0,
+        "landmarks": {
+          "left_shoulder": null,
+          "right_shoulder": null,
+          "left_hip": null,
+          "right_hip": null,
+          "left_knee": null,
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 19.0,
+          "y": 0.0,
+          "width": 779.0,
+          "height": 1405.0
+        },
+        "upper_body_roi": null,
+        "lower_body_roi": null,
+        "object_roi": {
+          "x": 19.0,
+          "y": 0.0,
+          "width": 779.0,
+          "height": 1405.0
+        },
+        "selected_roi": {
+          "x": 19.0,
+          "y": 0.0,
+          "width": 779.0,
+          "height": 1405.0
+        },
+        "selected_roi_source": "alpha_bbox"
+      },
+      "roi_diagnostics": {
+        "roi_source": "alpha_bbox",
+        "roi_specificity": "alpha_object_bbox",
+        "roi_fallback_used": true,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": false
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 45.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 99.14,
+        "image_quality_score": 100.0,
+        "face_score_if_relevant": 9.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 73.72
+      },
+      "warnings": [
+        "pose_not_detected"
+      ],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "pose_missing_but_crop_valid",
+        "sports_bra_partial_body_crop"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": true,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": true,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/stax/women/second_left_seamless_campaign/bralette/04.png",
+      "product_type": "sports_bra",
+      "inferred_roi_type": "upper_body_garment",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "sports_bra_partial_crop",
+        "face_required": false,
+        "pose_required": "helpful_not_required",
+        "primary_visual_target": "upper_body_garment"
+      },
+      "image": {
+        "width": 416,
+        "height": 1186,
+        "aspect_ratio": 0.3508,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 20.0,
+          "y": 11.0,
+          "width": 376.0,
+          "height": 1159.0
+        },
+        "alpha_occupancy": 0.5186,
+        "padding_pct": {
+          "top": 0.93,
+          "bottom": 1.35,
+          "left": 4.81,
+          "right": 4.81
+        },
+        "object_fill_ratio": 0.8833,
+        "crop_safety_estimate": "edge_risk"
+      },
+      "face": {
+        "face_detected": true,
+        "face_count": 1,
+        "face_bbox": {
+          "x": 136.38,
+          "y": 62.29,
+          "width": 94.72,
+          "height": 94.71
+        },
+        "face_visibility_score": 90.97,
+        "headroom_pct": 5.25,
+        "focus_y_pct": 8.0
+      },
+      "pose": {
+        "pose_detected": true,
+        "pose_confidence": 0.996,
+        "landmarks": {
+          "left_shoulder": {
+            "x": 333.08,
+            "y": 238.35,
+            "visibility": 1.0
+          },
+          "right_shoulder": {
+            "x": 117.7,
+            "y": 213.19,
+            "visibility": 1.0
+          },
+          "left_hip": {
+            "x": 289.42,
+            "y": 544.54,
+            "visibility": 1.0
+          },
+          "right_hip": {
+            "x": 157.66,
+            "y": 544.17,
+            "visibility": 1.0
+          },
+          "left_knee": {
+            "x": 268.43,
+            "y": 783.52,
+            "visibility": 0.99
+          },
+          "right_knee": {
+            "x": 64.59,
+            "y": 778.63,
+            "visibility": 0.993
+          },
+          "left_ankle": {
+            "x": 242.14,
+            "y": 1031.27,
+            "visibility": 0.991
+          },
+          "right_ankle": {
+            "x": 120.49,
+            "y": 1045.13,
+            "visibility": 0.992
+          }
+        }
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 20.0,
+          "y": 11.0,
+          "width": 376.0,
+          "height": 1159.0
+        },
+        "upper_body_roi": {
+          "x": 0.0,
+          "y": 62.29,
+          "width": 416.0,
+          "height": 671.83
+        },
+        "lower_body_roi": {
+          "x": 0.0,
+          "y": 449.48,
+          "width": 416.0,
+          "height": 636.17
+        },
+        "object_roi": {
+          "x": 20.0,
+          "y": 11.0,
+          "width": 376.0,
+          "height": 1159.0
+        },
+        "selected_roi": {
+          "x": 0.0,
+          "y": 62.29,
+          "width": 416.0,
+          "height": 671.83
+        },
+        "selected_roi_source": "pose_band"
+      },
+      "roi_diagnostics": {
+        "roi_source": "pose_band",
+        "roi_specificity": "body_region_band",
+        "roi_fallback_used": false,
+        "roi_confidence": "medium",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": true
+      },
+      "scores": {
+        "roi_fill_score": 70.81,
+        "crop_safety_score": 40.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 88.5,
+        "image_quality_score": 34.8,
+        "face_score_if_relevant": 40.94,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 59.67
+      },
+      "warnings": [],
+      "category_specific_warnings": [
+        "sports_bra_partial_body_crop"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": true,
+      "face_missing_but_not_required": false,
+      "pose_missing_but_not_required": false,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/asics/unisex/running_shoes/kayano_26.png",
+      "product_type": "object",
+      "inferred_roi_type": "object",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "object_product",
+        "face_required": false,
+        "pose_required": "not_required",
+        "primary_visual_target": "alpha_mask_object"
+      },
+      "image": {
+        "width": 500,
+        "height": 500,
+        "aspect_ratio": 1.0,
+        "orientation": "square"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 10.0,
+          "y": 108.0,
+          "width": 480.0,
+          "height": 271.0
+        },
+        "alpha_occupancy": 0.3423,
+        "padding_pct": {
+          "top": 21.6,
+          "bottom": 24.2,
+          "left": 2.0,
+          "right": 2.0
+        },
+        "object_fill_ratio": 0.5203,
+        "crop_safety_estimate": "safe"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": false,
+        "pose_confidence": 0.0,
+        "landmarks": {
+          "left_shoulder": null,
+          "right_shoulder": null,
+          "left_hip": null,
+          "right_hip": null,
+          "left_knee": null,
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        },
+        "pose_requirement": "not_required_for_product_type"
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 10.0,
+          "y": 108.0,
+          "width": 480.0,
+          "height": 271.0
+        },
+        "upper_body_roi": null,
+        "lower_body_roi": null,
+        "object_roi": {
+          "x": 10.0,
+          "y": 108.0,
+          "width": 480.0,
+          "height": 271.0
+        },
+        "selected_roi": {
+          "x": 10.0,
+          "y": 108.0,
+          "width": 480.0,
+          "height": 271.0
+        },
+        "selected_roi_source": "object_bbox"
+      },
+      "roi_diagnostics": {
+        "roi_source": "object_bbox",
+        "roi_specificity": "object_bbox",
+        "roi_fallback_used": false,
+        "roi_confidence": "high",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": false
+      },
+      "scores": {
+        "roi_fill_score": 65.04,
+        "crop_safety_score": 88.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 99.09,
+        "image_quality_score": 100.0,
+        "face_score_if_relevant": 0.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 71.8
+      },
+      "warnings": [],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "object_pose_not_required"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": true,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    },
+    {
+      "item_id": null,
+      "image_path": "images/brands/nike/other/600ml_waterbottle.png",
+      "product_type": "object",
+      "inferred_roi_type": "object",
+      "score_scope": "diagnostic_within_category_not_global_rank",
+      "category_interpretation": {
+        "label": "object_product",
+        "face_required": false,
+        "pose_required": "not_required",
+        "primary_visual_target": "alpha_mask_object"
+      },
+      "image": {
+        "width": 172,
+        "height": 484,
+        "aspect_ratio": 0.3554,
+        "orientation": "portrait"
+      },
+      "alpha": {
+        "has_alpha": true,
+        "alpha_bbox": {
+          "x": 8.0,
+          "y": 11.0,
+          "width": 155.0,
+          "height": 462.0
+        },
+        "alpha_occupancy": 0.694,
+        "padding_pct": {
+          "top": 2.27,
+          "bottom": 2.27,
+          "left": 4.65,
+          "right": 5.23
+        },
+        "object_fill_ratio": 0.8602,
+        "crop_safety_estimate": "safe"
+      },
+      "face": {
+        "face_detected": false,
+        "face_count": 0,
+        "face_bbox": null,
+        "face_visibility_score": 0.0,
+        "headroom_pct": null,
+        "focus_y_pct": null
+      },
+      "pose": {
+        "pose_detected": false,
+        "pose_confidence": 0.0,
+        "landmarks": {
+          "left_shoulder": null,
+          "right_shoulder": null,
+          "left_hip": null,
+          "right_hip": null,
+          "left_knee": null,
+          "right_knee": null,
+          "left_ankle": null,
+          "right_ankle": null
+        },
+        "pose_requirement": "not_required_for_product_type"
+      },
+      "rois": {
+        "full_body_roi": {
+          "x": 8.0,
+          "y": 11.0,
+          "width": 155.0,
+          "height": 462.0
+        },
+        "upper_body_roi": null,
+        "lower_body_roi": null,
+        "object_roi": {
+          "x": 8.0,
+          "y": 11.0,
+          "width": 155.0,
+          "height": 462.0
+        },
+        "selected_roi": {
+          "x": 8.0,
+          "y": 11.0,
+          "width": 155.0,
+          "height": 462.0
+        },
+        "selected_roi_source": "object_bbox"
+      },
+      "roi_diagnostics": {
+        "roi_source": "object_bbox",
+        "roi_specificity": "object_bbox",
+        "roi_fallback_used": false,
+        "roi_confidence": "high",
+        "roi_is_garment_specific": false,
+        "roi_is_body_region_specific": false
+      },
+      "scores": {
+        "roi_fill_score": 100.0,
+        "crop_safety_score": 88.0,
+        "orientation_fit_score": 78.0,
+        "composition_score": 99.68,
+        "image_quality_score": 100.0,
+        "face_score_if_relevant": 0.0,
+        "irrelevant_region_penalty": 0.0,
+        "missing_expected_signal_penalty": 0.0,
+        "final_advisory_score": 80.28
+      },
+      "warnings": [],
+      "category_specific_warnings": [
+        "face_missing_but_not_required",
+        "object_pose_not_required"
+      ],
+      "lower_body_roi_fallback_to_alpha_bbox": false,
+      "sports_bra_partial_body_crop": false,
+      "face_missing_but_not_required": true,
+      "pose_missing_but_not_required": true,
+      "pose_missing_needs_review": false,
+      "needs_manual_review": false
+    }
+  ]
+}
