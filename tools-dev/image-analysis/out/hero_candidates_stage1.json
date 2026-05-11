@@ -1,5 +1,5 @@
 {
-  "schema": "active_layers.hero_candidates_stage2a.v1",
+  "schema": "active_layers.hero_candidates_stage2b.v1",
   "advisory_only": true,
   "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
   "score_scope": "diagnostic_within_category_not_global_rank",
@@ -41,6 +41,120 @@
     "images/brands/other/sting-armaplus-boxing_gloves-T3.png"
   ],
   "image_count": 33,
+  "run_summary": {
+    "image_count": 33,
+    "product_type_counts": {
+      "full_body": 4,
+      "lower_body": 8,
+      "object": 8,
+      "sports_bra": 8,
+      "upper_body": 5
+    },
+    "roi_specificity_counts": {
+      "alpha_object_bbox": 9,
+      "body_region_band": 16,
+      "object_bbox": 8
+    },
+    "warning_counts": {
+      "expected_pose_missing": 3,
+      "lower_body_roi_uncertain": 3,
+      "pose_not_detected": 5
+    },
+    "category_specific_warning_counts": {
+      "face_missing_but_not_required": 14,
+      "lower_body_pose_missing_roi_not_garment_specific": 3,
+      "lower_body_roi_fallback_to_alpha_bbox": 3,
+      "object_pose_not_required": 8,
+      "pose_missing_but_crop_valid": 2,
+      "sports_bra_partial_body_crop": 8
+    },
+    "diagnostic_vocabulary_counts": {
+      "core_categories": {
+        "backpack": 1,
+        "ball": 1,
+        "bodysuit": 1,
+        "boxing gloves": 1,
+        "bralette": 2,
+        "helmet": 1,
+        "hoodie": 1,
+        "jacket": 1,
+        "leggings": 3,
+        "long sleeve": 1,
+        "longsleeve": 1,
+        "playsuit": 1,
+        "shoes": 2,
+        "shorts": 2,
+        "skirt": 1,
+        "sneakers": 1,
+        "sports bra": 3,
+        "t shirt": 1,
+        "tracksuit": 2,
+        "water bottle": 1,
+        "waterbottle": 1
+      },
+      "silhouette_shape": {
+        "adira crop": 1,
+        "backless": 1,
+        "flared": 2,
+        "full length": 3,
+        "high waisted": 2,
+        "ruched": 1,
+        "strappy crop": 1,
+        "v front crop": 1
+      },
+      "surface_material_pattern": {
+        "poly": 1
+      },
+      "garment_construction": {
+        "mesh": 1,
+        "seamless": 4
+      },
+      "sports_bra_support": {
+        "high support": 1
+      },
+      "object_controls": {
+        "backpack": 1,
+        "ball": 1,
+        "boxing gloves": 1,
+        "helmet": 1,
+        "shoes": 2,
+        "sneakers": 1,
+        "water bottle": 1,
+        "waterbottle": 1
+      }
+    },
+    "classification_confidence_counts": {
+      "high": 31,
+      "medium": 2
+    },
+    "competing_category_signal_records": [
+      {
+        "image_path": "images/brands/nike/women/training/full-zip_top Tracksuit/01.png",
+        "product_type": "full_body",
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "top"
+            ]
+          }
+        ]
+      },
+      {
+        "image_path": "images/brands/adidas/other/UEFA_Euro16-Top_Glider_Ball.png",
+        "product_type": "object",
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "top"
+            ]
+          }
+        ]
+      }
+    ],
+    "low_confidence_records": []
+  },
   "records": [
     {
       "item_id": null,
@@ -53,6 +167,29 @@
         "face_required": true,
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "active",
+          "zip",
+          "jacket",
+          "02",
+          "png"
+        ],
+        "matched_terms": [
+          "jacket"
+        ],
+        "matched_product_type_terms": [
+          "jacket"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as upper_body from clear normalized term match: jacket."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -207,8 +344,35 @@
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "wrap",
+          "longsleeve",
+          "long",
+          "sleeve",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "long sleeve",
+          "longsleeve"
+        ],
+        "matched_product_type_terms": [
+          "long sleeve",
+          "longsleeve"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as upper_body from clear normalized term match: long sleeve, longsleeve."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
+          "long sleeve",
           "longsleeve"
         ]
       },
@@ -355,6 +519,28 @@
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "ruched",
+          "tank",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "tank"
+        ],
+        "matched_product_type_terms": [
+          "tank"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as upper_body from clear normalized term match: tank."
+      },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
           "ruched"
@@ -499,6 +685,30 @@
         "face_required": true,
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "kids",
+          "marvel",
+          "spider",
+          "man",
+          "t",
+          "shirt",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "t shirt"
+        ],
+        "matched_product_type_terms": [
+          "t shirt"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as upper_body from clear normalized term match: t shirt."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -660,6 +870,32 @@
         "face_required": true,
         "pose_required": "expected",
         "primary_visual_target": "upper_body_model"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "men",
+          "poly",
+          "linear",
+          "full",
+          "zip",
+          "hoodie",
+          "and",
+          "pants",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "hoodie"
+        ],
+        "matched_product_type_terms": [
+          "hoodie"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as upper_body from clear normalized term match: hoodie."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -825,6 +1061,38 @@
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "nike",
+          "women",
+          "training",
+          "full",
+          "zip",
+          "top",
+          "tracksuit",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "tracksuit",
+          "top"
+        ],
+        "matched_product_type_terms": [
+          "tracksuit"
+        ],
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "top"
+            ]
+          }
+        ],
+        "classification_confidence": "medium",
+        "classification_reason": "Selected category has competing product-type signals in the normalized path."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "tracksuit"
@@ -986,6 +1254,30 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "second",
+          "left",
+          "seamless",
+          "campaign",
+          "bralette",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "bralette"
+        ],
+        "matched_product_type_terms": [
+          "bralette"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "bralette"
@@ -1136,6 +1428,30 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "second",
+          "left",
+          "seamless",
+          "campaign",
+          "bralette",
+          "03",
+          "png"
+        ],
+        "matched_terms": [
+          "bralette"
+        ],
+        "matched_product_type_terms": [
+          "bralette"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: bralette."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "bralette"
@@ -1259,7 +1575,33 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
-      "diagnostic_vocabulary": {},
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "nandex",
+          "strappy",
+          "crop",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "strappy crop"
+        ],
+        "matched_product_type_terms": [
+          "strappy crop"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: strappy crop."
+      },
+      "diagnostic_vocabulary": {
+        "silhouette_shape": [
+          "strappy crop"
+        ]
+      },
       "image": {
         "width": 486,
         "height": 660,
@@ -1402,7 +1744,34 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
-      "diagnostic_vocabulary": {},
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "nandex",
+          "v",
+          "front",
+          "crop",
+          "03",
+          "png"
+        ],
+        "matched_terms": [
+          "v front crop"
+        ],
+        "matched_product_type_terms": [
+          "v front crop"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: v front crop."
+      },
+      "diagnostic_vocabulary": {
+        "silhouette_shape": [
+          "v front crop"
+        ]
+      },
       "image": {
         "width": 374,
         "height": 1258,
@@ -1561,7 +1930,33 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
-      "diagnostic_vocabulary": {},
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "nandex",
+          "adira",
+          "crop",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "adira crop"
+        ],
+        "matched_product_type_terms": [
+          "adira crop"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: adira crop."
+      },
+      "diagnostic_vocabulary": {
+        "silhouette_shape": [
+          "adira crop"
+        ]
+      },
       "image": {
         "width": 1680,
         "height": 2147,
@@ -1676,6 +2071,28 @@
         "face_required": false,
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "aybl",
+          "adapt",
+          "seamless",
+          "sports",
+          "bra",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "sports bra"
+        ],
+        "matched_product_type_terms": [
+          "sports bra"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -1843,6 +2260,34 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "asos",
+          "4504",
+          "curve",
+          "sports",
+          "bra",
+          "high",
+          "support",
+          "zip",
+          "front",
+          "adjustable",
+          "straps",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "sports bra"
+        ],
+        "matched_product_type_terms": [
+          "sports bra"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "sports bra"
@@ -2001,6 +2446,29 @@
         "pose_required": "helpful_not_required",
         "primary_visual_target": "upper_body_garment"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "underarmour",
+          "women",
+          "wordmark",
+          "strappy",
+          "sports",
+          "bra",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "sports bra"
+        ],
+        "matched_product_type_terms": [
+          "sports bra"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as sports_bra from clear normalized term match: sports bra."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "sports bra"
@@ -2156,6 +2624,29 @@
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "full",
+          "length",
+          "tights",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "tights"
+        ],
+        "matched_product_type_terms": [
+          "tights"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: tights."
+      },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
           "full length"
@@ -2277,6 +2768,29 @@
         "face_required": false,
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "full",
+          "length",
+          "tights",
+          "02",
+          "png"
+        ],
+        "matched_terms": [
+          "tights"
+        ],
+        "matched_product_type_terms": [
+          "tights"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: tights."
       },
       "diagnostic_vocabulary": {
         "silhouette_shape": [
@@ -2438,6 +2952,31 @@
         "face_required": false,
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "nike",
+          "women",
+          "zenvy",
+          "leggings",
+          "high",
+          "waisted",
+          "full",
+          "length",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "leggings"
+        ],
+        "matched_product_type_terms": [
+          "leggings"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -2604,6 +3143,30 @@
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "nike",
+          "women",
+          "zenvy",
+          "leggings",
+          "high",
+          "waisted",
+          "flared",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "leggings"
+        ],
+        "matched_product_type_terms": [
+          "leggings"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "leggings"
@@ -2769,6 +3332,29 @@
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "women",
+          "3",
+          "stripes",
+          "flared",
+          "leggings",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "leggings"
+        ],
+        "matched_product_type_terms": [
+          "leggings"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: leggings."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "leggings"
@@ -2933,6 +3519,30 @@
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "nike",
+          "women",
+          "training",
+          "pro",
+          "mesh",
+          "3inch",
+          "shorts",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "shorts"
+        ],
+        "matched_product_type_terms": [
+          "shorts"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: shorts."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "shorts"
@@ -3058,6 +3668,33 @@
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "second",
+          "left",
+          "seamless",
+          "campaign",
+          "biker",
+          "shorts",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "shorts",
+          "biker"
+        ],
+        "matched_product_type_terms": [
+          "shorts",
+          "biker"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: shorts, biker."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "shorts"
@@ -3182,6 +3819,28 @@
         "face_required": false,
         "pose_required": "expected_for_garment_roi",
         "primary_visual_target": "hips_to_knees_or_ankles"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "nandex",
+          "venus",
+          "skirt",
+          "02",
+          "png"
+        ],
+        "matched_terms": [
+          "skirt"
+        ],
+        "matched_product_type_terms": [
+          "skirt"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as lower_body from clear normalized term match: skirt."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3344,6 +4003,28 @@
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "designer",
+          "kate",
+          "galliano",
+          "bodysuit",
+          "bubblegum",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "bodysuit"
+        ],
+        "matched_product_type_terms": [
+          "bodysuit"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as full_body from clear normalized term match: bodysuit."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "bodysuit"
@@ -3505,6 +4186,28 @@
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "stax",
+          "women",
+          "airlyte",
+          "backless",
+          "playsuit",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "playsuit"
+        ],
+        "matched_product_type_terms": [
+          "playsuit"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as full_body from clear normalized term match: playsuit."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "playsuit"
@@ -3660,6 +4363,29 @@
         "face_required": false,
         "pose_required": "expected",
         "primary_visual_target": "full_model_or_outfit"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "kids",
+          "marvel",
+          "spider",
+          "man",
+          "tracksuit",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "tracksuit"
+        ],
+        "matched_product_type_terms": [
+          "tracksuit"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as full_body from clear normalized term match: tracksuit."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -3822,6 +4548,27 @@
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "men",
+          "campus",
+          "sneakers",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "sneakers"
+        ],
+        "matched_product_type_terms": [
+          "sneakers"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: sneakers."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "sneakers"
@@ -3942,6 +4689,28 @@
         "face_required": false,
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "asics",
+          "unisex",
+          "running",
+          "shoes",
+          "kayano",
+          "26",
+          "png"
+        ],
+        "matched_terms": [
+          "shoes"
+        ],
+        "matched_product_type_terms": [
+          "shoes"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: shoes."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4064,6 +4833,30 @@
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "reebok",
+          "unisex",
+          "training",
+          "shoes",
+          "nano",
+          "x3",
+          "pure",
+          "white",
+          "png"
+        ],
+        "matched_terms": [
+          "shoes"
+        ],
+        "matched_product_type_terms": [
+          "shoes"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: shoes."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "shoes"
@@ -4185,11 +4978,39 @@
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "nike",
+          "other",
+          "600ml",
+          "waterbottle",
+          "water",
+          "bottle",
+          "png"
+        ],
+        "matched_terms": [
+          "bottle",
+          "water bottle",
+          "waterbottle"
+        ],
+        "matched_product_type_terms": [
+          "bottle",
+          "water bottle",
+          "waterbottle"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: bottle, water bottle, waterbottle."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
+          "water bottle",
           "waterbottle"
         ],
         "object_controls": [
+          "water bottle",
           "waterbottle"
         ]
       },
@@ -4305,6 +5126,37 @@
         "face_required": false,
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "other",
+          "uefa",
+          "euro16",
+          "top",
+          "glider",
+          "ball",
+          "png"
+        ],
+        "matched_terms": [
+          "ball",
+          "top"
+        ],
+        "matched_product_type_terms": [
+          "ball"
+        ],
+        "competing_product_type_terms": [
+          {
+            "product_type": "upper_body",
+            "terms": [
+              "top"
+            ]
+          }
+        ],
+        "classification_confidence": "medium",
+        "classification_reason": "Object/product term wins by priority, but competing product-type language is present."
       },
       "diagnostic_vocabulary": {
         "core_categories": [
@@ -4427,6 +5279,26 @@
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "other",
+          "protec",
+          "skate",
+          "helmet",
+          "png"
+        ],
+        "matched_terms": [
+          "helmet"
+        ],
+        "matched_product_type_terms": [
+          "helmet"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: helmet."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "helmet"
@@ -4548,6 +5420,29 @@
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
       },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "adidas",
+          "kids",
+          "marvel",
+          "spider",
+          "man",
+          "backpack",
+          "01",
+          "png"
+        ],
+        "matched_terms": [
+          "backpack"
+        ],
+        "matched_product_type_terms": [
+          "backpack"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: backpack."
+      },
       "diagnostic_vocabulary": {
         "core_categories": [
           "backpack"
@@ -4668,6 +5563,30 @@
         "face_required": false,
         "pose_required": "not_required",
         "primary_visual_target": "alpha_mask_object"
+      },
+      "classification_diagnostics": {
+        "normalized_tokens": [
+          "images",
+          "brands",
+          "other",
+          "sting",
+          "armaplus",
+          "boxing",
+          "gloves",
+          "t3",
+          "png"
+        ],
+        "matched_terms": [
+          "gloves",
+          "boxing gloves"
+        ],
+        "matched_product_type_terms": [
+          "gloves",
+          "boxing gloves"
+        ],
+        "competing_product_type_terms": [],
+        "classification_confidence": "high",
+        "classification_reason": "Classified as object from clear normalized term match: gloves, boxing gloves."
       },
       "diagnostic_vocabulary": {
         "core_categories": [

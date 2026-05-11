@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -116,6 +117,19 @@ PRODUCT_RULES = {
     },
 }
 
+COMPACT_TOKEN_SYNONYMS = {
+    "longsleeve": "long sleeve",
+    "waterbottle": "water bottle",
+    "sportsbra": "sports bra",
+    "croptop": "crop top",
+    "tshirt": "t shirt",
+    "tee": "t shirt",
+    "fullzip": "full zip",
+    "highwaisted": "high waisted",
+    "onepiece": "one piece",
+    "gymbag": "gym bag",
+}
+
 
 DIAGNOSTIC_VOCABULARY = {
     "core_categories": [
@@ -129,14 +143,17 @@ DIAGNOSTIC_VOCABULARY = {
         "one shoulder", "asymmetrical", "strapless", "halter", "scoop neck", "square neck",
         "v neck", "bandeau", "racerback", "straight back", "cross over back",
         "multi cross over back straps", "centre spine", "cutout", "ruched", "foldover",
-        "high waisted",
+        "high waisted", "strappy crop", "v front crop", "adira crop", "flex crop",
     ],
     "garment_construction": [
         "seamless", "scrunch", "underwire", "elastic underbust band", "rib waistband",
         "foldover ribbed", "waistband", "pocket", "mesh", "brushed fleece",
         "elastic waistband ankle cuff",
     ],
-    "sports_bra_support": ["low support", "light support", "medium support", "high support"],
+    "sports_bra_support": [
+        "low support", "light support", "medium support", "high support", "underwire",
+        "one shoulder", "halter", "racerback", "cross over back", "longline", "bandeau",
+    ],
     "surface_material_pattern": ["leopard print", "stonewash", "rib", "lyte", "poly", "towelling"],
     "object_controls": [
         "accessories", "backpack", "helmet", "ball", "water bottle", "waterbottle", "boxing gloves",
@@ -218,7 +235,19 @@ def normalize_label(value: str) -> str:
     text = value.lower()
     text = re.sub(r"[_\-\s:;\\/]+", " ", text)
     text = re.sub(r"[^a-z0-9]+", " ", text)
-    return re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+", " ", text).strip()
+    tokens = text.split()
+    expanded: list[str] = []
+    for token in tokens:
+        expanded.append(token)
+        synonym = COMPACT_TOKEN_SYNONYMS.get(token)
+        if synonym:
+            expanded.extend(synonym.split())
+    return re.sub(r"\s+", " ", " ".join(expanded)).strip()
+
+
+def normalized_tokens(value: str) -> list[str]:
+    return normalize_label(value).split()
 
 
 def has_normalized_phrase(haystack: str, phrase: str) -> bool:
@@ -236,6 +265,73 @@ def matched_diagnostic_vocabulary(image_path: str) -> dict[str, list[str]]:
         if group_matches:
             matches[group] = group_matches
     return matches
+
+
+def product_type_matches(image_path: str) -> dict[str, list[str]]:
+    haystack = normalize_label(image_path)
+    matches: dict[str, list[str]] = {}
+    for product_type, rule in PRODUCT_RULES.items():
+        terms = [keyword for keyword in rule["keywords"] if has_normalized_phrase(haystack, keyword)]
+        if terms:
+            matches[product_type] = terms
+    return matches
+
+
+def infer_product_type_with_diagnostics(image_path: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    matches = product_type_matches(image_path)
+    selected_type = None
+    selected_terms: list[str] = []
+
+    for product_type, rule in PRODUCT_RULES.items():
+        if product_type in matches:
+            selected_type = product_type
+            selected_terms = matches[product_type]
+            selected_rule = {"product_type": product_type, **rule}
+            break
+    else:
+        selected_rule = {
+            "product_type": "unknown",
+            "roi_type": "object_or_unknown",
+            "face_weight": 0.2,
+            "expected_pose": False,
+        }
+
+    competing = {
+        product_type: terms
+        for product_type, terms in matches.items()
+        if product_type != selected_rule["product_type"]
+    }
+    competing_terms = [
+        {"product_type": product_type, "terms": terms}
+        for product_type, terms in competing.items()
+    ]
+
+    if selected_rule["product_type"] == "unknown":
+        confidence = "low"
+        reason = "No product-type keyword matched after normalized token comparison."
+    elif not competing:
+        confidence = "high"
+        reason = f"Classified as {selected_rule['product_type']} from clear normalized term match: {', '.join(selected_terms)}."
+    elif selected_rule["product_type"] == "sports_bra" and set(competing).issubset({"upper_body"}):
+        confidence = "medium"
+        reason = "Sports bra/crop terms overlap with upper-body language; sports_bra rule wins by priority."
+    elif selected_rule["product_type"] == "object":
+        confidence = "medium"
+        reason = "Object/product term wins by priority, but competing product-type language is present."
+    else:
+        confidence = "low" if len(competing) > 1 else "medium"
+        reason = "Selected category has competing product-type signals in the normalized path."
+
+    diagnostics = {
+        "normalized_tokens": normalized_tokens(image_path),
+        "matched_terms": [term for terms in matches.values() for term in terms],
+        "matched_product_type_terms": selected_terms,
+        "competing_product_type_terms": competing_terms,
+        "classification_confidence": confidence,
+        "classification_reason": reason,
+    }
+
+    return selected_rule, diagnostics
 
 
 def collect_image_paths(inputs: list[str], max_images_per_input: int) -> list[Path]:
@@ -450,16 +546,8 @@ def detect_pose(img_bgr: np.ndarray, pose_detector: Any) -> tuple[dict[str, Any]
 
 
 def infer_product_type(image_path: str) -> dict[str, Any]:
-    haystack = normalize_label(image_path)
-    for product_type, rule in PRODUCT_RULES.items():
-        if any(has_normalized_phrase(haystack, keyword) for keyword in rule["keywords"]):
-            return {"product_type": product_type, **rule}
-    return {
-        "product_type": "unknown",
-        "roi_type": "object_or_unknown",
-        "face_weight": 0.2,
-        "expected_pose": False,
-    }
+    rule, _diagnostics = infer_product_type_with_diagnostics(image_path)
+    return rule
 
 
 def average_landmark(landmarks: dict[str, Any], names: list[str]) -> tuple[float, float] | None:
@@ -758,7 +846,7 @@ def analyse_image(path: Path, fd_short: Any, fd_full: Any, pose_detector: Any) -
     alpha, alpha_warnings = alpha_geometry(img)
     warnings.extend(alpha_warnings)
 
-    rule = infer_product_type(image_path)
+    rule, classification_diagnostics = infer_product_type_with_diagnostics(image_path)
     diagnostic_terms = matched_diagnostic_vocabulary(image_path)
     face = detect_face(img_bgr, fd_short, fd_full)
     if rule["expected_pose"] or rule["product_type"] == "unknown":
@@ -790,6 +878,7 @@ def analyse_image(path: Path, fd_short: Any, fd_full: Any, pose_detector: Any) -
         "inferred_roi_type": rule["roi_type"],
         "score_scope": SCORE_SCOPE,
         "category_interpretation": category_interpretation,
+        "classification_diagnostics": classification_diagnostics,
         "diagnostic_vocabulary": diagnostic_terms,
         "image": image,
         "alpha": alpha,
@@ -802,6 +891,59 @@ def analyse_image(path: Path, fd_short: Any, fd_full: Any, pose_detector: Any) -
         "category_specific_warnings": category_warnings,
         **category_flags,
         "needs_manual_review": manual,
+    }
+
+
+def build_run_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+    product_type_counts = Counter(r["product_type"] for r in records)
+    roi_specificity_counts = Counter(r["roi_diagnostics"]["roi_specificity"] for r in records)
+    warning_counts = Counter(w for r in records for w in r["warnings"])
+    category_specific_warning_counts = Counter(
+        w for r in records for w in r["category_specific_warnings"]
+    )
+
+    vocabulary_counts: dict[str, dict[str, int]] = {}
+    vocabulary_counter: dict[str, Counter] = defaultdict(Counter)
+    for record in records:
+        for group, terms in record.get("diagnostic_vocabulary", {}).items():
+            vocabulary_counter[group].update(terms)
+
+    for group, counter in vocabulary_counter.items():
+        vocabulary_counts[group] = dict(sorted(counter.items()))
+
+    confidence_counts = Counter(
+        r["classification_diagnostics"]["classification_confidence"]
+        for r in records
+    )
+    competing_signal_records = [
+        {
+            "image_path": r["image_path"],
+            "product_type": r["product_type"],
+            "competing_product_type_terms": r["classification_diagnostics"]["competing_product_type_terms"],
+        }
+        for r in records
+        if r["classification_diagnostics"]["competing_product_type_terms"]
+    ]
+    low_confidence_records = [
+        {
+            "image_path": r["image_path"],
+            "product_type": r["product_type"],
+            "classification_reason": r["classification_diagnostics"]["classification_reason"],
+        }
+        for r in records
+        if r["classification_diagnostics"]["classification_confidence"] == "low"
+    ]
+
+    return {
+        "image_count": len(records),
+        "product_type_counts": dict(sorted(product_type_counts.items())),
+        "roi_specificity_counts": dict(sorted(roi_specificity_counts.items())),
+        "warning_counts": dict(sorted(warning_counts.items())),
+        "category_specific_warning_counts": dict(sorted(category_specific_warning_counts.items())),
+        "diagnostic_vocabulary_counts": vocabulary_counts,
+        "classification_confidence_counts": dict(sorted(confidence_counts.items())),
+        "competing_category_signal_records": competing_signal_records,
+        "low_confidence_records": low_confidence_records,
     }
 
 
@@ -823,8 +965,10 @@ def main() -> int:
     pose_detector = mp.solutions.pose.Pose(static_image_mode=True, model_complexity=1, min_detection_confidence=0.35)
 
     records = [analyse_image(path, fd_short, fd_full, pose_detector) for path in tqdm(paths, desc="Analysing hero candidates")]
+    run_summary = build_run_summary(records)
+
     payload = {
-        "schema": "active_layers.hero_candidates_stage2a.v1",
+        "schema": "active_layers.hero_candidates_stage2b.v1",
         "advisory_only": True,
         "manual_override_policy": "Automation suggests. Manual Hero Manager selections win.",
         "score_scope": SCORE_SCOPE,
@@ -832,6 +976,7 @@ def main() -> int:
         "project_root": "project-relative paths only",
         "inputs": inputs,
         "image_count": len(records),
+        "run_summary": run_summary,
         "records": records,
     }
 
