@@ -2,6 +2,7 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/../inc/hero/authority.php';
 require_once __DIR__ . '/../inc/hero/candidates.php';
+require_once __DIR__ . '/../inc/hero/diagnostics.php';
 
 header('Content-Type: application/json');
 
@@ -11,6 +12,15 @@ if ($itemId <= 0) {
     exit;
 }
 
-echo json_encode(sw_enumerate_scored_candidates($pdo, $itemId));
+$result = sw_enumerate_scored_candidates($pdo, $itemId);
+
+if (isset($result['candidates']) && is_array($result['candidates'])) {
+    foreach ($result['candidates'] as &$candidate) {
+        $candidate['diagnostics'] = sw_get_hero_diagnostic_for_image((string)($candidate['path'] ?? ''));
+    }
+    unset($candidate);
+}
+
+echo json_encode($result);
 
 
