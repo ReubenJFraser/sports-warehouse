@@ -257,6 +257,60 @@
 }
 
 /* =========================================================
+   hero-manager — shortlist preview
+========================================================= */
+.hero-shortlist-preview {
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid rgba(148,163,235,0.35);
+    border-radius: 10px;
+    background: rgba(2,6,23,0.45);
+    font-size: 0.75rem;
+}
+
+.hero-shortlist-preview__head,
+.hero-shortlist-preview__foot {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hero-shortlist-preview__meta {
+    color: var(--text-muted);
+}
+
+.hero-shortlist-preview__thumbs {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.hero-shortlist-thumb { width: 72px; }
+.hero-shortlist-thumb__rank { display: inline-block; margin-bottom: 4px; }
+.hero-shortlist-thumb__imgwrap {
+    height: 84px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(148,163,235,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #020617;
+}
+.hero-shortlist-thumb__imgwrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.hero-shortlist-preview__current { color: var(--text-muted); }
+.hero-shortlist-preview__flag {
+    margin-left: 8px;
+    color: #fecaca;
+}
+
+/* =========================================================
    HERO GOVERNANCE SEMANTICS
 ========================================================= */
 
@@ -341,7 +395,6 @@
 [data-fullscreen] {
     cursor: zoom-in;
 }
-
 
 
 

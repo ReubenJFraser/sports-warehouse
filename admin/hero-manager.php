@@ -645,6 +645,10 @@ admin_layout_start("Hero Manager");
                     </div>
                 </div>
 
+                <div class="hero-shortlist-preview" data-shortlist-item-id="<?= $itemId ?>">
+                    <div class="hero-shortlist-preview__state">Loading shortlist…</div>
+                </div>
+
                 <!-- Buttons -->
                 <div class="hero-card__actions">
                     <a class="btn btn-primary" href="hero-edit.php?id=<?= $itemId ?>">
@@ -679,4 +683,3 @@ admin_layout_start("Hero Manager");
 <script src="<?= BASE_URL ?>/js/admin/hero.js"></script>
 
 <?php admin_layout_end();
-
