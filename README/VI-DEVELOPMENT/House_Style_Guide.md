@@ -1,270 +1,466 @@
-# README House Style Guide
+# Codex + GitHub PR Workflow Discipline
 
-This document defines the **house style** for all README files in this repository.
+## Purpose
 
-Its purpose is to ensure that documentation remains consistent, readable, auditable, and safe to evolve over time.
+This README defines the authoritative operational workflow for using Codex with GitHub Pull Requests in the Sports Warehouse repository.
 
-All future README files should conform to these conventions unless explicitly documented otherwise.
+Its purpose is to prevent repeated workflow instability caused by confusion between Codex task state, GitHub PR state, and the local Windows/Laragon development environment.
 
----
-
-## 1. Core Principles
-
-All README files must adhere to the following principles:
-
-- Procedural over theoretical  
-- Descriptive over prescriptive  
-- Explicit over implicit  
-- Auditable over clever  
-- Stable over fashionable  
-
-READMEs exist to explain **what is actually done**, not what could be done in theory.
+This document exists to ensure that development effort is spent implementing bounded changes rather than recovering from stale branches, detached task state, ambiguous PR status, or broken synchronization between environments.
 
 ---
 
-## 2. Formatting Rules (Non-Negotiable)
+## Scope
 
-### 2.1 Single Markdown Fence Requirement
+This README covers:
 
-- **Every README must be written entirely inside a single Markdown code fence**
-- No content may appear outside that fence
-- The fence itself is the containment boundary for the document
+- Codex operational workflow
+- GitHub PR workflow discipline
+- local post-merge synchronization
+- PR review expectations
+- recovery procedures when workflow state becomes unstable
 
-This rule exists to:
-- prevent accidental partial copies
-- preserve structural integrity
-- ensure long-term reliability when READMEs are reused or moved
+This README does not cover:
 
----
+- application architecture
+- routing invariants
+- business logic design
+- database schema governance
+- enforcement candidate policy
 
-### 2.2 Markdown Inside the Fence
+Those responsibilities remain governed by:
 
-Inside the single fence:
-
-- All content must be valid Markdown
-- Headings must use `#`, `##`, `###`
-- Lists must use `-` or numbered lists
-- Emphasis may use bold or italics
-
----
-
-### 2.3 SQL, Shell, and Queries (Clarified)
-
-**Executable content is allowed and expected.**
-
-- SQL queries (including DBeaver queries) **may be included**
-- Shell commands, configuration snippets, and other procedural statements **may be included**
-- These must appear **inline within the same single Markdown fence**
-
-What is prohibited is **not code**, but **multiple or nested fences**.
-
-Examples of acceptable inclusion:
-- Inline SQL statements such as `DELETE FROM item`
-- Multi-line SQL written as plain text paragraphs
-- Step descriptions followed by the exact query used
-
-Examples of prohibited inclusion:
-- Multiple fenced blocks inside a README
-- Nested triple-backtick blocks
-- Breaking executable content outside the single fence
+- `01-Codex-Behavioural_Rules.md`
+- `02-Codex-Architecture_Invariants.md`
+- `03-Codex-Routing_Invariants.md`
+- `ENFORCEMENT_CANDIDATE_REGISTER.md`
 
 ---
 
-### 2.4 Inline Literals
+## Conceptual Roles
 
-- Inline literals (filenames, table names, column names, queries) may be written inline
-- Paths, identifiers, and settings should appear inline rather than in separate fences
+### Codex Task Environment
 
----
+Codex operates in a temporary cloud execution environment.
 
-## 3. Document Structure
+Its characteristics:
 
-All READMEs should follow a predictable structure.
+- independent Git state
+- temporary task lifecycle
+- isolated branch state
+- possible divergence from GitHub
+- possible divergence from local Windows state
 
-### 3.1 Title
-
-- Use a single top-level `#` heading
-- The title should describe the system, workflow, or responsibility area
-- Avoid vague titles such as “Notes” or “Misc”
-
----
-
-### 3.2 Purpose Section
-
-Early in the document, include a section titled:
-
-- “Purpose”  
-  or  
-- “Purpose of This README”
-
-This section must explain:
-- why the document exists
-- what problem it solves
-- what kind of reader it is written for
+Codex task state is not authoritative.
 
 ---
 
-### 3.3 Scope Section
+### GitHub Repository
 
-Every README must explicitly state scope.
+GitHub is the authoritative shared repository.
 
-Include:
-- what the document covers
-- what it intentionally does not cover
+Its responsibilities:
 
-This prevents false assumptions and scope creep.
+- branch comparison
+- PR review
+- mergeability determination
+- conflict detection
+- canonical `main` branch state
+
+GitHub merge state is authoritative.
 
 ---
 
-### 3.4 Conceptual Roles (Where Applicable)
+### Local Windows / Laragon Environment
 
-When multiple systems interact, include a section explaining roles.
+The local Windows environment is the actual execution and verification environment.
+
+Its responsibilities:
+
+- PHP execution
+- browser testing
+- local Git synchronization
+- cache-sensitive CSS/JS verification
+
+Local state is authoritative for runtime verification.
+
+---
+
+## Guiding Principle
+
+Codex is to be treated as:
+
+**a single-task PR generator**
+
+Codex is not to be treated as:
+
+**a continuous long-lived development environment**
+
+Each implementation stage should produce:
+
+- one fresh Codex task
+- one bounded implementation objective
+- one GitHub PR
+- one merge decision
+- one local synchronization
+- one local verification cycle
+
+Then the task ends.
+
+---
+
+## Standard Workflow
+
+## Step 1 — Prepare Local Main
+
+Before starting any new Codex task:
+
+Run:
+
+`sports-warehouse`
+
+Then:
+
+`git checkout main`
+
+Then:
+
+`git pull origin main`
+
+Then:
+
+`git status`
+
+Expected result:
+
+`nothing to commit, working tree clean`
+
+If local `main` is not clean:
+
+stop.
+
+Resolve local issues first.
+
+---
+
+## Step 2 — Confirm Codex Environment
+
+Codex environment should be configured with:
+
+- Agent internet access enabled
+- Common dependencies domain allowlist
+- All HTTP methods enabled
+
+If Codex reports network failures such as:
+
+`CONNECT tunnel failed, response 403`
+
+stop.
+
+Resolve Codex environment access before continuing.
+
+Repeated prompting is not a valid network recovery strategy.
+
+---
+
+## Step 3 — Start Fresh Task
+
+Begin from the Codex task home screen.
+
+Create a new task.
+
+Do not begin new implementation work inside:
+
+- merged tasks
+- archived tasks
+- stale revision tasks
+- unrelated prior PR tasks
+- ambiguous recovery tasks
+
+Each implementation stage begins as a fresh task.
+
+---
+
+## Step 4 — Define One Bounded Objective
+
+Each Codex task must define:
+
+- exact implementation objective
+- intended stage name
+- expected changed files
+- explicit non-goals
+- required verification steps
+- PR completion requirement
+
+Implementation scope must remain bounded.
+
+Scope ambiguity creates workflow instability.
+
+---
+
+## Step 5 — Review Codex Output Before PR Creation
+
+When Codex completes implementation:
+
+review:
+
+- summary
+- changed files
+- reported tests
+- implementation scope
+
+Confirm changes align with expectations.
+
+Do not proceed blindly to PR creation.
+
+---
+
+## Step 6 — Create GitHub PR
+
+If Codex presents:
+
+`Create PR`
+
+use the Codex PR creation workflow.
+
+Completion is valid only when a real GitHub PR exists.
+
+Internal metadata summaries such as:
+
+- draft PR metadata
+- make_pr metadata
+- internal completion summaries
+
+are not sufficient evidence of PR creation.
+
+A real PR number must exist in GitHub.
+
+---
+
+## Step 7 — Review PR in GitHub
+
+Review:
+
+`Files changed`
+
+Confirm:
+
+- only intended files changed
+- no unrelated files added
+- no architecture drift
+- no unintended schema changes
+- no forbidden payload expansion
+- no hidden behavioural regressions
+
+If PR is draft:
+
+mark it ready for review before merging.
+
+---
+
+## Step 8 — Merge Only if Stable
+
+Merge only when:
+
+- PR scope is correct
+- branch is conflict-free
+- implementation aligns with requested scope
+- no unresolved ambiguity exists
+
+If GitHub reports merge conflicts:
+
+stop.
+
+Do not merge.
+
+---
+
+## Step 9 — Synchronize Local Main
+
+After merge:
+
+Run:
+
+`sports-warehouse`
+
+Then:
+
+`git checkout main`
+
+Then:
+
+`git pull origin main`
+
+Then:
+
+`git status`
+
+Then:
+
+`git log --oneline -5`
+
+Expected:
+
+local `main` matches GitHub `main`.
+
+---
+
+## Step 10 — Verify Runtime Behaviour
+
+For frontend / JS / CSS work:
+
+perform hard browser refresh.
+
+Then verify runtime behaviour in the browser.
+
+Where relevant:
+
+- test UI behaviour
+- test endpoint behaviour
+- test navigation
+- inspect browser console
+
+Codex completion is not final acceptance.
+
+Runtime verification is required.
+
+---
+
+## Step 11 — End Task
+
+After successful merge and local verification:
+
+the Codex task is complete.
+
+Do not continue unrelated implementation work inside that task.
+
+The next stage begins as a fresh task.
+
+---
+
+## Revision Policy
+
+One narrow correction cycle is acceptable.
 
 Examples:
-- Excel vs MySQL
-- frontend vs admin
-- automation vs human override
 
-This section defines **responsibility boundaries**, not implementation details.
+- syntax correction
+- narrow URL fix
+- scoped UI repair
+- targeted regression correction
 
----
+Repeated revision loops are prohibited.
 
-### 3.5 Procedural Sections
-
-Procedural documentation should:
-
-- be ordered
-- be numbered when sequence matters
-- describe intent before mechanics
-- avoid pseudo-code
-
-Use clear section titles such as:
-- “Step 1 — Prepare Data”
-- “Step 2 — Import”
-- “Verification”
+If branch state becomes ambiguous, stop and use recovery procedures.
 
 ---
 
-### 3.6 Optional Patterns and Alternatives
+## Stop Conditions
 
-Optional or advanced patterns should be clearly labeled.
+Immediately stop using the current Codex task if any of the following occur:
 
-Use language such as:
-- “Optional”
-- “Advanced”
-- “May be introduced later”
+- GitHub reports merge conflicts
+- Codex reports clean working tree but GitHub disagrees
+- PR identity becomes unclear
+- branch state becomes unclear
+- Codex/GitHub synchronization becomes uncertain
+- task lineage becomes ambiguous
+- expected PR does not exist in GitHub
 
-Optional patterns must never be mixed into the primary happy path.
-
----
-
-### 3.7 Known Gaps and Open Questions
-
-All READMEs should include a section acknowledging uncertainty.
-
-This section exists to:
-- document what is not yet locked
-- prevent accidental assumptions
-- signal areas of active evolution
-
-Leaving gaps undocumented is worse than leaving them unresolved.
+Workflow clarity is mandatory.
 
 ---
 
-### 3.8 Guiding Principles or Invariants
+## Recovery Procedures
 
-Where relevant, end with a short section describing:
+### Recovery Path A — Fresh Restart
 
-- guiding principles
-- invariants
-- non-goals
+Use when implementation is reproducible.
 
-These act as guardrails for future contributors (human or AI).
+Procedure:
 
----
+1. abandon confused PR
+2. synchronize local `main`
+3. begin fresh Codex task
+4. reimplement bounded change
 
-### 3.9 Handover Address & Operating Mode (Mandatory for Handovers)
-
-Any README intended to function as a **handover between chat sessions** must include, at the very top of the document, a section titled:
-
-**Handover Address & Operating Mode (Mandatory)**
-
-This section must appear **before** Purpose and Scope.
-
-The section must be included verbatim and must not be paraphrased:
-
-> This document is addressed to: **you, ChatGPT, being the new chat session acting as the active operator**.
->
-> You are not being asked to review, critique, summarize, or reinterpret this document.  
-> You are being asked to treat it as authoritative and resume execution at the stated next step.
->
-> This handover replaces all prior conversational context.
-
-Rationale:
-- Removes ambiguity about audience (operator vs reviewer)
-- Locks execution mode and prohibits re-interpretation
-- Ensures clean session-to-session continuity for long-running projects
-
-Handovers that omit this section are considered **non-compliant** and must not be used as execution entry points.
-
-This requirement applies only to READMEs that function as handover documents, not to this House Style Guide itself.
+Preferred default recovery.
 
 ---
 
-## 4. Tone and Language
+### Recovery Path B — Local Recovery
 
-### 4.1 Declarative, Not Conversational
+Use when implementation is valuable but PR workflow is unstable.
 
-- Do not address the reader conversationally
-- Do not reference chats, prompts, or prior discussion
-- The document must stand alone
+Procedure:
 
----
+1. synchronize local repository
+2. fetch remote branches
+3. resolve conflicts locally
+4. commit locally
+5. push clean branch
+6. create manual GitHub PR
 
-### 4.2 Calm and Precise
-
-- Avoid hype or marketing language
-- Avoid defensive or apologetic phrasing
-- Prefer neutral, technical clarity
-
----
-
-## 5. What READMEs Are Not
-
-READMEs in this repository are not:
-
-- tutorials for beginners
-- marketing copy
-- exhaustive API references
-- dumping grounds for raw logs or transcripts
-
-They are **governance documents**.
+This path restores full local control.
 
 ---
 
-## 6. Evolution Rule
+### Recovery Path C — Patch Recovery
 
-READMEs may evolve, but only deliberately.
+Use when Codex cannot successfully create a PR.
 
-When updating a README:
-- preserve existing structure where possible
-- add sections rather than rewriting history
-- document changes in intent, not just mechanics
+Request:
 
-Consistency across documents matters more than local perfection.
+- patch output
+- git apply output
+- complete changed file contents
+
+Apply changes locally.
+
+Then proceed manually.
 
 ---
 
-## 7. Summary Rule
+## Known Gaps and Open Questions
 
-A README that:
+Current uncertainties:
 
-- explains intent
-- defines scope
-- documents reality
-- includes the actual procedures used (including queries)
-- respects the single-fence rule
-- avoids cleverness
+- Codex PR update behaviour may vary by environment state
+- task recovery UX may differ between Codex sessions
+- environment lifecycle behaviour may evolve over time
 
-is considered compliant with the house style.
+These gaps do not invalidate the workflow.
+
+They reinforce the need for bounded implementation discipline.
+
+---
+
+## Non-Goals
+
+This workflow does not attempt to:
+
+- optimize Codex for continuous iterative development
+- eliminate all manual review
+- replace GitHub review discipline
+- replace runtime verification
+- abstract away Git branch reality
+
+Its purpose is stability, not automation maximalism.
+
+---
+
+## Invariants
+
+The following remain invariant:
+
+- GitHub merge state is authoritative
+- local runtime verification is mandatory
+- Codex task state is temporary
+- one task equals one bounded objective
+- one objective equals one PR
+- unstable workflow state requires explicit recovery
+
+When workflow becomes confusing:
+
+return to clean `main`, then restart cleanly.
 
