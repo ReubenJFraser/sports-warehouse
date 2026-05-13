@@ -162,5 +162,122 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-});
+  /* ------------------------------------------------------------
+     4. Shortlist Preview Panel (hero-manager.php, read-only)
+     ------------------------------------------------------------ */
 
+  const shortlistNodes = document.querySelectorAll("[data-shortlist-item-id]");
+  if (shortlistNodes.length > 0) {
+    const clearNode = node => { while (node.firstChild) node.removeChild(node.firstChild); };
+    const safeText = value => (value === null || value === undefined || value === "") ? "—" : String(value);
+    const isAbsoluteUrl = url => /^https?:\/\//i.test(url) || url.startsWith("/");
+    const resolveImageUrl = path => {
+      const cleanPath = String(path || "").replace(/^\/+/, "");
+      return `${window.BASE_URL}/${cleanPath}`;
+    };
+    const resolveChallengeUrl = (endpoint, itemId) => {
+      const fallback = `/admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`;
+      const raw = String(endpoint || fallback).trim();
+      if (raw === "") return `${window.BASE_URL}${fallback}`;
+      if (isAbsoluteUrl(raw)) return raw;
+      const normalized = raw.replace(/^\/+/, "");
+      if (normalized.startsWith("admin/")) return `${window.BASE_URL}/${normalized.slice("admin/".length)}`;
+      return `${window.BASE_URL}/${normalized}`;
+    };
+    const makeEl = (tag, className, text) => {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = text;
+      return el;
+    };
+    const renderShortlistState = (node, message) => {
+      clearNode(node);
+      node.appendChild(makeEl("div", "hero-shortlist-preview__state", message));
+    };
+
+    fetch(`${window.BASE_URL}/admin/hero-shortlists.php?limit=100`)
+      .then(res => {
+        if (!res.ok) throw new Error("endpoint");
+        return res.json();
+      })
+      .then(data => {
+        const products = Array.isArray(data.products) ? data.products : [];
+        const byItem = new Map(products.map(p => [String(p.item_id), p]));
+
+        shortlistNodes.forEach(node => {
+          const itemId = String(node.dataset.shortlistItemId || "");
+          const product = byItem.get(itemId);
+
+          if (!product) {
+            renderShortlistState(node, "Shortlist unavailable");
+            return;
+          }
+
+          const candidates = Array.isArray(product.recommended_candidates)
+            ? product.recommended_candidates.slice(0, 3)
+            : [];
+
+          const currentHero = product.current_hero || null;
+          const outsideTopThree = !!(currentHero && currentHero.current_hero_outside_top_three);
+          const profile = product.active_criteria_profile || "—";
+          const basis = product.shortlist_basis || "legacy_rank_placeholder";
+          const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
+
+          clearNode(node);
+          const head = makeEl("div", "hero-shortlist-preview__head");
+          head.appendChild(makeEl("strong", "", candidates.length === 0 ? "Shortlist preview" : "Recommended shortlist"));
+          head.appendChild(makeEl("span", "hero-shortlist-preview__meta", candidates.length === 0 ? "No candidates" : safeText(product.shortlist_status || "unavailable")));
+          node.appendChild(head);
+
+          if (candidates.length === 0) {
+            const foot = makeEl("div", "hero-shortlist-preview__foot");
+            foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
+            foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
+            const review = makeEl("a", "", "Review candidates");
+            review.href = challengeEndpoint;
+            foot.appendChild(review);
+            node.appendChild(foot);
+            return;
+          }
+
+          const thumbsWrap = makeEl("div", "hero-shortlist-preview__thumbs");
+          candidates.forEach((candidate, idx) => {
+            const rank = candidate.recommendation_rank || (idx + 1);
+            const path = candidate.path || "";
+            const thumb = makeEl("div", "hero-shortlist-thumb");
+            thumb.appendChild(makeEl("span", "hero-shortlist-thumb__rank", `#${rank}`));
+            const imgWrap = makeEl("div", "hero-shortlist-thumb__imgwrap");
+            if (path) {
+              const img = document.createElement("img");
+              img.src = resolveImageUrl(path);
+              img.alt = `Shortlist candidate #${rank}`;
+              imgWrap.appendChild(img);
+            } else {
+              imgWrap.appendChild(makeEl("span", "", "—"));
+            }
+            thumb.appendChild(imgWrap);
+            thumbsWrap.appendChild(thumb);
+          });
+          node.appendChild(thumbsWrap);
+
+          const current = makeEl("div", "hero-shortlist-preview__current", `Current hero: ${currentHero && currentHero.path ? "available" : "none"}`);
+          if (outsideTopThree) {
+            current.appendChild(makeEl("span", "hero-shortlist-preview__flag", "Current hero outside shortlist"));
+          }
+          node.appendChild(current);
+
+          const foot = makeEl("div", "hero-shortlist-preview__foot");
+          foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
+          foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
+          const review = makeEl("a", "", "Review candidates");
+          review.href = challengeEndpoint;
+          foot.appendChild(review);
+          node.appendChild(foot);
+        });
+      })
+      .catch(() => {
+        shortlistNodes.forEach(node => renderShortlistState(node, "Endpoint error / unable to load shortlist"));
+      });
+  }
+
+});
