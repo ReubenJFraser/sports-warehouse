@@ -162,5 +162,93 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-});
+  /* ------------------------------------------------------------
+     4. Shortlist Preview Panel (hero-manager.php, read-only)
+     ------------------------------------------------------------ */
 
+  const shortlistNodes = document.querySelectorAll("[data-shortlist-item-id]");
+  if (shortlistNodes.length > 0) {
+    const renderShortlistState = (node, message) => {
+      node.innerHTML = `<div class="hero-shortlist-preview__state">${message}</div>`;
+    };
+
+    fetch(`${window.BASE_URL}/admin/hero-shortlists.php?limit=100`)
+      .then(res => {
+        if (!res.ok) throw new Error("endpoint");
+        return res.json();
+      })
+      .then(data => {
+        const products = Array.isArray(data.products) ? data.products : [];
+        const byItem = new Map(products.map(p => [String(p.item_id), p]));
+
+        shortlistNodes.forEach(node => {
+          const itemId = String(node.dataset.shortlistItemId || "");
+          const product = byItem.get(itemId);
+
+          if (!product) {
+            renderShortlistState(node, "Shortlist unavailable");
+            return;
+          }
+
+          const candidates = Array.isArray(product.recommended_candidates)
+            ? product.recommended_candidates.slice(0, 3)
+            : [];
+
+          const currentHero = product.current_hero || null;
+          const outsideTopThree = !!(currentHero && currentHero.current_hero_outside_top_three);
+          const profile = product.active_criteria_profile || "—";
+          const basis = product.shortlist_basis || "legacy_rank_placeholder";
+          const challengeEndpoint = product.challenge_endpoint || `admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`;
+
+          if (candidates.length === 0) {
+            node.innerHTML = `
+              <div class="hero-shortlist-preview__head">
+                <strong>Shortlist preview</strong>
+                <span class="hero-shortlist-preview__meta">No candidates</span>
+              </div>
+              <div class="hero-shortlist-preview__foot">
+                <span>Profile: ${profile}</span>
+                <span>Basis: ${basis}</span>
+                <a href="${challengeEndpoint}">Review candidates</a>
+              </div>
+            `;
+            return;
+          }
+
+          const thumbs = candidates.map((candidate, idx) => {
+            const rank = candidate.recommendation_rank || (idx + 1);
+            const path = candidate.path || "";
+            return `
+              <div class="hero-shortlist-thumb">
+                <span class="hero-shortlist-thumb__rank">#${rank}</span>
+                <div class="hero-shortlist-thumb__imgwrap">
+                  ${path ? `<img src="${window.BASE_URL}/${path}" alt="Shortlist candidate #${rank}">` : "<span>—</span>"}
+                </div>
+              </div>
+            `;
+          }).join("");
+
+          node.innerHTML = `
+            <div class="hero-shortlist-preview__head">
+              <strong>Recommended shortlist</strong>
+              <span class="hero-shortlist-preview__meta">${product.shortlist_status || "unavailable"}</span>
+            </div>
+            <div class="hero-shortlist-preview__thumbs">${thumbs}</div>
+            <div class="hero-shortlist-preview__current">
+              Current hero: ${currentHero && currentHero.path ? "available" : "none"}
+              ${outsideTopThree ? '<span class="hero-shortlist-preview__flag">Current hero outside shortlist</span>' : ""}
+            </div>
+            <div class="hero-shortlist-preview__foot">
+              <span>Profile: ${profile}</span>
+              <span>Basis: ${basis}</span>
+              <a href="${challengeEndpoint}">Review candidates</a>
+            </div>
+          `;
+        });
+      })
+      .catch(() => {
+        shortlistNodes.forEach(node => renderShortlistState(node, "Endpoint error / unable to load shortlist"));
+      });
+  }
+
+});
