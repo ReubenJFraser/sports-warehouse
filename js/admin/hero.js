@@ -16,29 +16,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const thumbs = document.querySelectorAll("img[data-pswp-src]");
   if (thumbs.length > 0) {
 
-      // Build PhotoSwipe data
-      const galleryItems = Array.from(thumbs).map(img => ({
-          src: img.dataset.pswpSrc,
-          w: parseInt(img.dataset.pswpWidth, 10) || 800,
-          h: parseInt(img.dataset.pswpHeight, 10) || 1000
-      }));
+    // Build PhotoSwipe data
+    const galleryItems = Array.from(thumbs).map(img => ({
+      src: img.dataset.pswpSrc,
+      w: parseInt(img.dataset.pswpWidth, 10) || 800,
+      h: parseInt(img.dataset.pswpHeight, 10) || 1000
+    }));
 
-      // Attach listener to each thumb
-      thumbs.forEach((img, index) => {
-          img.style.cursor = "zoom-in";
+    // Attach listener to each thumb
+    thumbs.forEach((img, index) => {
+      img.style.cursor = "zoom-in";
 
-          img.addEventListener("click", () => {
-              const lightbox = new PhotoSwipeLightbox({
-                  dataSource: galleryItems,
-                  index: index,
-                  showHideAnimationType: "fade",
-                  preloaderDelay: 0,
-                  pswpModule: () => PhotoSwipe
-              });
+      img.addEventListener("click", () => {
+        const lightbox = new PhotoSwipeLightbox({
+          dataSource: galleryItems,
+          index: index,
+          showHideAnimationType: "fade",
+          preloaderDelay: 0,
+          pswpModule: () => PhotoSwipe
+        });
 
-              lightbox.init();
-          });
+        lightbox.init();
       });
+    });
   }
 
 
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".hero-candidates__toggle").forEach(btn => {
     btn.addEventListener("click", async () => {
 
-      const wrap  = btn.closest(".hero-candidates");
+      const wrap = btn.closest(".hero-candidates");
       const currentHeroPath = wrap.dataset.currentHero || "";
       const currentHeroSource = wrap.dataset.currentHeroSource || "auto";
       const panel = wrap.querySelector(".hero-candidates__panel");
@@ -167,42 +167,85 @@ document.addEventListener("DOMContentLoaded", () => {
      ------------------------------------------------------------ */
 
   const shortlistNodes = document.querySelectorAll("[data-shortlist-item-id]");
+
   if (shortlistNodes.length > 0) {
-    const clearNode = node => { while (node.firstChild) node.removeChild(node.firstChild); };
-    const safeText = value => (value === null || value === undefined || value === "") ? "—" : String(value);
-    const isAbsoluteUrl = url => /^https?:\/\//i.test(url) || url.startsWith("/");
+    const clearNode = node => {
+      while (node.firstChild) {
+        node.removeChild(node.firstChild);
+      }
+    };
+
+    const safeText = value => {
+      return (value === null || value === undefined || value === "") ? "—" : String(value);
+    };
+
     const resolveImageUrl = path => {
+      const baseUrl = String(window.BASE_URL || "").replace(/\/+$/, "");
       const cleanPath = String(path || "").replace(/^\/+/, "");
-      return `${window.BASE_URL}/${cleanPath}`;
+
+      return `${baseUrl}/${cleanPath}`;
     };
+
     const resolveChallengeUrl = (endpoint, itemId) => {
-      const fallback = `/admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`;
+      const baseUrl = String(window.BASE_URL || "").replace(/\/+$/, "");
+      const fallback = `admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`;
       const raw = String(endpoint || fallback).trim();
-      if (raw === "") return `${window.BASE_URL}${fallback}`;
-      if (isAbsoluteUrl(raw)) return raw;
+
+      if (raw === "") {
+        return `${baseUrl}/${fallback}`;
+      }
+
+      if (/^https?:\/\//i.test(raw)) {
+        return raw;
+      }
+
+      if (raw.startsWith("/")) {
+        return raw;
+      }
+
       const normalized = raw.replace(/^\/+/, "");
-      if (normalized.startsWith("admin/")) return `${window.BASE_URL}/${normalized.slice("admin/".length)}`;
-      return `${window.BASE_URL}/${normalized}`;
+
+      if (normalized.startsWith("admin/")) {
+        return `${baseUrl}/${normalized}`;
+      }
+
+      if (normalized.startsWith("hero-candidates.php")) {
+        return `${baseUrl}/admin/${normalized}`;
+      }
+
+      return `${baseUrl}/${fallback}`;
     };
+
     const makeEl = (tag, className, text) => {
       const el = document.createElement(tag);
-      if (className) el.className = className;
-      if (text !== undefined) el.textContent = text;
+
+      if (className) {
+        el.className = className;
+      }
+
+      if (text !== undefined) {
+        el.textContent = text;
+      }
+
       return el;
     };
+
     const renderShortlistState = (node, message) => {
       clearNode(node);
       node.appendChild(makeEl("div", "hero-shortlist-preview__state", message));
     };
 
-    fetch(`${window.BASE_URL}/admin/hero-shortlists.php?limit=100`)
+    fetch(`${String(window.BASE_URL || "").replace(/\/+$/, "")}/admin/hero-shortlists.php?limit=100`)
       .then(res => {
-        if (!res.ok) throw new Error("endpoint");
+        if (!res.ok) {
+          throw new Error("endpoint");
+        }
+
         return res.json();
       })
       .then(data => {
         const products = Array.isArray(data.products) ? data.products : [];
-        const byItem = new Map(products.map(p => [String(p.item_id), p]));
+        const byItem = new Map(products.map(product => [String(product.item_id), product]));
 
         shortlistNodes.forEach(node => {
           const itemId = String(node.dataset.shortlistItemId || "");
@@ -224,29 +267,45 @@ document.addEventListener("DOMContentLoaded", () => {
           const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
 
           clearNode(node);
+
           const head = makeEl("div", "hero-shortlist-preview__head");
-          head.appendChild(makeEl("strong", "", candidates.length === 0 ? "Shortlist preview" : "Recommended shortlist"));
-          head.appendChild(makeEl("span", "hero-shortlist-preview__meta", candidates.length === 0 ? "No candidates" : safeText(product.shortlist_status || "unavailable")));
+          head.appendChild(makeEl(
+            "strong",
+            "",
+            candidates.length === 0 ? "Shortlist preview" : "Recommended shortlist"
+          ));
+          head.appendChild(makeEl(
+            "span",
+            "hero-shortlist-preview__meta",
+            candidates.length === 0 ? "No candidates" : safeText(product.shortlist_status || "unavailable")
+          ));
           node.appendChild(head);
 
           if (candidates.length === 0) {
             const foot = makeEl("div", "hero-shortlist-preview__foot");
+
             foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
             foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
+
             const review = makeEl("a", "", "Review candidates");
             review.href = challengeEndpoint;
             foot.appendChild(review);
+
             node.appendChild(foot);
             return;
           }
 
           const thumbsWrap = makeEl("div", "hero-shortlist-preview__thumbs");
+
           candidates.forEach((candidate, idx) => {
             const rank = candidate.recommendation_rank || (idx + 1);
             const path = candidate.path || "";
             const thumb = makeEl("div", "hero-shortlist-thumb");
+
             thumb.appendChild(makeEl("span", "hero-shortlist-thumb__rank", `#${rank}`));
+
             const imgWrap = makeEl("div", "hero-shortlist-thumb__imgwrap");
+
             if (path) {
               const img = document.createElement("img");
               img.src = resolveImageUrl(path);
@@ -255,28 +314,45 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
               imgWrap.appendChild(makeEl("span", "", "—"));
             }
+
             thumb.appendChild(imgWrap);
             thumbsWrap.appendChild(thumb);
           });
+
           node.appendChild(thumbsWrap);
 
-          const current = makeEl("div", "hero-shortlist-preview__current", `Current hero: ${currentHero && currentHero.path ? "available" : "none"}`);
+          const current = makeEl(
+            "div",
+            "hero-shortlist-preview__current",
+            `Current hero: ${currentHero && currentHero.path ? "available" : "none"}`
+          );
+
           if (outsideTopThree) {
-            current.appendChild(makeEl("span", "hero-shortlist-preview__flag", "Current hero outside shortlist"));
+            current.appendChild(makeEl(
+              "span",
+              "hero-shortlist-preview__flag",
+              "Current hero outside shortlist"
+            ));
           }
+
           node.appendChild(current);
 
           const foot = makeEl("div", "hero-shortlist-preview__foot");
+
           foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
           foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
+
           const review = makeEl("a", "", "Review candidates");
           review.href = challengeEndpoint;
           foot.appendChild(review);
+
           node.appendChild(foot);
         });
       })
       .catch(() => {
-        shortlistNodes.forEach(node => renderShortlistState(node, "Endpoint error / unable to load shortlist"));
+        shortlistNodes.forEach(node => {
+          renderShortlistState(node, "Endpoint error / unable to load shortlist");
+        });
       });
   }
 
