@@ -41,4 +41,4 @@ CREATE TABLE IF NOT EXISTS hero_override_rationale (
     KEY idx_hor_image_set_limitation_signal (image_set_limitation_signal),
     KEY idx_hor_metadata_issue_signal (metadata_issue_signal),
     KEY idx_hor_diagnostics_issue_signal (diagnostics_issue_signal)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
