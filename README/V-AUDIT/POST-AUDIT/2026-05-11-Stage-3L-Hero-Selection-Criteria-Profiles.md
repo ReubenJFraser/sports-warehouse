@@ -560,6 +560,177 @@ It may mean:
 
 This distinction is central to the future Hero Manager workflow.
 
+---
+
+## Human Override Rationale And Criteria Exceptions
+
+Manual hero selection is not only an override mechanism.
+
+It is also a source of editorial evidence.
+
+This section defines a future design direction only. It does not mean that override rationale fields, checkbox controls, storage, or reporting have been implemented.
+
+When an administrator selects, keeps, or confirms a hero image that differs from the recommended shortlist, the system should eventually allow the administrator to record why the automatic criteria were overridden.
+
+This should be captured as:
+
+- structured checkbox reasons
+- optional explanatory note
+- product-specific saved rationale
+- criteria profile active at the time
+- selected hero image at the time of override
+- future evidence for criteria refinement
+
+The goal is not to force the administrator to invent a reason from scratch.
+
+The goal is to make common override patterns visible over time.
+
+### Why Structured Reasons Matter
+
+Free-text notes are useful, but they are difficult to analyze consistently.
+
+Structured checkbox reasons allow repeated editorial patterns to become visible.
+
+For example, if many lower-body apparel products are overridden because the top-ranked candidate is rear-facing, that pattern can later inform a criteria-profile change.
+
+Structured override reasons can help distinguish between:
+
+1. the AI ranking was wrong
+2. the active criteria profile was wrong
+3. the criteria profile was technically reasonable, but editorial judgement overruled it for this product
+4. the available image set contains no ideal hero image
+5. the product metadata or category may need correction
+
+This distinction matters because not every manual override means the ranking system failed.
+
+Sometimes the system correctly follows the active criteria, but the criteria are incomplete for the real editorial situation.
+
+### Proposed Structured Override Reasons
+
+Possible checkbox categories:
+
+- Top-ranked image is rear-facing / unsuitable angle
+- Top-ranked image is side-facing / insufficiently clear
+- Product is visible but presentation is not suitable for the primary hero image
+- Product focus conflicts with editorial or brand presentation
+- Full-body / model presentation preferred
+- Face / model context needed despite lower product-region score
+- Current criteria profile is probably wrong
+- Product or category metadata may be wrong
+- Diagnostics or ranking appear technically wrong
+- No ideal image exists in the available image set
+- Human editorial judgement overrides criteria for this product
+
+These categories should be treated as an initial taxonomy.
+
+They can be refined after real override patterns are observed.
+
+### Optional Explanatory Note
+
+A free-text note should remain available because structured categories cannot capture every editorial judgement.
+
+The optional note should explain the specific product-level reasoning behind the override.
+
+The note should not replace structured categories.
+
+The intended model is:
+
+- checkbox reasons for pattern analysis
+- optional note for product-specific explanation
+
+### Saved Override Rationale
+
+A future implementation should save the structured reasons and optional note as part of the product's Hero Manager state.
+
+A saved rationale record may eventually include:
+
+- `itemId`
+- selected hero image path
+- active criteria profile at time of override
+- selected checkbox reason codes
+- optional free-text note
+- timestamp
+- administrator/user identifier if available
+- whether the override suggests criteria refinement
+- whether the issue appears to be image-set limitation, metadata problem, diagnostic problem, or editorial exception
+
+This should not weaken manual hero authority.
+
+Manual selection remains final.
+
+The saved rationale simply makes the reason for that manual authority visible and useful.
+
+### Example — Fitted Lower-Body Apparel / Booty Shorts
+
+Fitted lower-body apparel shows why human override rationale is necessary.
+
+A `body_region_first` profile may correctly prioritize images that focus more directly on the product region.
+
+However, a technically product-focused image may still be unsuitable as a hero image if the angle, pose, or presentation creates the wrong editorial effect.
+
+For example, in a booty shorts product, the top-ranked candidates may satisfy lower-body/product-region visibility better than the current hero image.
+
+But the highest-ranked images may be rear-facing or awkwardly side-facing.
+
+A human editor can judge that those images are not suitable as primary hero images, even if they technically satisfy the product-region criterion.
+
+In that situation, the current hero image may be outside the top-three shortlist but still be the best available editorial choice.
+
+### Example Selected Reasons
+
+Example checkbox selections:
+
+- [x] Top-ranked image is rear-facing / unsuitable angle
+- [x] Top-ranked image is side-facing / insufficiently clear
+- [x] Product is visible but presentation is not suitable for the primary hero image
+- [x] Product focus conflicts with editorial or brand presentation
+- [x] Full-body / model presentation preferred
+- [x] No ideal image exists in the available image set
+- [x] Human editorial judgement overrides criteria for this product
+
+### Example Optional Note
+
+Example optional note:
+
+> The top-ranked candidates satisfy lower-body/product visibility better, but the rear-facing and side-facing compositions are unsuitable as hero images. The current image is outside the top-three shortlist but gives the best available overall product and brand presentation.
+
+### Criteria Refinement Value
+
+If similar override reasons recur across related products, those patterns should inform future criteria changes.
+
+For example, if fitted lower-body apparel frequently receives the reason:
+
+- Top-ranked image is rear-facing / unsuitable angle
+
+then the `body_region_first` profile should not treat product-region visibility alone as sufficient.
+
+It may need additional editorial suitability rules for:
+
+- angle
+- pose
+- viewer perception
+- brand-safe presentation
+- front-facing or balanced model presentation
+- whether product emphasis creates the wrong hero-image effect
+
+This allows human override decisions to become structured feedback for future criteria refinement.
+
+### Governance Boundary
+
+Human override rationale does not mean automation becomes final authority.
+
+It means the administrator's decision becomes more explainable.
+
+The governance rule remains:
+
+Automation suggests.
+
+Manual curation decides.
+
+Override rationale records why manual curation overruled the automated recommendation.
+
+---
+
 ## Relationship To Existing Diagnostics
 
 Stage 2D/3E diagnostics can support future criteria profiles, but they do not implement criteria-aware ranking yet.
