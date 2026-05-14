@@ -4,11 +4,19 @@
 
 This README defines the authoritative workflow for using Codex with GitHub Pull Requests in the Sports Warehouse repository.
 
-Its purpose is to prevent repeated workflow instability caused by confusion between Codex task state, GitHub PR state, and the local Windows/Laragon development environment.
+Its purpose is to prevent repeated workflow instability caused by confusion between:
 
-This document exists so that Codex-assisted development can proceed with guardrailed implementation velocity rather than becoming trapped in stale branches, internal task state, invisible PR metadata, merge conflicts, or local synchronization confusion.
+- Codex task state
+- GitHub Pull Request state
+- local Windows / Laragon runtime state
 
-The workflow described here is intended for Codex, ChatGPT, and human operators working with Codex-generated implementation tasks.
+This document exists so that Codex-assisted development can proceed with **guardrailed implementation velocity**.
+
+That means the project should not retreat into endless planning, excessive caution, or trivial micro-changes. Codex should be used to implement meaningful, bounded slices of work.
+
+At the same time, Codex must not be allowed to create branch confusion, invisible PR state, stale task lineage, uncontrolled file changes, or unclear merge status.
+
+The goal is disciplined execution, not defensive paralysis.
 
 ---
 
@@ -18,6 +26,7 @@ This README covers:
 
 - Codex task workflow
 - GitHub PR creation and review
+- manual PR recovery workflow
 - draft PR handling
 - local post-merge synchronization
 - local runtime verification
@@ -33,7 +42,8 @@ This README does not cover:
 - architecture invariants
 - routing invariants
 - enforcement candidate governance
-- detailed application feature design
+- detailed feature design
+- UI design standards outside the Codex workflow
 
 Those responsibilities are governed separately by:
 
@@ -61,11 +71,67 @@ The active workflow mode is now:
 
 **guardrailed implementation velocity**
 
-This means Codex should be used to produce meaningful bounded implementation slices, not endless planning stages or excessively small micro-changes.
+This means Codex should be used to produce meaningful implementation slices when the next step is clear.
 
-This does not reduce the need for review.
+This does not mean Codex should be given broad authority.
 
-It changes the workflow expectation from defensive hesitation to disciplined execution.
+It means Codex should be given bounded authority.
+
+---
+
+## Core Balance
+
+There are two workflow errors to avoid.
+
+### Error 1 — Reckless Implementation
+
+Do not prompt Codex with broad instructions such as:
+
+- continue improving the project
+- fix whatever needs fixing
+- refactor the Hero Manager
+- improve the whole admin area
+- clean up related files as needed
+
+This creates scope drift and review instability.
+
+---
+
+### Error 2 — Excessive Conservatism
+
+Do not reduce Codex to trivial changes such as:
+
+- change one selector
+- rename one class
+- write only a plan when the implementation is clear
+- split one coherent UI feature into unnecessarily tiny PRs
+
+This creates process drag and prevents useful progress.
+
+---
+
+### Correct Balance
+
+The correct operating mode is:
+
+**one coherent bounded implementation slice per Codex task**
+
+A bounded slice may touch multiple files when those files belong to the same objective.
+
+Examples of acceptable bounded slices:
+
+- PHP markup plus CSS styling plus JavaScript behaviour for one UI feature
+- endpoint consumption plus read-only display logic for one admin panel
+- route correction plus browser-verifiable link behaviour
+- documentation update plus one companion pointer update
+
+Examples of unacceptable broad slices:
+
+- redesign the full admin system
+- refactor all hero tooling
+- change endpoint payloads and UI layout together without approval
+- alter schema, routing, and UI in one task
+- clean up unrelated files while completing the requested feature
 
 ---
 
@@ -81,25 +147,29 @@ Codex must not be treated as:
 
 The correct operating model is:
 
-- one fresh Codex task
-- one bounded implementation objective
-- one GitHub Pull Request
-- one review and merge decision
-- one local synchronization cycle
-- one local runtime verification cycle
-- then stop
+1. one fresh Codex task
+2. one bounded implementation objective
+3. one GitHub Pull Request
+4. one review and merge decision
+5. one local synchronization cycle
+6. one local runtime verification cycle
+7. then stop
 
 The next implementation stage begins as a new Codex task.
 
 ---
 
-## Conceptual Roles
+## State Authority Model
 
-### Codex Task Environment
+Workflow confusion usually occurs when the wrong environment is treated as authoritative.
 
-The Codex task environment is a temporary cloud workspace.
+Use this authority model.
 
-It may have:
+### Codex Task State
+
+Codex task state is not authoritative.
+
+Codex may have:
 
 - its own branch state
 - its own Git checkout
@@ -107,19 +177,19 @@ It may have:
 - its own execution logs
 - its own temporary sandbox state
 
-Codex task state is not authoritative.
-
-It can become stale.
+Codex task state can become stale.
 
 It can diverge from GitHub.
 
 It can diverge from local Windows.
 
+A Codex summary is not proof that a GitHub PR exists.
+
 ---
 
-### GitHub Repository
+### GitHub Repository State
 
-GitHub is the authoritative shared repository.
+GitHub PR state is authoritative for merge decisions.
 
 GitHub determines:
 
@@ -130,19 +200,19 @@ GitHub determines:
 - conflict status
 - canonical `main` after merge
 
-A Codex task summary is not a substitute for a real GitHub PR.
+A PR exists only when GitHub shows a real PR number.
 
-GitHub PR state is authoritative for merge decisions.
+Internal Codex metadata is not enough.
 
 ---
 
-### Local Windows / Laragon Environment
+### Local Windows / Laragon State
 
-The local Windows environment is the runtime verification environment.
+Local Windows / Laragon state is authoritative for runtime verification.
 
-It determines whether the merged change works in the actual local project.
+The local environment determines whether the merged change works in the actual project.
 
-The local site does not update automatically after GitHub merge.
+The local site does not update automatically after a GitHub merge.
 
 Local synchronization is mandatory.
 
@@ -156,7 +226,11 @@ The Codex environment for this repository should use:
 - Domain allowlist: Common dependencies
 - Allowed HTTP methods: All methods
 
-If Codex reports `CONNECT tunnel failed, response 403`, the environment is not correctly available for GitHub network operations.
+If Codex reports:
+
+`CONNECT tunnel failed, response 403`
+
+then the environment is not correctly available for GitHub network operations.
 
 That is an environment configuration problem.
 
@@ -164,7 +238,7 @@ It must be fixed through Codex environment settings, not by repeated prompting.
 
 ---
 
-## Standard Workflow
+## Standard Codex Workflow
 
 ### Step 1 — Prepare Local Main
 
@@ -175,13 +249,15 @@ Run:
 - `sports-warehouse`
 - `git checkout main`
 - `git pull origin main`
-- `git status`
+- `git status --short`
+- `git log --oneline -5`
 
 Expected result:
 
 - local branch is `main`
 - local branch is up to date with `origin/main`
 - working tree is clean
+- recent log matches the expected merged state
 
 If local state is not clean, stop and resolve it before starting Codex work.
 
@@ -210,7 +286,9 @@ The prompt must define:
 
 - stage name
 - objective
-- likely changed files
+- expected changed files
+- allowed files
+- forbidden files
 - non-goals
 - tests or checks to run
 - completion requirement
@@ -218,7 +296,7 @@ The prompt must define:
 
 Codex should not be asked to “continue everything” or “fix the whole project.”
 
-A task should produce a coherent reviewable outcome.
+A task should produce one coherent reviewable outcome.
 
 ---
 
@@ -227,12 +305,14 @@ A task should produce a coherent reviewable outcome.
 When Codex finishes, review:
 
 - summary
-- files changed
+- changed files
 - tests run
 - implementation notes
 - whether the scope remained bounded
 
 Do not create or merge a PR without reviewing the changed file list.
+
+If unexpected files changed, stop and inspect before proceeding.
 
 ---
 
@@ -248,7 +328,15 @@ Click `View PR`.
 
 The PR is real only when GitHub opens a real PR number.
 
-Internal summaries such as `draft PR metadata`, `make_pr metadata`, or `PR metadata prepared` are not sufficient.
+Internal summaries such as the following are not sufficient:
+
+- `draft PR metadata`
+- `make_pr metadata`
+- `PR metadata prepared`
+- internal completion summaries
+- sandbox commit references
+
+Do not treat the task as complete until GitHub shows a real PR.
 
 ---
 
@@ -264,7 +352,9 @@ Confirm:
 - no schema changed unless approved
 - no enforcement behaviour changed unless approved
 - no forbidden payload expansion occurred
-- no architecture or routing invariant was violated
+- no architecture invariant was violated
+- no routing invariant was violated
+- no manual authority was weakened
 
 If the PR is a draft, mark it ready for review only after the changed files are acceptable.
 
@@ -296,7 +386,7 @@ Run:
 - `sports-warehouse`
 - `git checkout main`
 - `git pull origin main`
-- `git status`
+- `git status --short`
 - `git log --oneline -5`
 
 Expected result:
@@ -319,6 +409,12 @@ For UI, PHP, CSS, JavaScript, route, or endpoint work:
 
 Local runtime verification is required before the stage is considered accepted.
 
+Codex completion is not final acceptance.
+
+GitHub merge is not final acceptance.
+
+Local runtime verification is final acceptance.
+
 ---
 
 ### Step 10 — End the Task
@@ -330,6 +426,69 @@ Do not continue unrelated work in the same task.
 Do not reuse the same PR branch for the next stage.
 
 Start a fresh Codex task for the next bounded objective.
+
+---
+
+## Manual PR Workflow
+
+Manual PR workflow is valid when Codex PR creation fails or when local recovery is deliberately chosen.
+
+In manual workflow:
+
+1. create or use a local branch
+2. make the changes locally
+3. run local checks
+4. commit locally
+5. push the branch
+6. create the PR manually in GitHub
+7. merge the PR manually in GitHub
+8. pull `main` locally
+9. delete the local and remote feature branch if appropriate
+
+When manual workflow is used, Codex `Create PR` and `View PR` buttons are not involved.
+
+Do not return to Codex to create a duplicate PR after a manual PR has already been created or merged.
+
+Manual GitHub PR state is authoritative once the manual PR exists.
+
+---
+
+## Codex PR Buttons Versus Manual PRs
+
+Use this distinction to avoid confusion.
+
+### Use Codex `Create PR` / `View PR`
+
+Use these buttons when:
+
+- Codex performed the implementation
+- Codex still controls the task branch
+- no manual PR has already been created
+- the Codex UI is being used as the PR creation path
+
+The expected sequence is:
+
+1. Codex completes implementation
+2. Codex shows `Create PR`
+3. operator clicks `Create PR`
+4. Codex shows `View PR`
+5. operator clicks `View PR`
+6. GitHub opens a real PR number
+
+---
+
+### Do Not Use Codex PR Buttons
+
+Do not use Codex `Create PR` / `View PR` when:
+
+- the work was recovered locally
+- the branch was pushed manually
+- the PR was created manually in GitHub
+- the PR has already been merged
+- the branch has already been deleted
+- the Codex task state is stale or ambiguous
+
+In this case, the correct next step is local synchronization, not returning to Codex.
 
 ---
 
@@ -349,7 +508,16 @@ Acceptable correction examples:
 
 Repeated correction loops are not allowed.
 
-If a correction produces a new PR number unexpectedly, stale branch state, or a conflict that cannot be clearly resolved, stop and use a recovery procedure.
+If a correction produces any of the following, stop and use recovery procedures:
+
+- unexpected new PR number
+- stale branch state
+- unclear task lineage
+- merge conflict that cannot be clearly resolved
+- changed files outside scope
+- Codex/GitHub state mismatch
+
+Do not nurse a confused Codex task indefinitely.
 
 ---
 
@@ -367,10 +535,15 @@ Stop using the current Codex task if any of these occur:
 - the task disappears from the task list
 - Codex claims success but GitHub has no PR
 - the operator cannot confidently identify which task maps to which PR
+- Codex produces only internal PR metadata
+- patch application fails against current `main`
+- browser verification contradicts syntax checks
 
 When a stop condition occurs, do not keep prompting the same task.
 
 Use a recovery procedure.
+
+Confusion is a stop signal.
 
 ---
 
@@ -384,7 +557,7 @@ Procedure:
 2. return to local `main`
 3. run `git checkout main`
 4. run `git pull origin main`
-5. run `git status`
+5. run `git status --short`
 6. start a fresh Codex task
 7. reimplement the bounded objective in one clean PR
 
@@ -394,7 +567,7 @@ This is the preferred recovery path for small and medium changes.
 
 ## Recovery Procedure B — Local-First Recovery
 
-Use this when the Codex implementation is valuable but the PR branch is stale or conflicted.
+Use this when the Codex implementation is valuable but the PR workflow is unstable.
 
 Procedure:
 
@@ -406,6 +579,8 @@ Procedure:
 6. commit locally
 7. push a clean branch
 8. create or update the GitHub PR manually
+9. merge manually if the PR is correct
+10. pull merged `main` locally
 
 This path restores direct local control.
 
@@ -415,7 +590,7 @@ It should be used when Codex task state has become unreliable.
 
 ## Recovery Procedure C — Patch Recovery
 
-Use this when Codex cannot create or update a PR.
+Use this only when the patch is small enough to verify safely.
 
 Request one of:
 
@@ -427,7 +602,35 @@ Apply the result locally.
 
 Then use the local-first workflow to commit, push, and create a PR.
 
-Do not accept an internal Codex commit on a sandbox branch as final.
+Patch recovery is risky when:
+
+- the file has moved on
+- the patch touches nested PHP/HTML
+- the patch spans multiple unrelated sections
+- indentation or DOM nesting matters
+- the patch changes CSS, PHP, and JavaScript together
+
+If `git apply --check` fails, do not keep forcing the patch.
+
+Use local-first recovery or fresh restart.
+
+---
+
+## Recovery Procedure D — Full File or Section Replacement
+
+Use this when patch recovery is too fragile.
+
+Preferred order:
+
+1. complete file replacement for small or medium files
+2. complete top-level section replacement for large files
+3. narrow fragment replacement only when indentation and context are safe
+
+Avoid nested fragments when indentation or DOM structure matters.
+
+For PHP/HTML files, syntax success does not prove DOM correctness.
+
+Browser verification remains mandatory.
 
 ---
 
@@ -460,6 +663,30 @@ When Codex creates a draft PR:
 4. merge only after mergeability is confirmed
 
 Do not search for the merge button while the PR remains draft.
+
+---
+
+## Branch Deletion Policy
+
+After a PR is merged and closed, GitHub may report that the branch can be safely deleted.
+
+If the PR is merged and no further work is needed on that branch:
+
+- delete the remote branch in GitHub
+- delete the local branch if present
+- run `git fetch --prune`
+
+Typical local cleanup:
+
+- `git checkout main`
+- `git pull origin main`
+- `git branch -d BRANCH_NAME`
+- `git fetch --prune`
+- `git status --short`
+
+Only delete branches after confirming the PR was merged.
+
+Do not delete active branches tied to open PRs.
 
 ---
 
@@ -505,8 +732,35 @@ If Codex changes PHP:
 - prefer `php -l` on changed PHP files
 - verify the relevant local page or endpoint
 - inspect visible output or JSON structure
+- browser-test generated HTML where layout or interaction is affected
 
 If `php` is unavailable in the environment, the absence of `php -l` must be reported.
+
+Important limitation:
+
+`php -l` confirms PHP syntax only.
+
+It does not confirm:
+
+- correct HTML nesting
+- correct DOM structure
+- correct CSS layout
+- correct browser behaviour
+
+---
+
+## CSS Change Policy
+
+If Codex changes CSS:
+
+- check changed selectors for scope
+- avoid broad global overrides unless approved
+- preserve component ownership where possible
+- verify responsive behaviour in the browser
+- hard refresh before judging the result
+- inspect whether older rules are being overridden intentionally or accidentally
+
+CSS changes are not accepted until visual behaviour is checked locally.
 
 ---
 
@@ -552,9 +806,30 @@ Manual curation decides.
 
 ---
 
+## Runtime Verification Policy
+
+Runtime verification must match the kind of change made.
+
+Examples:
+
+- PHP page change: load the page locally
+- endpoint change: open or fetch the endpoint directly
+- route change: click the actual link
+- JavaScript change: test the interaction and inspect console
+- CSS change: hard refresh and inspect layout
+- admin action change: test the actual button or form
+
+A successful syntax check is necessary but not sufficient.
+
+A successful GitHub merge is necessary but not sufficient.
+
+The stage is accepted only after local runtime behaviour is verified.
+
+---
+
 ## Guardrailed Implementation Velocity Policy
 
-Codex should now deliver meaningful bounded implementation slices when risk is understood.
+Codex should deliver meaningful bounded implementation slices when the risk is understood.
 
 A bounded slice may include related changes across multiple files when they are part of one coherent objective.
 
@@ -567,7 +842,19 @@ Examples:
 
 Codex should not create unnecessary planning-only stages when the next implementation step is clear and bounded.
 
-Codex should also not use implementation velocity to justify broad refactors, architecture drift, or unrelated cleanup.
+Codex should also not use implementation velocity to justify:
+
+- broad refactors
+- architecture drift
+- routing drift
+- schema changes
+- hidden behavioural changes
+- unrelated cleanup
+- expanding endpoint payload use beyond the approved mode
+
+Velocity means disciplined execution.
+
+It does not mean uncontrolled scope.
 
 ---
 
@@ -577,7 +864,7 @@ Future Codex prompts should include the following completion requirement in subs
 
 Workflow completion requirement:
 
-Do not stop at draft PR metadata or internal make_pr summaries.
+Do not stop at draft PR metadata, internal `make_pr` summaries, sandbox commits, or task summaries.
 
 Task completion requires either:
 
@@ -585,6 +872,8 @@ Task completion requires either:
 - or a complete recoverable patch, git apply output, or full changed file content
 
 If the visible Codex UI shows `Create PR`, use the Codex UI PR workflow after completing the task.
+
+If PR creation fails, report that clearly and stop.
 
 Do not claim completion without a real GitHub PR or recoverable content.
 
@@ -602,12 +891,56 @@ Before merging any Codex PR, confirm:
 - tests reported by Codex are plausible
 - JavaScript syntax check passed if JavaScript changed
 - PHP syntax check passed if PHP changed and PHP was available
+- CSS or layout behaviour was browser-tested if CSS changed
 - URL behaviour was browser-tested if routes changed
 - no database or schema change occurred unless approved
 - no enforcement behaviour changed unless approved
 - no manual authority was weakened
+- endpoint payload boundaries were respected
 - local `main` will be pulled after merge
 - local runtime verification will be performed
+
+---
+
+## Required Local Post-Merge Checklist
+
+After merging any PR:
+
+- `sports-warehouse`
+- `git checkout main`
+- `git pull origin main`
+- `git status --short`
+- `git log --oneline -5`
+
+Then run checks relevant to the changed files.
+
+Examples:
+
+- `php -l path/to/file.php`
+- `node --check path/to/file.js`
+- `git diff --check`
+
+Then browser-test the relevant local page or endpoint.
+
+---
+
+## Stage Completion Definition
+
+A stage is complete only when all of the following are true:
+
+- a real GitHub PR was merged
+- local `main` has been pulled
+- local working tree is clean
+- relevant syntax checks have passed
+- relevant browser or endpoint tests have passed
+- changed files stayed within approved scope
+- branch cleanup has been performed if appropriate
+
+A Codex task summary alone does not complete a stage.
+
+A pushed branch alone does not complete a stage.
+
+A merged PR alone does not complete a stage.
 
 ---
 
@@ -622,6 +955,7 @@ Open questions include:
 - whether GitHub comments will reliably trigger Codex revisions
 - whether Codex task search and archive behaviour will become more predictable
 - whether environment state will remain stable across browser sessions
+- whether Codex will consistently distinguish internal PR metadata from real GitHub PR state
 
 These gaps do not change the workflow rule.
 
@@ -640,6 +974,8 @@ This workflow does not attempt to:
 - eliminate all manual recovery
 - prioritize automation over correctness
 - preserve confused task state at all costs
+- reduce all work to micro-changes
+- prevent meaningful implementation progress
 
 The goal is clean, reviewable implementation history.
 
@@ -651,11 +987,14 @@ The workflow principles are:
 
 - current `main` is the restart point
 - one task produces one PR
+- one PR produces one merge decision
 - GitHub mergeability is authoritative
 - local runtime verification is mandatory
 - stale branches should not be nursed indefinitely
 - recovery should be decisive
 - implementation slices should be meaningful
+- broad scope is not velocity
+- excessive caution is not discipline
 - confusion is a stop signal
 
 If the workflow becomes tangled, return to:
