@@ -78,9 +78,22 @@
     gap: 12px;
 }
 
+.hero-list .hero-card {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+}
+
 .hero-card__left {
     display: flex;
     gap: 10px;
+}
+
+.hero-list .hero-card__left {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    min-width: 0;
 }
 
 .hero-card__id {
@@ -155,12 +168,12 @@
     margin-top: 6px;
 }
 
-@media (min-width: 720px) {
-    .hero-card__images {
-        margin-top: 0;
-        margin-left: auto;
-        max-width: 360px;
-    }
+.hero-list .hero-card__images {
+    grid-column: 2;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 0;
+    margin-left: 0;
 }
 
 .hero-slot {
@@ -236,12 +249,11 @@
     margin-top: 4px;
 }
 
-@media (min-width: 720px) {
-    .hero-card__actions {
-        margin-top: 0;
-        margin-left: auto;
-        align-self: center;
-    }
+.hero-list .hero-card__actions {
+    grid-column: 2;
+    margin-top: 0;
+    margin-left: 0;
+    align-self: start;
 }
 
 .hero-empty {
@@ -256,51 +268,8 @@
     color: var(--text-muted);
 }
 
-/* =========================================================
-   hero-manager — Stage 3Y card layout correction
-========================================================= */
-
-.hero-admin .hero-card {
-    display: grid;
-    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-}
-
-.hero-admin .hero-card__left {
-    grid-column: 1;
-    grid-row: 1 / span 4;
-    min-width: 0;
-}
-
-.hero-admin .hero-card__images {
-    grid-column: 2;
-    width: 100%;
-    max-width: 360px;
-    margin-top: 0;
-    margin-left: 0;
-}
-
-.hero-admin .hero-card__insights {
-    grid-column: 2;
-    width: 100%;
-    max-width: 360px;
-}
-
-.hero-admin .hero-card__actions {
-    grid-column: 2;
-    margin-top: 0;
-    margin-left: 0;
-    align-self: start;
-}
-
-.hero-admin .hero-card > .context-note {
-    grid-column: 2;
-    margin-top: 0;
-}
-
 @media (min-width: 1100px) {
-    .hero-admin .hero-card {
+    .hero-list .hero-card {
         grid-template-columns:
             minmax(220px, 1fr)
             minmax(260px, 360px)
@@ -308,43 +277,43 @@
             minmax(150px, 180px);
     }
 
-    .hero-admin .hero-card__left {
+    .hero-list .hero-card__left {
         grid-column: 1;
         grid-row: 1 / span 2;
     }
 
-    .hero-admin .hero-card__images {
+    .hero-list .hero-card__images {
         grid-column: 2;
         max-width: none;
     }
 
-    .hero-admin .hero-card__insights {
+    .hero-list .hero-card__insights {
         grid-column: 3;
         max-width: none;
     }
 
-    .hero-admin .hero-card__actions {
+    .hero-list .hero-card__actions {
         grid-column: 4;
         grid-row: 1;
     }
 
-    .hero-admin .hero-card > .context-note {
+    .hero-list .hero-card > .context-note {
         grid-column: 4;
         grid-row: 2;
     }
 }
 
 @media (max-width: 719px) {
-    .hero-admin .hero-card {
+    .hero-list .hero-card {
         display: flex;
         flex-direction: column;
     }
 
-    .hero-admin .hero-card__left,
-    .hero-admin .hero-card__images,
-    .hero-admin .hero-card__insights,
-    .hero-admin .hero-card__actions,
-    .hero-admin .hero-card > .context-note {
+    .hero-list .hero-card__left,
+    .hero-list .hero-card__images,
+    .hero-list .hero-card__insights,
+    .hero-list .hero-card__actions,
+    .hero-list .hero-card > .context-note {
         width: 100%;
         max-width: none;
         margin-left: 0;
@@ -361,6 +330,16 @@
     flex-direction: column;
     gap: 10px;
     width: 100%;
+}
+
+.hero-list .hero-card__insights {
+    grid-column: 2;
+    max-width: 360px;
+}
+
+.hero-list .hero-card > .context-note {
+    grid-column: 2;
+    margin-top: 0;
 }
 
 .hero-shortlist-preview {
@@ -613,6 +592,5 @@
 [data-fullscreen] {
     cursor: zoom-in;
 }
-
 
 
