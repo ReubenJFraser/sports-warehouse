@@ -320,6 +320,85 @@
     }
 }
 
+.hero-rationale {
+    margin-top: 8px;
+    border: 1px solid rgba(148,163,235,0.25);
+    border-radius: 12px;
+    background: rgba(2,6,23,0.45);
+    padding: 8px;
+}
+
+.hero-rationale__status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hero-rationale__status-badge {
+    font-size: 0.72rem;
+    border-radius: 999px;
+    padding: 3px 8px;
+    border: 1px solid rgba(148,163,235,0.4);
+}
+
+.hero-rationale__status-badge.is-neutral { color: #cbd5e1; }
+.hero-rationale__status-badge.is-needed { color: #fda4af; border-color: rgba(251,113,133,0.75); }
+.hero-rationale__status-badge.is-saved { color: #86efac; border-color: rgba(74,222,128,0.7); }
+
+.hero-rationale__toggle {
+    border: 1px solid rgba(192,132,252,0.6);
+    background: rgba(88,28,135,0.35);
+    color: #f5d0fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+}
+
+.hero-rationale__panel {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hero-rationale__panel-state {
+    font-size: 0.72rem;
+    color: #cbd5e1;
+}
+
+.hero-rationale__group,
+.hero-rationale__signals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 6px 10px;
+}
+
+.hero-rationale__check {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    font-size: 0.75rem;
+    color: #e2e8f0;
+}
+
+.hero-rationale__field span {
+    display: block;
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+.hero-rationale__field textarea {
+    width: 100%;
+    background: rgba(15,23,42,0.8);
+    border: 1px solid rgba(148,163,235,0.3);
+    border-radius: 10px;
+    color: #e2e8f0;
+    padding: 8px;
+}
+
 /* =========================================================
    hero-manager — shortlist preview
 ========================================================= */
@@ -592,5 +671,4 @@
 [data-fullscreen] {
     cursor: zoom-in;
 }
-
 

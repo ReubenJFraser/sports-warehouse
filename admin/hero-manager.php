@@ -625,6 +625,21 @@ admin_layout_start("Hero Manager");
                     <div class="hero-shortlist-preview" data-shortlist-item-id="<?= $itemId ?>">
                         <div class="hero-shortlist-preview__state">Loading shortlist…</div>
                     </div>
+                    <div
+                        class="hero-rationale"
+                        data-rationale-item-id="<?= $itemId ?>"
+                        data-current-hero-image="<?= htmlspecialchars($currentHeroImage ?? '') ?>"
+                    >
+                        <div class="hero-rationale__status-row">
+                            <span class="hero-rationale__status-badge is-neutral" data-rationale-status>No rationale saved</span>
+                            <button type="button" class="hero-rationale__toggle" data-rationale-toggle>
+                                Record rationale
+                            </button>
+                        </div>
+                        <div class="hero-rationale__panel" data-rationale-panel hidden>
+                            <div class="hero-rationale__panel-state" data-rationale-feedback>Loading rationale…</div>
+                        </div>
+                    </div>
 
                     <!-- Candidates -->
                     <div
