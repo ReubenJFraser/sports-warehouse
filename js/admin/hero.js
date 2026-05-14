@@ -271,8 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const head = makeEl("div", "hero-shortlist-preview__head");
           head.appendChild(makeEl(
             "strong",
-            "",
-            candidates.length === 0 ? "Shortlist preview" : "Recommended shortlist"
+            "hero-shortlist-preview__top",
+            candidates.length === 0 ? "Shortlist preview" : "Top candidates"
           ));
           head.appendChild(makeEl(
             "span",
@@ -281,17 +281,21 @@ document.addEventListener("DOMContentLoaded", () => {
           ));
           node.appendChild(head);
 
-          if (candidates.length === 0) {
+          const makeShortlistFoot = () => {
             const foot = makeEl("div", "hero-shortlist-preview__foot");
 
-            foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
-            foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
+            foot.appendChild(makeEl("span", "hero-shortlist-preview__pill", `Profile: ${safeText(profile)}`));
+            foot.appendChild(makeEl("span", "hero-shortlist-preview__pill", `Basis: ${safeText(basis)}`));
 
-            const review = makeEl("a", "", "Review candidates");
+            const review = makeEl("a", "hero-shortlist-preview__action", "Review candidates");
             review.href = challengeEndpoint;
             foot.appendChild(review);
 
-            node.appendChild(foot);
+            return foot;
+          };
+
+          if (candidates.length === 0) {
+            node.appendChild(makeShortlistFoot());
             return;
           }
 
@@ -336,17 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           node.appendChild(current);
-
-          const foot = makeEl("div", "hero-shortlist-preview__foot");
-
-          foot.appendChild(makeEl("span", "", `Profile: ${safeText(profile)}`));
-          foot.appendChild(makeEl("span", "", `Basis: ${safeText(basis)}`));
-
-          const review = makeEl("a", "", "Review candidates");
-          review.href = challengeEndpoint;
-          foot.appendChild(review);
-
-          node.appendChild(foot);
+          node.appendChild(makeShortlistFoot());
         });
       })
       .catch(() => {

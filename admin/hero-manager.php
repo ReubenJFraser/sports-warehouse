@@ -603,50 +603,45 @@ admin_layout_start("Hero Manager");
                             <span class="hero-slot__tag">Auto</span>
                         </div>
 
-                    <div class="hero-slot__imgwrap">
-                        <?php if ($autoImg): ?>
-                            <?= admin_render_thumbnail_safe(
-                                $autoImg,
-                                "$itemName – computed baseline"
-                            ) ?>
-                        <?php else: ?>
-                            <span class="hero-slot__empty">No computed hero</span>
-                        <?php endif; ?>
-                    </div>
+                        <div class="hero-slot__imgwrap">
+                            <?php if ($autoImg): ?>
+                                <?= admin_render_thumbnail_safe(
+                                    $autoImg,
+                                    "$itemName – computed baseline"
+                                ) ?>
+                            <?php else: ?>
+                                <span class="hero-slot__empty">No computed hero</span>
+                            <?php endif; ?>
+                        </div>
 
-                    <div class="hero-slot__meta">
-                        <span>rejected:</span>
-                        <span><?= $rejects ?></span>
-                    </div>
-                </div>
-
-                <?php
-                $candidateMeta = [
-                    'itemId' => $itemId,
-                    'currentHero' => $currentHeroImage,
-                    'currentHeroSource' => $currentHeroSource,
-                ];
-                ?>
-
-                <!-- Candidates -->
-                <div
-                    class="hero-candidates"
-                    data-item-id="<?= $itemId ?>"
-                    data-current-hero="<?= htmlspecialchars($currentHeroImage ?? '') ?>"
-                    data-current-hero-source="<?= $currentHeroSource ?>"
-                >
-                    <button class="hero-candidates__toggle">
-                        ▸ Candidate images (ranked, explainable)
-                    </button>
-                    <div class="hero-candidates__panel" hidden>
-                        <div class="hero-candidates__placeholder">
-                            Loading candidate images…
+                        <div class="hero-slot__meta">
+                            <span>rejected:</span>
+                            <span><?= $rejects ?></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="hero-shortlist-preview" data-shortlist-item-id="<?= $itemId ?>">
-                    <div class="hero-shortlist-preview__state">Loading shortlist…</div>
+                <div class="hero-card__insights">
+                    <div class="hero-shortlist-preview" data-shortlist-item-id="<?= $itemId ?>">
+                        <div class="hero-shortlist-preview__state">Loading shortlist…</div>
+                    </div>
+
+                    <!-- Candidates -->
+                    <div
+                        class="hero-candidates"
+                        data-item-id="<?= $itemId ?>"
+                        data-current-hero="<?= htmlspecialchars($currentHeroImage ?? '') ?>"
+                        data-current-hero-source="<?= $currentHeroSource ?>"
+                    >
+                        <button class="hero-candidates__toggle">
+                            ▸ Candidate images (ranked, explainable)
+                        </button>
+                        <div class="hero-candidates__panel" hidden>
+                            <div class="hero-candidates__placeholder">
+                                Loading candidate images…
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Buttons -->
