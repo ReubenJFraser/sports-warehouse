@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS hero_override_rationale (
     current_hero_outside_top_three TINYINT(1) NOT NULL DEFAULT 0,
 
     -- Structured rationale payload
-    selected_reason_codes JSON NOT NULL,
+    selected_reason_codes LONGTEXT NOT NULL,
     optional_note TEXT DEFAULT NULL,
 
     -- Signals for future criteria/image quality improvements
