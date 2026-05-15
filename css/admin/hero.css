@@ -363,6 +363,11 @@
     gap: 8px;
 }
 
+
+.hero-rationale__panel[hidden] {
+    display: none;
+}
+
 .hero-rationale__panel-state {
     font-size: 0.72rem;
     color: #cbd5e1;
