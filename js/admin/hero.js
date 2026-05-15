@@ -266,6 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const profile = product.active_criteria_profile || "—";
           const basis = product.shortlist_basis || "legacy_rank_placeholder";
           const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
+          const reviewHref = `${baseUrl}/admin/hero-edit.php?id=${encodeURIComponent(itemId)}`;
 
           clearNode(node);
 
@@ -289,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
             foot.appendChild(makeEl("span", "hero-shortlist-preview__pill", `Basis: ${safeText(basis)}`));
 
             const review = makeEl("a", "hero-shortlist-preview__action", "Review candidates");
-            review.href = challengeEndpoint;
+            review.href = reviewHref;
             foot.appendChild(review);
 
             return foot;

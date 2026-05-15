@@ -205,6 +205,16 @@ if (!function_exists('sw_recalc_hero_for_item')) {
 $flashMessage = '';
 $flashType = 'info';
 
+if (!empty($_GET['hero_saved'])) {
+    $savedItemId = (int)($_GET['item_id'] ?? 0);
+    if ($savedItemId > 0) {
+        $flashMessage = 'Manual hero saved for item #' . $savedItemId . '.';
+    } else {
+        $flashMessage = 'Manual hero saved.';
+    }
+    $flashType = 'success';
+}
+
 if (!empty($_GET['recalc'])) {
     $id = (int)$_GET['recalc'];
     $res = sw_recalc_hero_for_item($pdo, $id);
