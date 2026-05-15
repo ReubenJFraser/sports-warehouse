@@ -871,3 +871,24 @@
         grid-auto-columns: minmax(220px, 86%);
     }
 }
+
+/* =========================================================
+   hero-rationale-report
+========================================================= */
+.hero-rationale-report .hero-report-section { margin-bottom: 16px; }
+.hero-rationale-report .hero-report-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+.hero-rationale-report .hero-report-card { background:linear-gradient(135deg,var(--card-bg),#10182b); border:1px solid var(--card-border); border-radius:12px; padding:10px; }
+.hero-rationale-report .hero-report-card h3 { font-size:.75rem; color:var(--text-muted); margin:0 0 6px; text-transform:uppercase; letter-spacing:.04em; }
+.hero-rationale-report .hero-report-card p { margin:0; font-size:1rem; color:#e8ecff; }
+.hero-rationale-report .hero-report-table-wrap { overflow:auto; border:1px solid var(--card-border); border-radius:12px; }
+.hero-rationale-report .hero-report-table { width:100%; border-collapse:collapse; min-width:980px; }
+.hero-rationale-report .hero-report-table th,.hero-rationale-report .hero-report-table td { border-bottom:1px solid rgba(148,163,235,.16); padding:8px; vertical-align:top; font-size:.82rem; }
+.hero-rationale-report .hero-report-table th { text-align:left; color:#d0dbff; background:rgba(15,23,42,.5); }
+.hero-rationale-report .hero-report-muted { color:var(--text-muted); font-size:.76rem; }
+.hero-rationale-report .hero-report-path { max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.hero-rationale-report .hero-report-signal-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px; }
+.hero-rationale-report .hero-report-signal-item { display:flex; justify-content:space-between; border:1px solid var(--card-border); background:rgba(15,23,42,.5); border-radius:10px; padding:8px 10px; }
+.hero-rationale-report .hero-report-filter-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; align-items:end; }
+.hero-rationale-report .hero-report-filter-form label { display:flex; flex-direction:column; gap:4px; font-size:.78rem; color:var(--text-muted); }
+.hero-rationale-report .hero-report-filter-form input,
+.hero-rationale-report .hero-report-filter-form select { background:#0b1220; border:1px solid var(--card-border); color:#e2e8ff; border-radius:8px; padding:6px 8px; }
