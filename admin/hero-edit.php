@@ -135,6 +135,8 @@ $heroRatio  = $item['hero_ratio'] !== null ? (float)$item['hero_ratio'] : null;
 $heroOrient = strtoupper(trim((string)($item['hero_orientation'] ?? '')));
 $chosen     = trim((string)($item['chosen_image'] ?? ''));
 $thumbsRaw  = (string)($item['thumbnails_json'] ?? '');
+$selectedFromQuery = trim((string)($_GET['select'] ?? ''));
+$selectedFromQueryValid = false;
 
 // --------------------------------------------------------
 // 2) Build candidate list (chosen_image + thumbnails_json)
@@ -166,6 +168,15 @@ if ($thumbsRaw !== '') {
     $parts = array_filter(array_map('trim', explode(';', $thumbsRaw)));
     foreach ($parts as $p) {
         $addCandidate($p, 'thumb');
+    }
+}
+
+if ($selectedFromQuery !== '') {
+    foreach ($candidates as $candidate) {
+        if ((string)$candidate['path'] === $selectedFromQuery) {
+            $selectedFromQueryValid = true;
+            break;
+        }
     }
 }
 
@@ -274,8 +285,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':img' => $overridePath,
             ]);
 
-            $flashMessage = 'Hero image overridden for item #' . $itemId . '.';
-            $flashType    = 'success';
+            header('Location: hero-manager.php?hero_saved=1&item_id=' . $itemId);
+            exit;
         }
 
     } elseif ($action === 'clear_override') {
@@ -328,6 +339,18 @@ $overStmt = $pdo->prepare("SELECT chosen_image FROM hero_override WHERE itemId =
 $overStmt->execute([':id' => $itemId]);
 $override = trim((string)$overStmt->fetchColumn());
 
+$effectiveOverride = $override;
+if ($selectedFromQueryValid) {
+    $effectiveOverride = $selectedFromQuery;
+    if ($flashMessage === '') {
+        $flashMessage = 'Candidate staged. Click “Save override” to apply this hero.';
+        $flashType = 'info';
+    }
+} elseif ($selectedFromQuery !== '' && $flashMessage === '') {
+    $flashMessage = 'Requested candidate was not found for this item.';
+    $flashType = 'error';
+}
+
 $activeHero = $override ?: $heroImage ?: $chosen;
 
 // Label for stored hero orientation
@@ -340,6 +363,8 @@ if ($heroOrient === 'L') {
 
 // Best candidate path for "Reject auto choice" button
 $bestPathForReject = $bestCandidate ? $bestCandidate['path'] : '';
+$stagedLabel = $effectiveOverride !== '' ? $effectiveOverride : 'No candidate selected';
+$stagedStatus = $effectiveOverride !== '' ? 'Ready to save' : 'Select a candidate, then save override';
 // --------------------------------------------------------
 // 6) Render layout
 // --------------------------------------------------------
@@ -443,9 +468,39 @@ admin_layout_start("Hero Editor");
     </section>
 
     <!-- Candidate list + override / reject controls -->
-    <form method="post" class="card">
+    <form method="post" class="card hero-override-form" id="heroOverrideForm">
         <input type="hidden" name="override_image" id="overrideImageInput"
-               value="<?= htmlspecialchars($override) ?>">
+               value="<?= htmlspecialchars($effectiveOverride) ?>">
+        <input type="hidden" name="reject_image" value="<?= htmlspecialchars($bestPathForReject) ?>">
+
+        <section class="hero-override-summary" data-override-summary>
+            <h2>Selected override candidate</h2>
+            <div class="hero-override-summary__body">
+                <div class="hero-override-summary__preview hero-slot__imgwrap" data-override-preview-wrap>
+                    <?php if ($effectiveOverride !== ''): ?>
+                        <?= admin_render_thumbnail_safe($effectiveOverride, "$itemName – staged override") ?>
+                    <?php else: ?>
+                        <span class="hero-slot__empty" data-override-preview-empty>No candidate selected</span>
+                    <?php endif; ?>
+                </div>
+                <div class="hero-override-summary__meta">
+                    <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
+                    <div class="hero-override-summary__status" data-override-status><?= htmlspecialchars($stagedStatus) ?></div>
+                    <div class="hero-override-summary__actions">
+                        <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override>
+                            <span class="btn__dot"></span>
+                            Save override
+                        </button>
+                        <?php if ($bestPathForReject !== ''): ?>
+                            <button type="submit" name="action" value="reject_auto" class="btn btn-danger">
+                                Reject auto choice
+                            </button>
+                        <?php endif; ?>
+                        <a href="hero-manager.php" class="btn btn-ghost">Back to Hero Manager</a>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <h2 style="font-size:1.0rem;margin:0 0 10px;">All candidate images</h2>
 
@@ -454,19 +509,20 @@ admin_layout_start("Hero Editor");
                 No candidate images found from <code>chosen_image</code> or <code>thumbnails_json</code>.
             </p>
         <?php else: ?>
-            <div class="card-grid">
+            <div class="card-grid card-grid--candidates">
                 <?php foreach ($candidates as $cand):
                     $path       = $cand['path'];
                     $src        = $cand['source'];
                     $score      = $cand['score'];
                     $ratio      = $cand['ratio'];
-                    $isSelected = ($override !== '' && $override === $path)
-                        || ($override === '' && $heroImage !== '' && $heroImage === $path);
-                    $isBestAuto = ($bestPathForReject !== '' && $path === $bestPathForReject);
+                    $isSelected = ($effectiveOverride !== '' && $effectiveOverride === $path)
+                        || ($effectiveOverride === '' && $heroImage !== '' && $heroImage === $path);
                     ?>
-                    <article class="candidate-tile candidate<?= $isSelected ? ' candidate--selected' : '' ?>">
+                    <article class="candidate-tile candidate<?= $isSelected ? ' candidate--selected' : '' ?>" data-candidate-card data-candidate-path="<?= htmlspecialchars($path) ?>" data-is-active-hero="<?= ($activeHero === $path) ? '1' : '0' ?>" data-is-stored-hero="<?= ($heroImage === $path) ? '1' : '0' ?>">
                         <div class="hero-slot__label">
                             <span><?= $src === 'chosen' ? 'Chosen image' : 'Thumbnail' ?></span>
+                            <?php if ($activeHero === $path): ?><span class="hero-badge hero-badge--manual">Active hero</span><?php endif; ?>
+                            <?php if ($heroImage === $path): ?><span class="hero-badge">Stored hero_image</span><?php endif; ?>
                             <span class="hero-slot__tag">
                                 <?= $src === 'chosen' ? 'Primary' : 'Alt' ?>
                             </span>
@@ -477,8 +533,8 @@ admin_layout_start("Hero Editor");
                         </div>
 
                         <div class="candidate-score">
-                            Score: <?= number_format($score, 2) ?>
-                            <span class="micro-label">(historical)</span>
+                            Score: <?= number_format($score, 2) ?> (historical)
+                            <span class="micro-label">Not current shortlist rank</span>
                             <div>Ratio: <?= $ratio !== null ? number_format($ratio, 3) : '—' ?></div>
                         </div>
                         
@@ -490,33 +546,11 @@ admin_layout_start("Hero Editor");
                             <span class="btn__dot"></span>
                             Use this hero
                         </button>
-
-                        <?php if ($isBestAuto): ?>
-                            <form method="post" class="mt-1">
-                                <input type="hidden"
-                                       name="reject_image"
-                                       value="<?= htmlspecialchars($path) ?>">
-                                <button
-                                    type="submit"
-                                    name="action"
-                                    value="reject_auto"
-                                    class="btn btn-danger"
-                                >
-                                    Reject auto choice
-                                </button>
-                            </form>
-                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
 
-        <div class="hero-card__actions mt-3">
-            <button type="submit" name="action" value="save_override" class="btn btn-primary">
-                <span class="btn__dot"></span>
-                Save override
-            </button>
-        </div>
     </form>
 </div>
 
