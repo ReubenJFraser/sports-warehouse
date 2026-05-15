@@ -429,6 +429,53 @@ document.addEventListener("DOMContentLoaded", () => {
     return panel;
   };
 
+  const canonicalizeRationaleState = state => {
+    const reasonCodes = Array.isArray(state?.selected_reason_codes) ? state.selected_reason_codes : [];
+    const normalizedCodes = Array.from(new Set(reasonCodes.map(code => String(code || "").trim()).filter(Boolean))).sort();
+
+    return {
+      itemId: Number(state?.itemId || 0),
+      selected_hero_image: String(state?.selected_hero_image || "").trim(),
+      current_hero_image: String(state?.current_hero_image || "").trim(),
+      active_criteria_profile: String(state?.active_criteria_profile || "").trim(),
+      shortlist_basis: String(state?.shortlist_basis || "").trim(),
+      current_hero_rank: state?.current_hero_rank === null || state?.current_hero_rank === undefined || state?.current_hero_rank === "" ? null : Number(state.current_hero_rank),
+      current_hero_outside_top_three: !!state?.current_hero_outside_top_three,
+      selected_reason_codes: normalizedCodes,
+      optional_note: String(state?.optional_note || "").trim(),
+      criteria_refinement_signal: !!state?.criteria_refinement_signal,
+      image_set_limitation_signal: !!state?.image_set_limitation_signal,
+      metadata_issue_signal: !!state?.metadata_issue_signal,
+      diagnostics_issue_signal: !!state?.diagnostics_issue_signal
+    };
+  };
+
+  const setSaveButtonState = (node, state) => {
+    const panel = createForm(node);
+    const btn = panel ? panel.querySelector("[data-rationale-save]") : null;
+    if (!btn) return;
+
+    btn.classList.remove("is-saving", "is-saved");
+    btn.disabled = false;
+
+    if (state === "saving") {
+      btn.textContent = "Saving...";
+      btn.disabled = true;
+      btn.classList.add("is-saving");
+      return;
+    }
+    if (state === "saved") {
+      btn.textContent = "Saved ✓";
+      btn.classList.add("is-saved");
+      return;
+    }
+    if (state === "changes") {
+      btn.textContent = "Save changes";
+      return;
+    }
+    btn.textContent = "Save rationale";
+  };
+
   const hydrateForm = (node, rationale) => {
     const panel = createForm(node);
     if (!panel) return;
@@ -454,7 +501,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     node._rationale = data.rationale || null;
     hydrateForm(node, node._rationale);
+    node._rationaleBaseline = canonicalizeRationaleState({ ...(node._rationale || {}), itemId: Number(itemId || 0) });
+    node._rationaleSaving = false;
     feedback.textContent = node._rationale ? "Loaded saved rationale." : "No saved rationale yet.";
+    setSaveButtonState(node, node._rationale ? "saved" : "idle");
     const toggle = node.querySelector("[data-rationale-toggle]");
     if (toggle) toggle.textContent = node._rationale ? "View / edit rationale" : "Record rationale";
   };
@@ -477,6 +527,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const saveRationale = async node => {
+    if (node._rationaleSaving) return;
+
     const itemId = Number(node.dataset.rationaleItemId || 0);
     const panel = createForm(node);
     const feedback = panel.querySelector("[data-rationale-feedback]");
@@ -502,21 +554,66 @@ document.addEventListener("DOMContentLoaded", () => {
       ...signals
     };
 
-    feedback.textContent = "Saving rationale…";
-    const res = await fetch(`${baseUrl}/admin/hero-rationale.php`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || "Failed to save rationale");
-    await fetchRationale(node);
-    applyStatusFromState(node);
-    feedback.textContent = "Rationale saved.";
+    const normalizedCurrent = canonicalizeRationaleState(payload);
+    const baseline = node._rationaleBaseline || canonicalizeRationaleState({ itemId });
+    if (JSON.stringify(normalizedCurrent) === JSON.stringify(baseline)) {
+      feedback.textContent = "No changes to save.";
+      setSaveButtonState(node, "saved");
+      return;
+    }
+
+    node._rationaleSaving = true;
+    setSaveButtonState(node, "saving");
+    feedback.textContent = "Saving rationale...";
+
+    try {
+      const res = await fetch(`${baseUrl}/admin/hero-rationale.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Failed to save rationale");
+
+      await fetchRationale(node);
+      applyStatusFromState(node);
+      feedback.textContent = data.message || "Rationale saved.";
+      setSaveButtonState(node, "saved");
+    } finally {
+      node._rationaleSaving = false;
+    }
   };
 
   rationaleNodes.forEach(node => {
     createForm(node);
+    const panel = node.querySelector("[data-rationale-panel]");
+    if (panel) {
+      const markDirty = () => {
+        if (node._rationaleSaving) return;
+        const shortlist = shortlistByItem.get(String(node.dataset.rationaleItemId || "")) || null;
+        const currentHero = shortlist?.current_hero || {};
+        const currentPayload = {
+          itemId: Number(node.dataset.rationaleItemId || 0),
+          selected_hero_image: String(node.dataset.currentHeroImage || currentHero.path || "").trim(),
+          current_hero_image: String(node.dataset.currentHeroImage || currentHero.path || "").trim(),
+          active_criteria_profile: shortlist?.active_criteria_profile || null,
+          shortlist_basis: shortlist?.shortlist_basis || null,
+          current_hero_rank: currentHero.current_hero_rank ?? null,
+          current_hero_outside_top_three: !!currentHero.current_hero_outside_top_three,
+          selected_reason_codes: Array.from(panel.querySelectorAll("[data-reason-code]:checked")).map(input => input.dataset.reasonCode),
+          optional_note: panel.querySelector("[data-rationale-note]").value,
+          criteria_refinement_signal: !!panel.querySelector('[data-signal-code="criteria_refinement_signal"]')?.checked,
+          image_set_limitation_signal: !!panel.querySelector('[data-signal-code="image_set_limitation_signal"]')?.checked,
+          metadata_issue_signal: !!panel.querySelector('[data-signal-code="metadata_issue_signal"]')?.checked,
+          diagnostics_issue_signal: !!panel.querySelector('[data-signal-code="diagnostics_issue_signal"]')?.checked
+        };
+        const current = canonicalizeRationaleState(currentPayload);
+        const baseline = node._rationaleBaseline || canonicalizeRationaleState({ itemId: current.itemId });
+        setSaveButtonState(node, JSON.stringify(current) === JSON.stringify(baseline) ? "saved" : "changes");
+      };
+      panel.addEventListener("input", markDirty);
+      panel.addEventListener("change", markDirty);
+    }
     fetchRationale(node).catch(err => {
       const panel = node.querySelector("[data-rationale-panel]");
       const feedback = panel ? panel.querySelector("[data-rationale-feedback]") : null;
@@ -543,6 +640,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const panel = node.querySelector("[data-rationale-panel]");
         const feedback = panel ? panel.querySelector("[data-rationale-feedback]") : null;
         if (feedback) feedback.textContent = err.message || "Unable to save rationale.";
+        setSaveButtonState(node, "changes");
+        node._rationaleSaving = false;
       });
     });
   });

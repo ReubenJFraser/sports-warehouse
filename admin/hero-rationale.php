@@ -48,13 +48,14 @@ if ($method === 'POST') {
 
     try {
         $itemId = (int)($payload['itemId'] ?? 0);
-        $rationaleId = sw_hero_rationale_save($pdo, $payload);
+        $saveResult = sw_hero_rationale_save($pdo, $payload);
 
         echo json_encode([
             'ok' => true,
             'item_id' => $itemId,
-            'rationale_id' => $rationaleId,
-            'message' => 'Rationale saved',
+            'rationale_id' => (int)$saveResult['rationale_id'],
+            'message' => !empty($saveResult['unchanged']) ? 'No changes to save' : 'Rationale saved',
+            'unchanged' => !empty($saveResult['unchanged']),
         ], JSON_UNESCAPED_SLASHES);
         exit;
     } catch (InvalidArgumentException $e) {
