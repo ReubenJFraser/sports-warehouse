@@ -236,6 +236,66 @@ document.addEventListener("DOMContentLoaded", () => {
       return `${baseUrl}/${cleanPath}`;
     };
 
+    const normalizeComparablePath = value => {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+
+      let normalized = raw;
+      try {
+        const url = new URL(raw, "https://example.invalid");
+        normalized = `${url.pathname || ""}${url.search || ""}${url.hash || ""}`;
+      } catch (_) {
+        normalized = raw;
+      }
+
+      normalized = normalized
+        .replace(/^[a-z]+:\/\/[^/]+/i, "")
+        .replace(/[#?].*$/, "")
+        .replace(/^\.\//, "")
+        .replace(/\\/g, "/")
+        .replace(/^\/+/, "")
+        .replace(/\/+/g, "/")
+        .trim();
+
+      try {
+        normalized = decodeURIComponent(normalized);
+      } catch (_) {
+        // Keep non-decodable URI fragments unchanged.
+      }
+
+      return normalized;
+    };
+
+    const getHeroRankStatus = (itemId, product) => {
+      const currentHeroNode = document.querySelector(`[data-item-id="${CSS.escape(String(itemId || ""))}"]`);
+      const effectivePath = normalizeComparablePath(currentHeroNode?.dataset?.currentHero || product?.current_hero?.path || "");
+      const topCandidates = Array.isArray(product?.recommended_candidates) ? product.recommended_candidates : [];
+      const allCandidates = Array.isArray(product?.all_candidates) ? product.all_candidates : [];
+
+      if (!effectivePath) {
+        return { message: "Current hero: none", outsideTopThree: false, rank: null };
+      }
+
+      const shortlistIndex = topCandidates.findIndex(c => normalizeComparablePath(c?.path || "") === effectivePath);
+      if (shortlistIndex >= 0) {
+        const rank = Number(topCandidates[shortlistIndex]?.recommendation_rank || shortlistIndex + 1);
+        return { message: `Current hero is shortlist #${rank}`, outsideTopThree: false, rank };
+      }
+
+      const allIndex = allCandidates.findIndex(c => normalizeComparablePath(c?.path || "") === effectivePath);
+      if (allIndex >= 0) {
+        const rank = Number(allCandidates[allIndex]?.rank || allIndex + 1);
+        return { message: `Current hero outside top 3 · ranked #${rank}`, outsideTopThree: true, rank };
+      }
+
+      const fallbackRank = Number(product?.current_hero?.rank || 0);
+      if (fallbackRank > 0) {
+        return { message: `Current hero outside top 3 · ranked #${fallbackRank}`, outsideTopThree: true, rank: fallbackRank };
+      }
+
+      return { message: "Current hero outside candidate set", outsideTopThree: true, rank: null };
+    };
+
     const resolveChallengeUrl = (endpoint, itemId) => {
       const fallback = `admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`;
       const raw = String(endpoint || fallback).trim();
@@ -310,8 +370,13 @@ document.addEventListener("DOMContentLoaded", () => {
             ? product.recommended_candidates.slice(0, 3)
             : [];
 
+          const rankStatus = getHeroRankStatus(itemId, product);
           const currentHero = product.current_hero || null;
-          const outsideTopThree = !!(currentHero && currentHero.current_hero_outside_top_three);
+          product.current_hero = {
+            ...(currentHero || {}),
+            current_hero_outside_top_three: !!rankStatus.outsideTopThree,
+            current_hero_rank: rankStatus.rank
+          };
           const profile = product.active_criteria_profile || "—";
           const basis = product.shortlist_basis || "legacy_rank_placeholder";
           const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
@@ -376,18 +441,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           node.appendChild(thumbsWrap);
 
-          const current = makeEl(
-            "div",
-            "hero-shortlist-preview__current",
-            `Current hero: ${currentHero && currentHero.path ? "available" : "none"}`
-          );
+          const current = makeEl("div", "hero-shortlist-preview__current", rankStatus.message);
 
-          if (outsideTopThree) {
-            current.appendChild(makeEl(
-              "span",
-              "hero-shortlist-preview__flag",
-              "Current hero outside shortlist"
-            ));
+          if (rankStatus.outsideTopThree) {
+            current.appendChild(makeEl("span", "hero-shortlist-preview__flag", "Needs review"));
           }
 
           node.appendChild(current);
