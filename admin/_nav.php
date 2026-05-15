@@ -39,6 +39,11 @@ function admin_render_nav(): string
                 'icon'  => 'fa-solid fa-wand-magic-sparkles',
                 'label' => 'Hero Editor',
             ],
+            [
+                'href'  => $adminBase . '/hero-rationale-report.php',
+                'icon'  => 'fa-solid fa-chart-simple',
+                'label' => 'Rationale Report',
+            ],
         ],
         'Diagnostics' => [
             [
