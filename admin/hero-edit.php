@@ -135,6 +135,8 @@ $heroRatio  = $item['hero_ratio'] !== null ? (float)$item['hero_ratio'] : null;
 $heroOrient = strtoupper(trim((string)($item['hero_orientation'] ?? '')));
 $chosen     = trim((string)($item['chosen_image'] ?? ''));
 $thumbsRaw  = (string)($item['thumbnails_json'] ?? '');
+$selectedFromQuery = trim((string)($_GET['select'] ?? ''));
+$selectedFromQueryValid = false;
 
 // --------------------------------------------------------
 // 2) Build candidate list (chosen_image + thumbnails_json)
@@ -166,6 +168,15 @@ if ($thumbsRaw !== '') {
     $parts = array_filter(array_map('trim', explode(';', $thumbsRaw)));
     foreach ($parts as $p) {
         $addCandidate($p, 'thumb');
+    }
+}
+
+if ($selectedFromQuery !== '') {
+    foreach ($candidates as $candidate) {
+        if ((string)$candidate['path'] === $selectedFromQuery) {
+            $selectedFromQueryValid = true;
+            break;
+        }
     }
 }
 
@@ -274,8 +285,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':img' => $overridePath,
             ]);
 
-            $flashMessage = 'Hero image overridden for item #' . $itemId . '.';
-            $flashType    = 'success';
+            header('Location: hero-manager.php?hero_saved=1&item_id=' . $itemId);
+            exit;
         }
 
     } elseif ($action === 'clear_override') {
@@ -327,6 +338,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $overStmt = $pdo->prepare("SELECT chosen_image FROM hero_override WHERE itemId = :id");
 $overStmt->execute([':id' => $itemId]);
 $override = trim((string)$overStmt->fetchColumn());
+
+$effectiveOverride = $override;
+if ($selectedFromQueryValid) {
+    $effectiveOverride = $selectedFromQuery;
+    if ($flashMessage === '') {
+        $flashMessage = 'Candidate staged. Click “Save override” to apply this hero.';
+        $flashType = 'info';
+    }
+} elseif ($selectedFromQuery !== '' && $flashMessage === '') {
+    $flashMessage = 'Requested candidate was not found for this item.';
+    $flashType = 'error';
+}
 
 $activeHero = $override ?: $heroImage ?: $chosen;
 
@@ -445,7 +468,7 @@ admin_layout_start("Hero Editor");
     <!-- Candidate list + override / reject controls -->
     <form method="post" class="card">
         <input type="hidden" name="override_image" id="overrideImageInput"
-               value="<?= htmlspecialchars($override) ?>">
+               value="<?= htmlspecialchars($effectiveOverride) ?>">
 
         <h2 style="font-size:1.0rem;margin:0 0 10px;">All candidate images</h2>
 
@@ -460,8 +483,8 @@ admin_layout_start("Hero Editor");
                     $src        = $cand['source'];
                     $score      = $cand['score'];
                     $ratio      = $cand['ratio'];
-                    $isSelected = ($override !== '' && $override === $path)
-                        || ($override === '' && $heroImage !== '' && $heroImage === $path);
+                    $isSelected = ($effectiveOverride !== '' && $effectiveOverride === $path)
+                        || ($effectiveOverride === '' && $heroImage !== '' && $heroImage === $path);
                     $isBestAuto = ($bestPathForReject !== '' && $path === $bestPathForReject);
                     ?>
                     <article class="candidate-tile candidate<?= $isSelected ? ' candidate--selected' : '' ?>">
