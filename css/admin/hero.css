@@ -892,3 +892,19 @@
 .hero-rationale-report .hero-report-filter-form label { display:flex; flex-direction:column; gap:4px; font-size:.78rem; color:var(--text-muted); }
 .hero-rationale-report .hero-report-filter-form input,
 .hero-rationale-report .hero-report-filter-form select { background:#0b1220; border:1px solid var(--card-border); color:#e2e8ff; border-radius:8px; padding:6px 8px; }
+
+
+.hero-override-form { gap: 14px; }
+.hero-override-summary { border:1px solid rgba(148,163,235,.35); border-radius:12px; padding:12px; background:rgba(15,23,42,.45); }
+.hero-override-summary h2 { margin:0 0 10px; font-size:.95rem; }
+.hero-override-summary__body { display:grid; grid-template-columns:minmax(180px,220px) 1fr; gap:12px; align-items:start; }
+.hero-override-summary__path { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.74rem; color:#cbd5e1; word-break: break-all; }
+.hero-override-summary__status { font-size:.8rem; color:#93c5fd; margin-top:6px; }
+.hero-override-summary__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.card-grid--candidates { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: start; }
+.card-grid--candidates .candidate { min-width:0; }
+.card-imagebox { width:100%; max-width:100%; }
+.candidate .hero-slot__label { gap:6px; flex-wrap:wrap; justify-content:flex-start; }
+.candidate .hero-slot__label .hero-badge { text-transform:none; letter-spacing:0; }
+.candidate--selected { border-width:2px; }
+@media (max-width: 719px) { .hero-override-summary__body { grid-template-columns: 1fr; } }

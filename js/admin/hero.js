@@ -50,19 +50,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll("[data-select-hero]").forEach(btn => {
     btn.addEventListener("click", () => {
-
       const imagePath = btn.getAttribute("data-select-hero");
       const input = document.querySelector("#overrideImageInput");
-      if (!input) return;
+      if (!input || !imagePath) return;
 
-      // write input for form submission
       input.value = imagePath;
 
-      // highlight selection
-      document.querySelectorAll(".candidate--selected")
-        .forEach(el => el.classList.remove("candidate--selected"));
+      document.querySelectorAll("[data-candidate-card]").forEach(card => {
+        card.classList.remove("candidate--selected");
+      });
 
-      btn.closest(".candidate").classList.add("candidate--selected");
+      const card = btn.closest("[data-candidate-card]");
+      if (card) card.classList.add("candidate--selected");
+
+      const summaryPath = document.querySelector("[data-override-path]");
+      const summaryStatus = document.querySelector("[data-override-status]");
+      const previewWrap = document.querySelector("[data-override-preview-wrap]");
+      const saveBtn = document.querySelector("[data-save-override]");
+
+      if (summaryPath) summaryPath.textContent = imagePath;
+      if (summaryStatus) summaryStatus.textContent = "Ready to save";
+      if (saveBtn) saveBtn.disabled = false;
+
+      if (previewWrap) {
+        const currentImg = previewWrap.querySelector("img");
+        const base = String(window.BASE_URL || "").replace(/\/+$/, "");
+        const normalizedPath = imagePath.replace(/^\/+/, "");
+        const imageSrc = `${base}/${normalizedPath}`;
+
+        if (currentImg) {
+          currentImg.src = imageSrc;
+        } else {
+          const empty = previewWrap.querySelector("[data-override-preview-empty]");
+          if (empty) empty.remove();
+          const img = document.createElement("img");
+          img.src = imageSrc;
+          img.alt = "Staged override candidate";
+          previewWrap.appendChild(img);
+        }
+      }
     });
   });
 
