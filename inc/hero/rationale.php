@@ -97,7 +97,41 @@ function sw_hero_rationale_validate_reason_codes(array $reasonCodes): array
     ];
 }
 
-function sw_hero_rationale_save(PDO $pdo, array $payload): int
+function sw_hero_rationale_normalize_for_compare(array $row): array
+{
+    $reasonCodes = $row['selected_reason_codes'] ?? [];
+    if (!is_array($reasonCodes)) {
+        $parsed = sw_hero_rationale_parse_reason_codes((string)$reasonCodes);
+        $reasonCodes = $parsed['codes'];
+    }
+
+    $normalizedCodes = [];
+    foreach ($reasonCodes as $code) {
+        if (is_string($code) && trim($code) !== '') {
+            $normalizedCodes[] = trim($code);
+        }
+    }
+    $normalizedCodes = array_values(array_unique($normalizedCodes));
+    sort($normalizedCodes);
+
+    return [
+        'itemId' => (int)($row['itemId'] ?? 0),
+        'selected_hero_image' => trim((string)($row['selected_hero_image'] ?? '')),
+        'current_hero_image' => trim((string)($row['current_hero_image'] ?? '')),
+        'active_criteria_profile' => trim((string)($row['active_criteria_profile'] ?? '')),
+        'shortlist_basis' => trim((string)($row['shortlist_basis'] ?? '')),
+        'current_hero_rank' => isset($row['current_hero_rank']) && $row['current_hero_rank'] !== '' ? (int)$row['current_hero_rank'] : null,
+        'current_hero_outside_top_three' => !empty($row['current_hero_outside_top_three']),
+        'selected_reason_codes' => $normalizedCodes,
+        'optional_note' => trim((string)($row['optional_note'] ?? '')),
+        'criteria_refinement_signal' => !empty($row['criteria_refinement_signal']),
+        'image_set_limitation_signal' => !empty($row['image_set_limitation_signal']),
+        'metadata_issue_signal' => !empty($row['metadata_issue_signal']),
+        'diagnostics_issue_signal' => !empty($row['diagnostics_issue_signal']),
+    ];
+}
+
+function sw_hero_rationale_save(PDO $pdo, array $payload): array
 {
     $itemId = (int)($payload['itemId'] ?? 0);
     if ($itemId <= 0) {
@@ -117,6 +151,33 @@ function sw_hero_rationale_save(PDO $pdo, array $payload): int
     $validation = sw_hero_rationale_validate_reason_codes($reasonCodes);
     if (!empty($validation['invalid'])) {
         throw new InvalidArgumentException('Unknown reason codes: ' . implode(', ', array_map('strval', $validation['invalid'])));
+    }
+
+    $normalizedPayload = sw_hero_rationale_normalize_for_compare([
+        'itemId' => $itemId,
+        'selected_hero_image' => $selectedHeroImage,
+        'current_hero_image' => $payload['current_hero_image'] ?? '',
+        'active_criteria_profile' => $payload['active_criteria_profile'] ?? '',
+        'shortlist_basis' => $payload['shortlist_basis'] ?? '',
+        'current_hero_rank' => $payload['current_hero_rank'] ?? null,
+        'current_hero_outside_top_three' => $payload['current_hero_outside_top_three'] ?? false,
+        'selected_reason_codes' => $validation['codes'],
+        'optional_note' => $payload['optional_note'] ?? '',
+        'criteria_refinement_signal' => $payload['criteria_refinement_signal'] ?? false,
+        'image_set_limitation_signal' => $payload['image_set_limitation_signal'] ?? false,
+        'metadata_issue_signal' => $payload['metadata_issue_signal'] ?? false,
+        'diagnostics_issue_signal' => $payload['diagnostics_issue_signal'] ?? false,
+    ]);
+
+    $active = sw_hero_rationale_fetch_active($pdo, $itemId);
+    if ($active) {
+        $normalizedActive = sw_hero_rationale_normalize_for_compare($active);
+        if ($normalizedActive === $normalizedPayload) {
+            return [
+                'rationale_id' => (int)$active['rationale_id'],
+                'unchanged' => true,
+            ];
+        }
     }
 
     $encodedReasonCodes = json_encode($validation['codes'], JSON_UNESCAPED_SLASHES);
@@ -149,24 +210,27 @@ function sw_hero_rationale_save(PDO $pdo, array $payload): int
         $insert->execute([
             ':item_id' => $itemId,
             ':selected_hero_image' => $selectedHeroImage,
-            ':current_hero_image' => trim((string)($payload['current_hero_image'] ?? '')),
-            ':active_criteria_profile' => trim((string)($payload['active_criteria_profile'] ?? '')),
-            ':shortlist_basis' => trim((string)($payload['shortlist_basis'] ?? '')),
-            ':current_hero_rank' => isset($payload['current_hero_rank']) && $payload['current_hero_rank'] !== '' ? (int)$payload['current_hero_rank'] : null,
-            ':current_hero_outside_top_three' => !empty($payload['current_hero_outside_top_three']) ? 1 : 0,
+            ':current_hero_image' => $normalizedPayload['current_hero_image'],
+            ':active_criteria_profile' => $normalizedPayload['active_criteria_profile'],
+            ':shortlist_basis' => $normalizedPayload['shortlist_basis'],
+            ':current_hero_rank' => $normalizedPayload['current_hero_rank'],
+            ':current_hero_outside_top_three' => $normalizedPayload['current_hero_outside_top_three'] ? 1 : 0,
             ':selected_reason_codes' => $encodedReasonCodes,
-            ':optional_note' => trim((string)($payload['optional_note'] ?? '')),
-            ':criteria_refinement_signal' => !empty($payload['criteria_refinement_signal']) ? 1 : 0,
-            ':image_set_limitation_signal' => !empty($payload['image_set_limitation_signal']) ? 1 : 0,
-            ':metadata_issue_signal' => !empty($payload['metadata_issue_signal']) ? 1 : 0,
-            ':diagnostics_issue_signal' => !empty($payload['diagnostics_issue_signal']) ? 1 : 0,
+            ':optional_note' => $normalizedPayload['optional_note'],
+            ':criteria_refinement_signal' => $normalizedPayload['criteria_refinement_signal'] ? 1 : 0,
+            ':image_set_limitation_signal' => $normalizedPayload['image_set_limitation_signal'] ? 1 : 0,
+            ':metadata_issue_signal' => $normalizedPayload['metadata_issue_signal'] ? 1 : 0,
+            ':diagnostics_issue_signal' => $normalizedPayload['diagnostics_issue_signal'] ? 1 : 0,
             ':created_at' => $now,
             ':updated_at' => $now,
         ]);
 
         $rationaleId = (int)$pdo->lastInsertId();
         $pdo->commit();
-        return $rationaleId;
+        return [
+            'rationale_id' => $rationaleId,
+            'unchanged' => false,
+        ];
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();

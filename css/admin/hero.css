@@ -672,3 +672,15 @@
     cursor: zoom-in;
 }
 
+
+.hero-rationale__actions [data-rationale-save].is-saving,
+.hero-rationale__actions [data-rationale-save]:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.hero-rationale__actions [data-rationale-save].is-saved {
+    border-color: rgba(74,222,128,0.7);
+    background: rgba(22,101,52,0.28);
+    color: #bbf7d0;
+}
