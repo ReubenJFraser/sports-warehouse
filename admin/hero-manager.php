@@ -545,7 +545,7 @@ admin_layout_start("Hero Manager");
                             <span class="hero-badge">
                                 <?= $score !== null ? "Score: " . number_format($score, 1) : "No score" ?>
                             </span>
-                            <span class="hero-badge"><?= $orientLabel ?></span>
+                            <span class="hero-badge hero-badge--orientation<?= $orient === 'S' ? ' is-square' : '' ?>"><?= $orientLabel ?></span>
 
                             <?php if ($override): ?>
                                 <span class="hero-badge hero-badge--override">Override active</span>
@@ -563,6 +563,20 @@ admin_layout_start("Hero Manager");
                                 <span class="hero-badge hero-badge--missing">Missing (override)</span>
                             <?php endif; ?>
 
+                        </div>
+
+                        <div class="hero-card__actions" aria-label="Hero item actions">
+                            <a class="btn btn-primary" href="hero-edit.php?id=<?= $itemId ?>">
+                                <span class="btn__dot"></span> Edit hero
+                            </a>
+
+                            <a class="btn btn-ghost" href="hero-manager.php?recalc=<?= $itemId ?>">
+                                Recalculate
+                            </a>
+                        </div>
+                        <div class="context-note">
+                            Recalculate runs the automatic selector only.
+                            It does not override manual hero selections.
                         </div>
                     </div>
                 </div>
@@ -649,7 +663,7 @@ admin_layout_start("Hero Manager");
                         data-current-hero-source="<?= $currentHeroSource ?>"
                     >
                         <button class="hero-candidates__toggle">
-                            ▸ Candidate images (ranked, explainable)
+                            ▸ Candidate images
                         </button>
                         <div class="hero-candidates__panel" hidden>
                             <div class="hero-candidates__placeholder">
@@ -657,21 +671,6 @@ admin_layout_start("Hero Manager");
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Buttons -->
-                <div class="hero-card__actions">
-                    <a class="btn btn-primary" href="hero-edit.php?id=<?= $itemId ?>">
-                        <span class="btn__dot"></span> Edit hero
-                    </a>
-
-                    <a class="btn btn-ghost" href="hero-manager.php?recalc=<?= $itemId ?>">
-                        Recalculate
-                    </a>
-                </div>
-                <div class="context-note">
-                    Recalculate runs the automatic selector only.
-                    It does not override manual hero selections.
                 </div>
 
             </section>
