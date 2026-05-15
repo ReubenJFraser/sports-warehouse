@@ -428,6 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     panel.dataset.formBuilt = "1";
+    panel.hidden = true;
     return panel;
   };
 
