@@ -639,6 +639,9 @@ admin_layout_start("Hero Manager");
                     <div class="hero-shortlist-preview" data-shortlist-item-id="<?= $itemId ?>">
                         <div class="hero-shortlist-preview__state">Loading shortlist…</div>
                     </div>
+                </div>
+
+                <div class="hero-card__review-trays">
                     <div
                         class="hero-rationale"
                         data-rationale-item-id="<?= $itemId ?>"
