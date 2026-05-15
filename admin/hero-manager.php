@@ -561,9 +561,6 @@ admin_layout_start("Hero Manager");
                                 <span class="hero-badge hero-badge--override">Override active</span>
                             <?php endif; ?>
 
-                            <?php if ($rejects > 0): ?>
-                                <span class="hero-badge hero-badge--rejections"><?= $rejects ?> rejected</span>
-                            <?php endif; ?>
 
                             <?php if ($autoImg && !admin_image_exists($autoImg)): ?>
                                 <span class="hero-badge hero-badge--missing">Missing (auto)</span>
@@ -638,10 +635,6 @@ admin_layout_start("Hero Manager");
                             <?php endif; ?>
                         </div>
 
-                        <div class="hero-slot__meta">
-                            <span>rejected:</span>
-                            <span><?= $rejects ?></span>
-                        </div>
                     </div>
                 </div>
 

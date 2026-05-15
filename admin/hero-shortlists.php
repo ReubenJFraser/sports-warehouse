@@ -89,6 +89,7 @@ foreach ($items as $item) {
         'shortlist_status' => $shortlist['shortlist_status'] ?? 'unavailable',
         'current_hero' => $shortlist['current_hero'] ?? null,
         'recommended_candidates' => $shortlist['recommended_candidates'] ?? [],
+        'all_candidates' => $shortlist['all_candidates'] ?? [],
         'candidate_count' => is_array($candidates) ? count($candidates) : 0,
         'challenge_endpoint' => 'admin/hero-candidates.php?item_id=' . $itemId . '&include_shortlist=1',
     ];
