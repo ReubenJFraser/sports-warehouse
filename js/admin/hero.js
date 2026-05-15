@@ -84,13 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // toggle closed
       if (!panel.hasAttribute("hidden")) {
         panel.hidden = true;
-        btn.textContent = "▸ Candidate images (ranked, explainable)";
+        btn.textContent = "▸ Candidate images";
         return;
       }
 
       // toggle open
       panel.hidden = false;
-      btn.textContent = "▾ Candidate images (ranked, explainable)";
+      btn.textContent = "▾ Candidate images";
 
       // already loaded
       if (panel.dataset.loaded) return;
