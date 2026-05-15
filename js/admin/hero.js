@@ -48,49 +48,72 @@ document.addEventListener("DOMContentLoaded", () => {
      2. Hero Selection (only used in hero-edit.php)
      ------------------------------------------------------------ */
 
-  document.querySelectorAll("[data-select-hero]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const imagePath = btn.getAttribute("data-select-hero");
-      const input = document.querySelector("#overrideImageInput");
-      if (!input || !imagePath) return;
+  const heroOverrideForm = document.querySelector("#heroOverrideForm");
+  const overrideInput = document.querySelector("#overrideImageInput");
+  const selectHeroButtons = document.querySelectorAll("[data-select-hero]");
 
-      input.value = imagePath;
+  if (heroOverrideForm && overrideInput && selectHeroButtons.length > 0) {
+    const summaryPath = document.querySelector("[data-override-path]");
+    const summaryStatus = document.querySelector("[data-override-status]");
+    const previewWrap = document.querySelector("[data-override-preview-wrap]");
+    const saveBtn = document.querySelector("[data-save-override]");
+
+    const setSaveEnabled = enabled => {
+      if (saveBtn) {
+        saveBtn.disabled = !enabled;
+      }
+    };
+
+    const setStagedState = (imagePath, sourceCard) => {
+      overrideInput.value = imagePath;
 
       document.querySelectorAll("[data-candidate-card]").forEach(card => {
         card.classList.remove("candidate--selected");
       });
 
-      const card = btn.closest("[data-candidate-card]");
-      if (card) card.classList.add("candidate--selected");
-
-      const summaryPath = document.querySelector("[data-override-path]");
-      const summaryStatus = document.querySelector("[data-override-status]");
-      const previewWrap = document.querySelector("[data-override-preview-wrap]");
-      const saveBtn = document.querySelector("[data-save-override]");
+      if (sourceCard) {
+        sourceCard.classList.add("candidate--selected");
+      }
 
       if (summaryPath) summaryPath.textContent = imagePath;
       if (summaryStatus) summaryStatus.textContent = "Ready to save";
-      if (saveBtn) saveBtn.disabled = false;
+      setSaveEnabled(true);
 
-      if (previewWrap) {
-        const currentImg = previewWrap.querySelector("img");
-        const base = String(window.BASE_URL || "").replace(/\/+$/, "");
-        const normalizedPath = imagePath.replace(/^\/+/, "");
-        const imageSrc = `${base}/${normalizedPath}`;
+      if (!previewWrap) return;
 
-        if (currentImg) {
-          currentImg.src = imageSrc;
-        } else {
-          const empty = previewWrap.querySelector("[data-override-preview-empty]");
-          if (empty) empty.remove();
-          const img = document.createElement("img");
-          img.src = imageSrc;
-          img.alt = "Staged override candidate";
-          previewWrap.appendChild(img);
-        }
+      const selectedImg = sourceCard ? sourceCard.querySelector("img") : null;
+      const selectedSrc = selectedImg ? selectedImg.getAttribute("src") : "";
+
+      if (!selectedSrc) return;
+
+      let stagedImg = previewWrap.querySelector("img");
+      if (!stagedImg) {
+        const empty = previewWrap.querySelector("[data-override-preview-empty]");
+        if (empty) empty.remove();
+
+        stagedImg = document.createElement("img");
+        previewWrap.appendChild(stagedImg);
       }
+
+      stagedImg.src = selectedSrc;
+      stagedImg.alt = "Staged override candidate";
+    };
+
+    const hasInitialOverride = overrideInput.value.trim() !== "";
+    setSaveEnabled(hasInitialOverride);
+
+    selectHeroButtons.forEach(btn => {
+      btn.addEventListener("click", event => {
+        event.preventDefault();
+
+        const imagePath = String(btn.getAttribute("data-select-hero") || "").trim();
+        if (!imagePath) return;
+
+        const card = btn.closest("[data-candidate-card]");
+        setStagedState(imagePath, card);
+      });
     });
-  });
+  }
 
   /* ------------------------------------------------------------
      3. Candidate Images Panel (hero-manager.php)
