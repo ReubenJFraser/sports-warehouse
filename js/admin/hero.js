@@ -379,6 +379,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (node !== current) {
         const panel = node.querySelector("[data-rationale-panel]");
         if (panel) panel.hidden = true;
+        const toggle = node.querySelector("[data-rationale-toggle]");
+        if (toggle) toggle.textContent = node._rationale ? "View / edit rationale" : "Record rationale";
       }
     });
   };
@@ -427,6 +429,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
     panel.dataset.formBuilt = "1";
     return panel;
+  };
+
+  const getCompactSummaryNode = node => {
+    let summary = node.querySelector("[data-rationale-compact]");
+    if (summary) return summary;
+
+    const statusRow = node.querySelector(".hero-rationale__status-row");
+    if (!statusRow) return null;
+
+    summary = document.createElement("div");
+    summary.className = "hero-rationale__compact";
+    summary.setAttribute("data-rationale-compact", "");
+    statusRow.insertAdjacentElement("afterend", summary);
+    return summary;
+  };
+
+  const updateToggleLabel = node => {
+    const toggle = node.querySelector("[data-rationale-toggle]");
+    const panel = node.querySelector("[data-rationale-panel]");
+    if (!toggle || !panel) return;
+
+    if (!panel.hidden) {
+      toggle.textContent = "Hide rationale";
+      return;
+    }
+    toggle.textContent = node._rationale ? "View / edit rationale" : "Record rationale";
+  };
+
+  const updateCompactSummary = node => {
+    const summary = getCompactSummaryNode(node);
+    if (!summary) return;
+
+    if (!node._rationale) {
+      summary.innerHTML = "";
+      summary.hidden = true;
+      return;
+    }
+
+    const savedReasons = Array.isArray(node._rationale.selected_reason_codes) ? node._rationale.selected_reason_codes.length : 0;
+    const tags = [`<span class="hero-rationale__compact-pill">Reasons: ${savedReasons}</span>`];
+
+    if (node._rationale.criteria_refinement_signal) tags.push('<span class="hero-rationale__compact-pill">Criteria review</span>');
+    if (node._rationale.image_set_limitation_signal) tags.push('<span class="hero-rationale__compact-pill">Image-set limitation</span>');
+    if (node._rationale.metadata_issue_signal) tags.push('<span class="hero-rationale__compact-pill">Metadata/category issue</span>');
+    if (node._rationale.diagnostics_issue_signal) tags.push('<span class="hero-rationale__compact-pill">Diagnostics/ranking issue</span>');
+
+    summary.innerHTML = tags.join("");
+    summary.hidden = false;
+  };
+
+  const setPanelOpen = (node, open) => {
+    const panel = node.querySelector("[data-rationale-panel]");
+    if (!panel) return;
+    panel.hidden = !open;
+    updateToggleLabel(node);
   };
 
   const canonicalizeRationaleState = state => {
@@ -505,8 +562,8 @@ document.addEventListener("DOMContentLoaded", () => {
     node._rationaleSaving = false;
     feedback.textContent = node._rationale ? "Loaded saved rationale." : "No saved rationale yet.";
     setSaveButtonState(node, node._rationale ? "saved" : "idle");
-    const toggle = node.querySelector("[data-rationale-toggle]");
-    if (toggle) toggle.textContent = node._rationale ? "View / edit rationale" : "Record rationale";
+    updateCompactSummary(node);
+    setPanelOpen(node, !node._rationale);
   };
 
   const applyStatusFromState = node => {
@@ -579,6 +636,12 @@ document.addEventListener("DOMContentLoaded", () => {
       applyStatusFromState(node);
       feedback.textContent = data.message || "Rationale saved.";
       setSaveButtonState(node, "saved");
+      setTimeout(() => {
+        if (node._rationaleSaving) return;
+        const btn = panel.querySelector("[data-rationale-save]");
+        if (btn && btn.textContent === "Save changes") return;
+        setPanelOpen(node, false);
+      }, 800);
     } finally {
       node._rationaleSaving = false;
     }
@@ -629,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!panel) return;
         const willOpen = panel.hidden;
         closeAllRationalePanels(node);
-        panel.hidden = !willOpen;
+        setPanelOpen(node, willOpen);
       });
     }
 

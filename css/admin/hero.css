@@ -368,6 +368,24 @@
     color: #cbd5e1;
 }
 
+.hero-rationale__compact {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.hero-rationale__compact-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(134,239,172,0.45);
+    background: rgba(22,101,52,0.18);
+    color: #bbf7d0;
+    font-size: 0.68rem;
+}
+
 .hero-rationale__group,
 .hero-rationale__signals {
     display: grid;
