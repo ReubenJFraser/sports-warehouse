@@ -487,7 +487,7 @@ admin_layout_start("Hero Editor");
                     <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
                     <div class="hero-override-summary__status" data-override-status><?= htmlspecialchars($stagedStatus) ?></div>
                     <div class="hero-override-summary__actions">
-                        <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override>
+                        <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override<?= $effectiveOverride === "" ? " disabled" : "" ?>>
                             <span class="btn__dot"></span>
                             Save override
                         </button>
@@ -555,7 +555,10 @@ admin_layout_start("Hero Editor");
 </div>
 
 <!-- Hero JS: fullscreen viewer + candidate selection -->
-<script src="/js/admin/hero.js"></script>
+<script>
+  window.BASE_URL = "<?= BASE_URL ?>";
+</script>
+<script src="<?= BASE_URL ?>/js/admin/hero.js"></script>
 
 <?php
 admin_layout_end();
