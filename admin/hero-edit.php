@@ -409,16 +409,23 @@ admin_layout_start("Hero Editor");
         </div>
     <?php endif; ?>
 
-    <section class="card mb-3" data-shortlist-diagnostics data-item-id="<?= $itemId ?>">
+    <section class="card mb-3 hero-diagnostics" data-shortlist-diagnostics data-item-id="<?= $itemId ?>">
         <h2 style="font-size:1.0rem;margin:0 0 8px;">Shortlist diagnostics</h2>
-        <div class="hero-slot__meta">
-            <span data-diagnostic-rank>Current hero rank: <?= htmlspecialchars($activeHeroRankText) ?></span>
-            <?php if ($heroContextText !== ''): ?>
-                <span data-diagnostic-context><?= htmlspecialchars($heroContextText) ?></span>
-            <?php endif; ?>
-            <span data-diagnostic-profile hidden>Criteria profile: <?= htmlspecialchars($activeCriteriaProfileText) ?></span>
-            <span data-diagnostic-basis hidden>Ranking basis: <?= htmlspecialchars($rankingBasisText) ?></span>
+        <div class="hero-diagnostics__grid">
+            <div class="hero-diagnostics__item">
+                <div class="hero-diagnostics__label">Current hero rank</div>
+                <div class="hero-diagnostics__value" data-diagnostic-rank><?= htmlspecialchars($activeHeroRankText) ?></div>
+            </div>
+            <div class="hero-diagnostics__item">
+                <div class="hero-diagnostics__label">Hero context</div>
+                <div class="hero-diagnostics__value" data-diagnostic-context><?= htmlspecialchars($heroContextText !== '' ? $heroContextText : '—') ?></div>
+            </div>
+            <div class="hero-diagnostics__item">
+                <div class="hero-diagnostics__label">Ranking basis</div>
+                <div class="hero-diagnostics__value" data-diagnostic-basis><?= htmlspecialchars($rankingBasisText) ?></div>
+            </div>
         </div>
+        <div class="hero-diagnostics__hidden" hidden data-diagnostic-profile><?= htmlspecialchars($activeCriteriaProfileText) ?></div>
     </section>
 
     <!-- Current hero / override summary -->

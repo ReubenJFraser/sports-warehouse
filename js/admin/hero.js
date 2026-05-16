@@ -181,21 +181,21 @@ document.addEventListener("DOMContentLoaded", () => {
           const recommended = Array.isArray(shortlist?.recommended_candidates) ? shortlist.recommended_candidates : [];
           const allCandidates = Array.isArray(shortlist?.all_candidates) ? shortlist.all_candidates : [];
           const effectiveHeroPath = normalizeComparablePath(currentActiveHeroPath || shortlist?.current_hero?.path || "");
-          let heroRankText = "Current hero rank: outside candidate set";
+          let heroRankText = "outside candidate set";
 
           if (!effectiveHeroPath) {
-            heroRankText = "Current hero rank: none selected";
+            heroRankText = "none selected";
           } else {
             const shortlistIndex = recommended.findIndex(c => normalizeComparablePath(c?.path || "") === effectiveHeroPath);
             if (shortlistIndex >= 0) {
               const rank = Number(recommended[shortlistIndex]?.recommendation_rank || shortlistIndex + 1);
-              heroRankText = `Current hero rank: #${rank}`;
+              heroRankText = `#${rank}`;
             } else {
               const allIndex = allCandidates.findIndex(c => normalizeComparablePath(c?.path || "") === effectiveHeroPath);
               const fallbackRank = Number(shortlist?.current_hero?.rank || 0);
               const rank = allIndex >= 0 ? Number(allCandidates[allIndex]?.rank || allIndex + 1) : fallbackRank;
               if (rank > 0) {
-                heroRankText = `Current hero rank: outside top 3 · ranked #${rank}`;
+                heroRankText = `outside top 3 · ranked #${rank}`;
               }
             }
           }
@@ -213,17 +213,17 @@ document.addEventListener("DOMContentLoaded", () => {
           const profileLabel = humanizeCriteriaProfile(shortlist?.active_criteria_profile || "");
           if (profileNode && profileLabel) {
             profileNode.hidden = false;
-            profileNode.textContent = `Criteria profile: ${profileLabel}`;
+            profileNode.textContent = profileLabel;
           }
 
           const basisLabel = humanizeRankingBasis(shortlist?.shortlist_basis || "");
           if (basisNode && basisLabel) {
             basisNode.hidden = false;
-            basisNode.textContent = `Ranking basis: ${basisLabel}`;
+            basisNode.textContent = basisLabel;
           }
         })
         .catch(() => {
-          rankNode.textContent = "Current hero rank: unavailable";
+          rankNode.textContent = "unavailable";
         });
     }
   }
