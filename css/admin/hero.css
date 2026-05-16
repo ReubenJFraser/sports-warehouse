@@ -293,6 +293,17 @@
     justify-content: center;
 }
 
+.hero-editor-actions__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.hero-editor-actions__row form {
+    margin: 0;
+}
+
 .hero-empty {
     font-size: 0.9rem;
     color: var(--text-muted);
