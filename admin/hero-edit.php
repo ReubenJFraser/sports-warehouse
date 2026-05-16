@@ -368,22 +368,27 @@ $stagedStatus = $effectiveOverride !== '' ? 'Ready to save' : 'Select a candidat
 $activeHeroRankText = 'Current hero rank is unavailable.';
 $activeCriteriaProfileText = '';
 $rankingBasisText = 'Ranking basis is a temporary legacy ranking.';
-$heroContextParts = [];
+$showHeroContextDiagnostic = false;
+$heroContextText = '';
 
-if ($activeHero !== '') {
-    $heroContextParts[] = 'Current hero in use';
+if ($showHeroContextDiagnostic) {
+    $heroContextParts = [];
+
+    if ($activeHero !== '') {
+        $heroContextParts[] = 'Current hero in use';
+    }
+    if ($heroImage !== '') {
+        $heroContextParts[] = 'Stored hero image available';
+    }
+    if ($override !== '') {
+        $heroContextParts[] = 'Manual override currently saved';
+    }
+    if ($selectedFromQueryValid) {
+        $heroContextParts[] = 'Review selection staged (not yet saved)';
+    }
+
+    $heroContextText = !empty($heroContextParts) ? implode(' · ', $heroContextParts) : '';
 }
-if ($heroImage !== '') {
-    $heroContextParts[] = 'Stored hero image available';
-}
-if ($override !== '') {
-    $heroContextParts[] = 'Manual override currently saved';
-}
-if ($selectedFromQueryValid) {
-    $heroContextParts[] = 'Review selection staged (not yet saved)';
-}
-$heroContextText = !empty($heroContextParts) ? implode(' · ', $heroContextParts) : '';
-$showHeroContextDiagnostic = $heroContextText !== '' && $heroContextText !== 'Current hero in use';
 // --------------------------------------------------------
 // 6) Render layout
 // --------------------------------------------------------
