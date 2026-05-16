@@ -656,7 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ,ranked_1_image_path_snapshot: String(state?.ranked_1_image_path_snapshot || "").trim()
     };
   };
-  const normalizePath = value => String(value || "").trim();
+  const normalizePath = value => normalizeComparablePath(value);
   const findRankedTop = shortlist => (Array.isArray(shortlist?.recommended_candidates) && shortlist.recommended_candidates[0]) || (Array.isArray(shortlist?.all_candidates) && shortlist.all_candidates[0]) || null;
   const findCandidateByPath = (shortlist, path) => {
     const all = Array.isArray(shortlist?.all_candidates) ? shortlist.all_candidates : [];
@@ -691,7 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
     box.innerHTML = cards.join("");
     const noSnap = !(rationale && (rationale.selected_image_path || rationale.ranked_1_image_path_snapshot));
     note.textContent = cx.matchTop
-      ? "Current hero matches the system-ranked #1 candidate. A rationale is optional and may not count toward criteria refinement unless there is another reason to record it."
+      ? "Current hero matches the system-ranked #1 candidate. A rationale is optional and normally should not count toward criteria refinement unless there is another reason to record it."
       : (rankedPath ? "Current hero differs from the system-ranked #1 candidate. This rationale can explain why the human-selected image should beat the ranked #1 image." : "No ranked candidate available. Use data-quality-only if ranking inputs are missing/broken.");
     if (noSnap && rationale) note.textContent += " Snapshot fields not yet saved for this rationale.";
   };
@@ -769,17 +769,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemId = String(node.dataset.rationaleItemId || "");
     const shortlist = shortlistByItem.get(itemId);
     const saved = !!node._rationale;
+    const cx = buildSnapshotContext(node);
     const outside = !!(shortlist && shortlist.current_hero && shortlist.current_hero.current_hero_outside_top_three);
 
     if (saved) {
       setStatus(node, "Rationale saved", "is-saved");
       return;
     }
+    if (!shortlist) {
+      setStatus(node, "Rationale status unavailable · shortlist unavailable", "is-neutral");
+      return;
+    }
+    if (cx.currentPath && cx.rankedPath && cx.matchTop) {
+      setStatus(node, "Rationale optional · Current hero matches ranked #1", "is-neutral");
+      return;
+    }
+    if (!cx.rankedPath) {
+      setStatus(node, "Rationale status unavailable · ranked #1 unavailable", "is-neutral");
+      return;
+    }
     if (outside) {
       setStatus(node, "Rationale needed · Current hero outside shortlist", "is-needed");
       return;
     }
-    setStatus(node, "No rationale saved", "is-neutral");
+    setStatus(node, "Rationale needed · Current hero differs from ranked #1", "is-needed");
   };
 
   const saveRationale = async node => {
