@@ -38,6 +38,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return normalized;
   };
+  const humanizeCriteriaProfile = profile => {
+    const normalized = String(profile || "").trim();
+    const labels = {
+      object_only: "Object-focused",
+      body_region_first: "Body-region first",
+      product_first: "Product-first",
+      full_outfit: "Full outfit"
+    };
+
+    return labels[normalized] || normalized || "";
+  };
+  const humanizeRankingBasis = basis => {
+    const normalized = String(basis || "").trim();
+    if (normalized === "legacy_rank_placeholder") {
+      return "temporary legacy ranking";
+    }
+    return normalized;
+  };
 
   /* ------------------------------------------------------------
      1. PhotoSwipe Fullscreen Viewer
@@ -142,6 +160,72 @@ document.addEventListener("DOMContentLoaded", () => {
         setStagedState(imagePath, card);
       });
     });
+  }
+
+  const diagnosticsNode = document.querySelector("[data-shortlist-diagnostics]");
+  if (diagnosticsNode) {
+    const itemId = String(diagnosticsNode.dataset.itemId || "").trim();
+    const rankNode = diagnosticsNode.querySelector("[data-diagnostic-rank]");
+    const contextNode = diagnosticsNode.querySelector("[data-diagnostic-context]");
+    const profileNode = diagnosticsNode.querySelector("[data-diagnostic-profile]");
+    const basisNode = diagnosticsNode.querySelector("[data-diagnostic-basis]");
+
+    if (itemId && rankNode) {
+      const currentActiveHeroPath = normalizeComparablePath(
+        document.querySelector('[data-candidate-card][data-is-active-hero="1"]')?.dataset?.candidatePath || ""
+      );
+
+      fetch(`${baseUrl}/admin/hero-candidates.php?item_id=${encodeURIComponent(itemId)}&include_shortlist=1`)
+        .then(res => res.ok ? res.json() : Promise.reject(new Error("diagnostics_endpoint")))
+        .then(shortlist => {
+          const recommended = Array.isArray(shortlist?.recommended_candidates) ? shortlist.recommended_candidates : [];
+          const allCandidates = Array.isArray(shortlist?.all_candidates) ? shortlist.all_candidates : [];
+          const effectiveHeroPath = normalizeComparablePath(currentActiveHeroPath || shortlist?.current_hero?.path || "");
+          let heroRankText = "Current hero rank: outside candidate set";
+
+          if (!effectiveHeroPath) {
+            heroRankText = "Current hero rank: none selected";
+          } else {
+            const shortlistIndex = recommended.findIndex(c => normalizeComparablePath(c?.path || "") === effectiveHeroPath);
+            if (shortlistIndex >= 0) {
+              const rank = Number(recommended[shortlistIndex]?.recommendation_rank || shortlistIndex + 1);
+              heroRankText = `Current hero rank: #${rank}`;
+            } else {
+              const allIndex = allCandidates.findIndex(c => normalizeComparablePath(c?.path || "") === effectiveHeroPath);
+              const fallbackRank = Number(shortlist?.current_hero?.rank || 0);
+              const rank = allIndex >= 0 ? Number(allCandidates[allIndex]?.rank || allIndex + 1) : fallbackRank;
+              if (rank > 0) {
+                heroRankText = `Current hero rank: outside top 3 · ranked #${rank}`;
+              }
+            }
+          }
+
+          rankNode.textContent = heroRankText;
+
+          if (contextNode) {
+            const contextParts = [];
+            if (effectiveHeroPath) contextParts.push("Current hero in use");
+            if (shortlist?.current_hero?.is_manual_override) contextParts.push("Manual override saved");
+            if (shortlist?.current_hero?.is_in_recommended_candidates) contextParts.push("Included in current top 3");
+            contextNode.textContent = contextParts.length > 0 ? contextParts.join(" · ") : "No active hero context found";
+          }
+
+          const profileLabel = humanizeCriteriaProfile(shortlist?.active_criteria_profile || "");
+          if (profileNode && profileLabel) {
+            profileNode.hidden = false;
+            profileNode.textContent = `Criteria profile: ${profileLabel}`;
+          }
+
+          const basisLabel = humanizeRankingBasis(shortlist?.shortlist_basis || "");
+          if (basisNode && basisLabel) {
+            basisNode.hidden = false;
+            basisNode.textContent = `Ranking basis: ${basisLabel}`;
+          }
+        })
+        .catch(() => {
+          rankNode.textContent = "Current hero rank: unavailable";
+        });
+    }
   }
 
   /* ------------------------------------------------------------
