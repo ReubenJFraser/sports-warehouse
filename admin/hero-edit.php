@@ -480,7 +480,7 @@ admin_layout_start("Hero Editor");
                         </span>
                     <?php endif; ?>
                 </div>
-                <div class="hero-slot__meta hero-active-state__meta">
+                <div class="hero-slot__meta hero-active-state__meta hero-active-state__meta--primary">
                     <span>ratio:
                         <?php if ($heroRatio !== null): ?>
                             <?= number_format($heroRatio, 3) ?>
@@ -510,7 +510,7 @@ admin_layout_start("Hero Editor");
                     <div class="hero-slot__imgwrap mt-1">
                         <?= admin_render_thumbnail_safe($heroImage, "$itemName – stored hero") ?>
                     </div>
-                    <div class="hero-slot__meta hero-active-state__meta">
+                    <div class="hero-slot__meta hero-active-state__meta hero-active-state__meta--comparison">
                         <span>Saved DB hero differs from current site hero.</span>
                     </div>
                 </div>
@@ -557,7 +557,10 @@ admin_layout_start("Hero Editor");
                     <?php endif; ?>
                 </div>
                 <div class="hero-override-summary__meta hero-override-panel__details">
-                    <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
+                    <div class="hero-override-summary__path-wrap">
+                        <span class="hero-override-summary__path-label">Image path</span>
+                        <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
+                    </div>
                     <div class="hero-override-summary__status" data-override-status><?= htmlspecialchars($stagedStatus) ?></div>
                     <div class="hero-override-summary__actions hero-override-panel__actions">
                         <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override<?= ($effectiveOverride === "" || $selectedOverrideIsSaved) ? " disabled" : "" ?>>
@@ -594,7 +597,7 @@ admin_layout_start("Hero Editor");
                         <div class="hero-slot__label">
                             <span><?= $src === 'chosen' ? 'Chosen image' : 'Thumbnail' ?></span>
                             <?php if ($activeHero === $path): ?><span class="hero-badge hero-badge--manual">Active hero</span><?php endif; ?>
-                            <?php if ($heroImage === $path): ?><span class="hero-badge">Stored hero_image</span><?php endif; ?>
+                            <?php if ($heroImage === $path): ?><span class="hero-badge">Saved DB hero</span><?php endif; ?>
                             <span class="hero-slot__tag">
                                 <?= $src === 'chosen' ? 'Primary' : 'Alt' ?>
                             </span>
