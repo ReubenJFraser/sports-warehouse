@@ -377,6 +377,11 @@ document.addEventListener("DOMContentLoaded", () => {
             current_hero_outside_top_three: !!rankStatus.outsideTopThree,
             current_hero_rank: rankStatus.rank
           };
+
+          const rationaleNode = document.querySelector(`[data-rationale-item-id="${CSS.escape(itemId)}"]`);
+          if (rationaleNode && typeof applyStatusFromState === "function") {
+            applyStatusFromState(rationaleNode);
+          }
           const profile = product.active_criteria_profile || "—";
           const basis = product.shortlist_basis || "legacy_rank_placeholder";
           const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
