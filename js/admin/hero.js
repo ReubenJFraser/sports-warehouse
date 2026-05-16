@@ -479,6 +479,18 @@ document.addEventListener("DOMContentLoaded", () => {
     ["metadata_issue_signal", "Metadata/category issue"],
     ["diagnostics_issue_signal", "Diagnostics/ranking issue"]
   ];
+  const decisionTypeOptions = [
+    ["", "— Select decision type —"],
+    ["accepted_top_candidate", "Accepted top candidate"],
+    ["corrected_old_stored_hero", "Corrected old stored hero"],
+    ["manual_override_against_top_candidate", "Manual override against top candidate"],
+    ["paired_product_differentiation", "Paired product differentiation"],
+    ["product_detail_closeup_preferred", "Product detail close-up preferred"],
+    ["model_personality_hero_preferred", "Model personality hero preferred"],
+    ["campaign_background_context_preferred", "Campaign/background context preferred"],
+    ["missing_image_data_failure", "Missing image data failure"],
+    ["temporary_best_available_image", "Temporary best available image"]
+  ];
 
   const rationaleNodes = document.querySelectorAll("[data-rationale-item-id]");
   const closeAllRationalePanels = current => {
@@ -507,6 +519,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     panel.innerHTML = `
       <div class="hero-rationale__panel-state" data-rationale-feedback></div>
+      <div class="hero-rationale__compare" data-rationale-compare></div>
+      <div class="hero-rationale__panel-state hero-rationale__panel-note" data-rationale-compare-note></div>
+      <label class="hero-rationale__field">
+        <span>Decision type</span>
+        <select data-rationale-decision-type></select>
+      </label>
+      <label class="hero-rationale__check hero-rationale__check--signal">
+        <input type="checkbox" data-rationale-counts-refinement> <span>Counts toward criteria refinement</span>
+      </label>
+      <label class="hero-rationale__check hero-rationale__check--signal">
+        <input type="checkbox" data-rationale-data-quality-only> <span>Data-quality only / missing image issue</span>
+      </label>
       <div class="hero-rationale__group" data-reason-group></div>
       <label class="hero-rationale__field">
         <span>Optional note</span>
@@ -517,6 +541,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <button type="button" class="btn btn-primary btn-sm" data-rationale-save>Save rationale</button>
       </div>
     `;
+    const decisionSelect = panel.querySelector("[data-rationale-decision-type]");
+    decisionTypeOptions.forEach(([value, label]) => {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      decisionSelect.appendChild(opt);
+    });
 
     const reasonWrap = panel.querySelector("[data-reason-group]");
     reasonOptions.forEach(([code, label]) => {
@@ -612,7 +643,57 @@ document.addEventListener("DOMContentLoaded", () => {
       image_set_limitation_signal: !!state?.image_set_limitation_signal,
       metadata_issue_signal: !!state?.metadata_issue_signal,
       diagnostics_issue_signal: !!state?.diagnostics_issue_signal
+      ,decision_type: String(state?.decision_type || "").trim()
+      ,counts_toward_criteria_refinement: !!state?.counts_toward_criteria_refinement
+      ,data_quality_only: !!state?.data_quality_only
+      ,comparison_target_role: String(state?.comparison_target_role || "").trim()
+      ,cross_cutting_signal_codes: String(state?.cross_cutting_signal_codes || "").trim()
+      ,product_specific_reason_codes: String(state?.product_specific_reason_codes || "").trim()
+      ,reviewer_note: String(state?.reviewer_note || "").trim()
+      ,selected_image_path: String(state?.selected_image_path || "").trim()
+      ,selected_image_rank_snapshot: state?.selected_image_rank_snapshot === null || state?.selected_image_rank_snapshot === undefined || state?.selected_image_rank_snapshot === "" ? null : Number(state.selected_image_rank_snapshot)
+      ,selected_image_score_snapshot: state?.selected_image_score_snapshot === null || state?.selected_image_score_snapshot === undefined || state?.selected_image_score_snapshot === "" ? null : String(state.selected_image_score_snapshot).trim()
+      ,ranked_1_image_path_snapshot: String(state?.ranked_1_image_path_snapshot || "").trim()
     };
+  };
+  const normalizePath = value => String(value || "").trim();
+  const findRankedTop = shortlist => (Array.isArray(shortlist?.recommended_candidates) && shortlist.recommended_candidates[0]) || (Array.isArray(shortlist?.all_candidates) && shortlist.all_candidates[0]) || null;
+  const findCandidateByPath = (shortlist, path) => {
+    const all = Array.isArray(shortlist?.all_candidates) ? shortlist.all_candidates : [];
+    return all.find(c => normalizePath(c?.path) === normalizePath(path)) || null;
+  };
+  const buildSnapshotContext = node => {
+    const itemId = String(node.dataset.rationaleItemId || "");
+    const shortlist = shortlistByItem.get(itemId) || null;
+    const currentPath = normalizePath(node.dataset.currentHeroImage || shortlist?.current_hero?.path || "");
+    const rankedTop = findRankedTop(shortlist);
+    const rankedPath = normalizePath(rankedTop?.path);
+    const selectedCandidate = findCandidateByPath(shortlist, currentPath);
+    const matchTop = !!(currentPath && rankedPath && currentPath === rankedPath);
+    return { shortlist, currentPath, rankedTop, rankedPath, selectedCandidate, matchTop };
+  };
+  const renderComparePanel = (node, rationale) => {
+    const panel = createForm(node);
+    const box = panel.querySelector("[data-rationale-compare]");
+    const note = panel.querySelector("[data-rationale-compare-note]");
+    const cx = buildSnapshotContext(node);
+    const selectedPath = normalizePath(rationale?.selected_image_path || cx.currentPath);
+    const rankedPath = normalizePath(rationale?.ranked_1_image_path_snapshot || cx.rankedPath);
+    const dispPath = normalizePath(rationale?.displaced_current_hero_path_snapshot || "");
+    const selectedRank = rationale?.selected_image_rank_snapshot ?? cx.selectedCandidate?.rank ?? cx.selectedCandidate?.recommendation_rank ?? null;
+    const selectedScore = rationale?.selected_image_score_snapshot ?? cx.selectedCandidate?.score ?? null;
+    const rankedScore = rationale?.ranked_1_image_score_snapshot ?? cx.rankedTop?.score ?? null;
+    const cards = [];
+    const makeCard = (title, path, meta) => `<div class="hero-rationale__compare-card"><div class="hero-rationale__compare-title">${title}</div>${path ? `<img src="${resolveImageUrl(path)}" alt="${title}">` : '<div class="hero-rationale__compare-empty">No image</div>'}<div class="hero-rationale__compare-path">${path || "—"}</div><div class="hero-rationale__compare-meta">${meta}</div></div>`;
+    cards.push(makeCard("System ranked #1", rankedPath, `Rank #1${rankedScore !== null && rankedScore !== undefined ? ` · Score ${rankedScore}` : ""}`));
+    cards.push(makeCard("Human selected/current hero", selectedPath, `${selectedRank ? `Rank #${selectedRank}` : "Rank unknown"} · ${cx.matchTop ? "Matches #1" : "Differs from #1"}`));
+    if (dispPath && dispPath !== selectedPath && dispPath !== rankedPath) cards.push(makeCard("Displaced stored/current", dispPath, `${rationale?.displaced_current_hero_rank_snapshot ? `Rank #${rationale.displaced_current_hero_rank_snapshot}` : "Context only"}`));
+    box.innerHTML = cards.join("");
+    const noSnap = !(rationale && (rationale.selected_image_path || rationale.ranked_1_image_path_snapshot));
+    note.textContent = cx.matchTop
+      ? "Current hero matches the system-ranked #1 candidate. A rationale is optional and may not count toward criteria refinement unless there is another reason to record it."
+      : (rankedPath ? "Current hero differs from the system-ranked #1 candidate. This rationale can explain why the human-selected image should beat the ranked #1 image." : "No ranked candidate available. Use data-quality-only if ranking inputs are missing/broken.");
+    if (noSnap && rationale) note.textContent += " Snapshot fields not yet saved for this rationale.";
   };
 
   const setSaveButtonState = (node, state) => {
@@ -652,6 +733,16 @@ document.addEventListener("DOMContentLoaded", () => {
     panel.querySelectorAll("[data-signal-code]").forEach(input => {
       input.checked = !!rationale?.[input.dataset.signalCode];
     });
+    const decisionSelect = panel.querySelector("[data-rationale-decision-type]");
+    if (rationale?.decision_type) {
+      decisionSelect.value = rationale.decision_type;
+    } else {
+      const cx = buildSnapshotContext(node);
+      decisionSelect.value = !cx.rankedPath || !cx.currentPath ? "missing_image_data_failure" : (cx.matchTop ? "accepted_top_candidate" : "manual_override_against_top_candidate");
+    }
+    panel.querySelector("[data-rationale-counts-refinement]").checked = !!rationale?.counts_toward_criteria_refinement;
+    panel.querySelector("[data-rationale-data-quality-only]").checked = !!rationale?.data_quality_only;
+    renderComparePanel(node, rationale);
   };
 
   const fetchRationale = async node => {
@@ -716,8 +807,37 @@ document.addEventListener("DOMContentLoaded", () => {
       current_hero_outside_top_three: !!currentHero.current_hero_outside_top_three,
       selected_reason_codes: selectedReasonCodes,
       optional_note: panel.querySelector("[data-rationale-note]").value.trim(),
+      decision_type: panel.querySelector("[data-rationale-decision-type]").value || null,
+      counts_toward_criteria_refinement: !!panel.querySelector("[data-rationale-counts-refinement]").checked,
+      data_quality_only: !!panel.querySelector("[data-rationale-data-quality-only]").checked,
       ...signals
     };
+    const cx = buildSnapshotContext(node);
+    const signalCodes = [];
+    if (signals.criteria_refinement_signal) signalCodes.push("criteria_review_signal");
+    if (signals.image_set_limitation_signal) signalCodes.push("image_set_limitation");
+    if (signals.metadata_issue_signal) signalCodes.push("metadata_category_issue");
+    if (signals.diagnostics_issue_signal) signalCodes.push("diagnostics_ranking_issue");
+    if (payload.data_quality_only) signalCodes.push("data_quality_blocker");
+    Object.assign(payload, {
+      product_name_snapshot: cx.shortlist?.item_name || null,
+      brand_snapshot: cx.shortlist?.brand || null,
+      selected_image_path: cx.currentPath || null,
+      selected_image_rank_snapshot: cx.selectedCandidate?.rank ?? cx.selectedCandidate?.recommendation_rank ?? currentHero.current_hero_rank ?? null,
+      selected_image_score_snapshot: cx.selectedCandidate?.score ?? null,
+      selected_image_role: "human_selected_current",
+      ranked_1_image_path_snapshot: cx.rankedPath || null,
+      ranked_1_image_score_snapshot: cx.rankedTop?.score ?? null,
+      ranked_1_image_role: cx.rankedPath ? "top_ranked_candidate" : null,
+      ranked_1_reason_snapshot: cx.rankedTop?.score_reason || null,
+      criteria_profile_snapshot: shortlist?.active_criteria_profile || null,
+      shortlist_basis_snapshot: shortlist?.shortlist_basis || null,
+      comparison_target_role: cx.rankedPath ? "top_ranked_candidate" : "missing_broken_image",
+      product_specific_reason_codes: selectedReasonCodes.length ? JSON.stringify(selectedReasonCodes) : null,
+      cross_cutting_signal_codes: signalCodes.length ? JSON.stringify(signalCodes) : null,
+      reviewer_note: payload.optional_note || null,
+      candidate_snapshot_json: shortlist ? JSON.stringify({recommended_candidates: shortlist.recommended_candidates || [], all_candidates: shortlist.all_candidates || []}) : null
+    });
 
     const normalizedCurrent = canonicalizeRationaleState(payload);
     const baseline = node._rationaleBaseline || canonicalizeRationaleState({ itemId });
@@ -759,6 +879,20 @@ document.addEventListener("DOMContentLoaded", () => {
     createForm(node);
     const panel = node.querySelector("[data-rationale-panel]");
     if (panel) {
+      const applyDecisionDefaults = () => {
+        const decision = panel.querySelector("[data-rationale-decision-type]")?.value || "";
+        const dataQ = panel.querySelector("[data-rationale-data-quality-only]");
+        const counts = panel.querySelector("[data-rationale-counts-refinement]");
+        if (!dataQ || !counts) return;
+        if (decision === "missing_image_data_failure") {
+          dataQ.checked = true; counts.checked = false;
+        } else if (decision === "manual_override_against_top_candidate" && !dataQ.checked) {
+          counts.checked = true;
+        } else if (decision === "corrected_old_stored_hero" || decision === "accepted_top_candidate") {
+          counts.checked = false;
+        }
+      };
+      panel.querySelector("[data-rationale-decision-type]")?.addEventListener("change", applyDecisionDefaults);
       const markDirty = () => {
         if (node._rationaleSaving) return;
         const shortlist = shortlistByItem.get(String(node.dataset.rationaleItemId || "")) || null;
@@ -777,6 +911,9 @@ document.addEventListener("DOMContentLoaded", () => {
           image_set_limitation_signal: !!panel.querySelector('[data-signal-code="image_set_limitation_signal"]')?.checked,
           metadata_issue_signal: !!panel.querySelector('[data-signal-code="metadata_issue_signal"]')?.checked,
           diagnostics_issue_signal: !!panel.querySelector('[data-signal-code="diagnostics_issue_signal"]')?.checked
+          ,decision_type: panel.querySelector("[data-rationale-decision-type]").value || null
+          ,counts_toward_criteria_refinement: !!panel.querySelector("[data-rationale-counts-refinement]").checked
+          ,data_quality_only: !!panel.querySelector("[data-rationale-data-quality-only]").checked
         };
         const current = canonicalizeRationaleState(currentPayload);
         const baseline = node._rationaleBaseline || canonicalizeRationaleState({ itemId: current.itemId });
