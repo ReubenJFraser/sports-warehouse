@@ -492,21 +492,23 @@ admin_layout_start("Hero Editor");
             </div>
         </div>
 
-        <div class="hero-card__actions mt-2">
-            <form method="post" style="display:inline;">
-                <button
-                    type="submit"
-                    name="action"
-                    value="clear_override"
-                    class="btn btn-ghost"
-                >
-                    Clear override
-                </button>
-            </form>
+        <div class="hero-card__actions hero-editor-actions mt-2">
+            <div class="hero-editor-actions__row">
+                <form method="post">
+                    <button
+                        type="submit"
+                        name="action"
+                        value="clear_override"
+                        class="btn btn-ghost"
+                    >
+                        Clear override
+                    </button>
+                </form>
 
-            <a href="hero-manager.php" class="btn btn-ghost">
-                Back to Hero Manager
-            </a>
+                <a href="hero-manager.php" class="btn btn-ghost">
+                    Back to Hero Manager
+                </a>
+            </div>
         </div>
     </section>
 
