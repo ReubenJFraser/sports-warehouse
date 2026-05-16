@@ -538,20 +538,20 @@ admin_layout_start("Hero Editor");
                value="<?= htmlspecialchars($effectiveOverride) ?>">
         <input type="hidden" name="reject_image" value="<?= htmlspecialchars($bestPathForReject) ?>">
 
-        <section class="hero-override-summary" data-override-summary>
+        <section class="hero-override-summary hero-override-panel" data-override-summary>
             <h2>Selected override candidate</h2>
-            <div class="hero-override-summary__body">
-                <div class="hero-override-summary__preview hero-slot__imgwrap" data-override-preview-wrap>
+            <div class="hero-override-summary__body hero-override-panel__body">
+                <div class="hero-override-summary__preview hero-override-panel__preview hero-slot__imgwrap" data-override-preview-wrap>
                     <?php if ($effectiveOverride !== ''): ?>
                         <?= admin_render_thumbnail_safe($effectiveOverride, "$itemName – staged override") ?>
                     <?php else: ?>
                         <span class="hero-slot__empty" data-override-preview-empty>No candidate selected</span>
                     <?php endif; ?>
                 </div>
-                <div class="hero-override-summary__meta">
+                <div class="hero-override-summary__meta hero-override-panel__details">
                     <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
                     <div class="hero-override-summary__status" data-override-status><?= htmlspecialchars($stagedStatus) ?></div>
-                    <div class="hero-override-summary__actions">
+                    <div class="hero-override-summary__actions hero-override-panel__actions">
                         <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override<?= $effectiveOverride === "" ? " disabled" : "" ?>>
                             <span class="btn__dot"></span>
                             Save override
