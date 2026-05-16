@@ -9,6 +9,35 @@
 document.addEventListener("DOMContentLoaded", () => {
   const baseUrl = String(window.BASE_URL || "").replace(/\/+$/, "");
   const shortlistByItem = new Map();
+  const normalizeComparablePath = value => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    let normalized = raw;
+    try {
+      const url = new URL(raw, "https://example.invalid");
+      normalized = `${url.pathname || ""}${url.search || ""}${url.hash || ""}`;
+    } catch (_) {
+      normalized = raw;
+    }
+
+    normalized = normalized
+      .replace(/^[a-z]+:\/\/[^/]+/i, "")
+      .replace(/[#?].*$/, "")
+      .replace(/^\.\//, "")
+      .replace(/\\/g, "/")
+      .replace(/^\/+/, "")
+      .replace(/\/+/g, "/")
+      .trim();
+
+    try {
+      normalized = decodeURIComponent(normalized);
+    } catch (_) {
+      // Keep non-decodable URI fragments unchanged.
+    }
+
+    return normalized;
+  };
 
   /* ------------------------------------------------------------
      1. PhotoSwipe Fullscreen Viewer
@@ -234,36 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const cleanPath = String(path || "").replace(/^\/+/, "");
 
       return `${baseUrl}/${cleanPath}`;
-    };
-
-    const normalizeComparablePath = value => {
-      const raw = String(value || "").trim();
-      if (!raw) return "";
-
-      let normalized = raw;
-      try {
-        const url = new URL(raw, "https://example.invalid");
-        normalized = `${url.pathname || ""}${url.search || ""}${url.hash || ""}`;
-      } catch (_) {
-        normalized = raw;
-      }
-
-      normalized = normalized
-        .replace(/^[a-z]+:\/\/[^/]+/i, "")
-        .replace(/[#?].*$/, "")
-        .replace(/^\.\//, "")
-        .replace(/\\/g, "/")
-        .replace(/^\/+/, "")
-        .replace(/\/+/g, "/")
-        .trim();
-
-      try {
-        normalized = decodeURIComponent(normalized);
-      } catch (_) {
-        // Keep non-decodable URI fragments unchanged.
-      }
-
-      return normalized;
     };
 
     const getHeroRankStatus = (itemId, product) => {
