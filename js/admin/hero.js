@@ -166,8 +166,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (diagnosticsNode) {
     const itemId = String(diagnosticsNode.dataset.itemId || "").trim();
     const rankNode = diagnosticsNode.querySelector("[data-diagnostic-rank]");
-    const contextNode = diagnosticsNode.querySelector("[data-diagnostic-context]");
-    const contextItemNode = diagnosticsNode.querySelector("[data-diagnostic-context-item]");
+    const showHeroContextDiagnostic = false;
+    const contextNode = showHeroContextDiagnostic
+      ? diagnosticsNode.querySelector("[data-diagnostic-context]")
+      : null;
+    const contextItemNode = showHeroContextDiagnostic
+      ? diagnosticsNode.querySelector("[data-diagnostic-context-item]")
+      : null;
     const profileNode = diagnosticsNode.querySelector("[data-diagnostic-profile]");
     const basisNode = diagnosticsNode.querySelector("[data-diagnostic-basis]");
 
@@ -209,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
             rankNode.textContent = `Current hero rank is ${heroRankText}.`;
           }
 
-          if (contextNode) {
+          if (showHeroContextDiagnostic && contextNode) {
             const contextParts = [];
             if (effectiveHeroPath) contextParts.push("Current hero in use");
             if (shortlist?.current_hero?.is_manual_override) contextParts.push("Manual override saved");
