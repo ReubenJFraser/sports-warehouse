@@ -353,6 +353,23 @@ if ($selectedFromQueryValid) {
 
 $activeHero = $override ?: $heroImage ?: $chosen;
 
+$normalizeHeroPath = static function (string $path): string {
+    $normalized = trim($path);
+    if ($normalized === '') {
+        return '';
+    }
+
+    $normalized = preg_replace('#^[a-z]+://#i', '', $normalized);
+    $normalized = preg_replace('#/{2,}#', '/', $normalized);
+
+    return strtolower(rtrim($normalized, '/'));
+};
+
+$activeHeroNormalized = $normalizeHeroPath($activeHero);
+$storedHeroNormalized = $normalizeHeroPath($heroImage);
+$savedHeroMatchesActiveHero = ($activeHeroNormalized !== '' && $storedHeroNormalized !== '' && $activeHeroNormalized === $storedHeroNormalized);
+$showSavedHeroComparisonCard = ($heroImage !== '' && !$savedHeroMatchesActiveHero);
+
 // Label for stored hero orientation
 $orientLabel = 'Portrait';
 if ($heroOrient === 'L') {
@@ -438,12 +455,12 @@ admin_layout_start("Hero Editor");
     <section class="card mb-3">
         <h2 style="font-size:1.0rem;margin:0 0 10px;">Active hero state</h2>
 
-        <div class="grid grid-2">
+        <div class="grid <?= $showSavedHeroComparisonCard ? 'grid-2' : 'grid-1' ?> hero-active-state-grid">
             <div>
-                <div class="hero-slot__label">
-                    <span>Active hero</span>
+                <div class="hero-slot__label hero-active-state__label">
+                    <span>Current site hero</span>
                     <span class="hero-slot__tag">
-                        <?= $activeHero !== '' ? 'In use' : 'None' ?>
+                        <?= $activeHero !== '' ? 'In use' : 'Not set' ?>
                     </span>
                 </div>
                 <div class="hero-slot__imgwrap mt-1">
@@ -455,25 +472,7 @@ admin_layout_start("Hero Editor");
                         </span>
                     <?php endif; ?>
                 </div>
-            </div>
-
-            <div>
-                <div class="hero-slot__label">
-                    <span>Stored hero_image</span>
-                    <span class="hero-slot__tag">
-                        <?= $heroImage !== '' ? $orientLabel : 'None' ?>
-                    </span>
-                </div>
-                <div class="hero-slot__imgwrap mt-1">
-                    <?php if ($heroImage !== ''): ?>
-                        <?= admin_render_thumbnail_safe($heroImage, "$itemName – stored hero") ?>
-                    <?php else: ?>
-                        <span class="hero-slot__empty">
-                            No stored <code>hero_image</code>; cards use chosen/override instead.
-                        </span>
-                    <?php endif; ?>
-                </div>
-                <div class="hero-slot__meta">
+                <div class="hero-slot__meta hero-active-state__meta">
                     <span>ratio:
                         <?php if ($heroRatio !== null): ?>
                             <?= number_format($heroRatio, 3) ?>
@@ -481,6 +480,9 @@ admin_layout_start("Hero Editor");
                             —
                         <?php endif; ?>
                     </span>
+                    <?php if ($heroOrient !== ''): ?>
+                        <span><?= strtolower($orientLabel) ?></span>
+                    <?php endif; ?>
                     <span>score:
                         <?php if ($heroScore !== null): ?>
                             <?= number_format($heroScore, 1) ?>
@@ -490,8 +492,26 @@ admin_layout_start("Hero Editor");
                     </span>
                 </div>
             </div>
+
+            <?php if ($showSavedHeroComparisonCard): ?>
+                <div>
+                    <div class="hero-slot__label hero-active-state__label">
+                        <span>Saved DB hero</span>
+                        <span class="hero-slot__tag">Differs</span>
+                    </div>
+                    <div class="hero-slot__imgwrap mt-1">
+                        <?= admin_render_thumbnail_safe($heroImage, "$itemName – stored hero") ?>
+                    </div>
+                    <div class="hero-slot__meta hero-active-state__meta">
+                        <span>Saved DB hero differs from current site hero.</span>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
+        <?php if ($savedHeroMatchesActiveHero): ?>
+            <div class="hero-active-state__status">Saved DB hero matches current site hero.</div>
+        <?php endif; ?>
         <div class="hero-card__actions hero-editor-actions mt-2">
             <div class="hero-editor-actions__row">
                 <form method="post">

@@ -982,3 +982,31 @@
 .candidate .hero-slot__label .hero-badge { text-transform:none; letter-spacing:0; }
 .candidate--selected { border-width:2px; }
 @media (max-width: 719px) { .hero-override-summary__body { grid-template-columns: 1fr; } }
+
+.hero-active-state-grid {
+    gap: 10px;
+}
+
+.hero-active-state__label {
+    text-transform: none;
+    letter-spacing: 0.01em;
+}
+
+.hero-active-state__label span {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.hero-active-state__meta {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.hero-active-state__status {
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
