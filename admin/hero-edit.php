@@ -381,7 +381,15 @@ if ($heroOrient === 'L') {
 // Best candidate path for "Reject auto choice" button
 $bestPathForReject = $bestCandidate ? $bestCandidate['path'] : '';
 $stagedLabel = $effectiveOverride !== '' ? $effectiveOverride : 'No candidate selected';
-$stagedStatus = $effectiveOverride !== '' ? 'Ready to save' : 'Select a candidate, then save override';
+$effectiveOverrideNormalized = $normalizeHeroPath($effectiveOverride);
+$savedOverrideNormalized = $normalizeHeroPath($override);
+$selectedOverrideIsSaved = ($effectiveOverrideNormalized !== '' && $effectiveOverrideNormalized === $savedOverrideNormalized);
+$stagedStatus = 'Select a candidate, then save override';
+if ($effectiveOverride !== '') {
+    $stagedStatus = $selectedOverrideIsSaved
+        ? 'Saved as current override.'
+        : 'Ready to save';
+}
 $activeHeroRankText = 'Current hero rank is unavailable.';
 $activeCriteriaProfileText = '';
 $rankingBasisText = 'Ranking basis is a temporary legacy ranking.';
@@ -552,8 +560,7 @@ admin_layout_start("Hero Editor");
                     <div class="hero-override-summary__path" data-override-path><?= htmlspecialchars($stagedLabel) ?></div>
                     <div class="hero-override-summary__status" data-override-status><?= htmlspecialchars($stagedStatus) ?></div>
                     <div class="hero-override-summary__actions hero-override-panel__actions">
-                        <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override<?= $effectiveOverride === "" ? " disabled" : "" ?>>
-                            <span class="btn__dot"></span>
+                        <button type="submit" name="action" value="save_override" class="btn btn-primary" data-save-override<?= ($effectiveOverride === "" || $selectedOverrideIsSaved) ? " disabled" : "" ?>>
                             Save override
                         </button>
                         <?php if ($bestPathForReject !== ''): ?>
@@ -567,7 +574,7 @@ admin_layout_start("Hero Editor");
             </div>
         </section>
 
-        <h2 style="font-size:1.0rem;margin:0 0 10px;">All candidate images</h2>
+        <h2 class="hero-override-candidates-heading" style="font-size:1.0rem;margin:0 0 10px;">All candidate images</h2>
 
         <?php if (empty($candidates)): ?>
             <p class="hero-empty">
