@@ -365,6 +365,24 @@ if ($heroOrient === 'L') {
 $bestPathForReject = $bestCandidate ? $bestCandidate['path'] : '';
 $stagedLabel = $effectiveOverride !== '' ? $effectiveOverride : 'No candidate selected';
 $stagedStatus = $effectiveOverride !== '' ? 'Ready to save' : 'Select a candidate, then save override';
+$activeHeroRankText = 'Unavailable';
+$activeCriteriaProfileText = '';
+$rankingBasisText = '';
+$heroContextParts = [];
+
+if ($activeHero !== '') {
+    $heroContextParts[] = 'Current hero in use';
+}
+if ($heroImage !== '') {
+    $heroContextParts[] = 'Stored hero image available';
+}
+if ($override !== '') {
+    $heroContextParts[] = 'Manual override currently saved';
+}
+if ($selectedFromQueryValid) {
+    $heroContextParts[] = 'Review selection staged (not yet saved)';
+}
+$heroContextText = !empty($heroContextParts) ? implode(' · ', $heroContextParts) : '';
 // --------------------------------------------------------
 // 6) Render layout
 // --------------------------------------------------------
@@ -390,6 +408,18 @@ admin_layout_start("Hero Editor");
             <span><?= $flashMessage ?></span>
         </div>
     <?php endif; ?>
+
+    <section class="card mb-3" data-shortlist-diagnostics data-item-id="<?= $itemId ?>">
+        <h2 style="font-size:1.0rem;margin:0 0 8px;">Shortlist diagnostics</h2>
+        <div class="hero-slot__meta">
+            <span data-diagnostic-rank>Current hero rank: <?= htmlspecialchars($activeHeroRankText) ?></span>
+            <?php if ($heroContextText !== ''): ?>
+                <span data-diagnostic-context><?= htmlspecialchars($heroContextText) ?></span>
+            <?php endif; ?>
+            <span data-diagnostic-profile hidden>Criteria profile: <?= htmlspecialchars($activeCriteriaProfileText) ?></span>
+            <span data-diagnostic-basis hidden>Ranking basis: <?= htmlspecialchars($rankingBasisText) ?></span>
+        </div>
+    </section>
 
     <!-- Current hero / override summary -->
     <section class="card mb-3">
@@ -562,4 +592,3 @@ admin_layout_start("Hero Editor");
 
 <?php
 admin_layout_end();
-
