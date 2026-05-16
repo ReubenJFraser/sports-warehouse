@@ -365,9 +365,9 @@ if ($heroOrient === 'L') {
 $bestPathForReject = $bestCandidate ? $bestCandidate['path'] : '';
 $stagedLabel = $effectiveOverride !== '' ? $effectiveOverride : 'No candidate selected';
 $stagedStatus = $effectiveOverride !== '' ? 'Ready to save' : 'Select a candidate, then save override';
-$activeHeroRankText = 'Unavailable';
+$activeHeroRankText = 'Current hero rank is unavailable.';
 $activeCriteriaProfileText = '';
-$rankingBasisText = '';
+$rankingBasisText = 'Ranking basis is a temporary legacy ranking.';
 $heroContextParts = [];
 
 if ($activeHero !== '') {
@@ -383,6 +383,7 @@ if ($selectedFromQueryValid) {
     $heroContextParts[] = 'Review selection staged (not yet saved)';
 }
 $heroContextText = !empty($heroContextParts) ? implode(' · ', $heroContextParts) : '';
+$showHeroContextDiagnostic = $heroContextText !== '' && $heroContextText !== 'Current hero in use';
 // --------------------------------------------------------
 // 6) Render layout
 // --------------------------------------------------------
@@ -416,9 +417,9 @@ admin_layout_start("Hero Editor");
                 <div class="hero-diagnostics__label">Current hero rank</div>
                 <div class="hero-diagnostics__value" data-diagnostic-rank><?= htmlspecialchars($activeHeroRankText) ?></div>
             </div>
-            <div class="hero-diagnostics__item">
+            <div class="hero-diagnostics__item" data-diagnostic-context-item<?= $showHeroContextDiagnostic ? '' : ' hidden' ?>>
                 <div class="hero-diagnostics__label">Hero context</div>
-                <div class="hero-diagnostics__value" data-diagnostic-context><?= htmlspecialchars($heroContextText !== '' ? $heroContextText : '—') ?></div>
+                <div class="hero-diagnostics__value" data-diagnostic-context><?= htmlspecialchars($heroContextText) ?></div>
             </div>
             <div class="hero-diagnostics__item">
                 <div class="hero-diagnostics__label">Ranking basis</div>

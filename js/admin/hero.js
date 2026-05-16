@@ -51,8 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const humanizeRankingBasis = basis => {
     const normalized = String(basis || "").trim();
-    if (normalized === "legacy_rank_placeholder") {
-      return "temporary legacy ranking";
+    if (!normalized || normalized === "legacy_rank_placeholder") {
+      return "a temporary legacy ranking";
     }
     return normalized;
   };
@@ -167,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemId = String(diagnosticsNode.dataset.itemId || "").trim();
     const rankNode = diagnosticsNode.querySelector("[data-diagnostic-rank]");
     const contextNode = diagnosticsNode.querySelector("[data-diagnostic-context]");
+    const contextItemNode = diagnosticsNode.querySelector("[data-diagnostic-context-item]");
     const profileNode = diagnosticsNode.querySelector("[data-diagnostic-profile]");
     const basisNode = diagnosticsNode.querySelector("[data-diagnostic-basis]");
 
@@ -200,14 +201,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
 
-          rankNode.textContent = heroRankText;
+          if (heroRankText === "#1" || heroRankText === "#2" || heroRankText === "#3") {
+            rankNode.textContent = `Current hero rank is ${heroRankText}.`;
+          } else if (heroRankText === "none selected" || heroRankText === "outside candidate set") {
+            rankNode.textContent = "Current hero rank is unavailable.";
+          } else {
+            rankNode.textContent = `Current hero rank is ${heroRankText}.`;
+          }
 
           if (contextNode) {
             const contextParts = [];
             if (effectiveHeroPath) contextParts.push("Current hero in use");
             if (shortlist?.current_hero?.is_manual_override) contextParts.push("Manual override saved");
-            if (shortlist?.current_hero?.is_in_recommended_candidates) contextParts.push("Included in current top 3");
-            contextNode.textContent = contextParts.length > 0 ? contextParts.join(" · ") : "No active hero context found";
+            if (shortlist?.current_hero?.is_in_recommended_candidates) contextParts.push("Active hero included in current top 3");
+            const contextText = contextParts.join(" · ");
+            const showContext = contextText !== "" && contextText !== "Current hero in use";
+            if (contextItemNode) contextItemNode.hidden = !showContext;
+            if (showContext) contextNode.textContent = contextText;
           }
 
           const profileLabel = humanizeCriteriaProfile(shortlist?.active_criteria_profile || "");
@@ -219,11 +229,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const basisLabel = humanizeRankingBasis(shortlist?.shortlist_basis || "");
           if (basisNode && basisLabel) {
             basisNode.hidden = false;
-            basisNode.textContent = basisLabel;
+            basisNode.textContent = `Ranking basis is ${basisLabel}.`;
           }
         })
         .catch(() => {
-          rankNode.textContent = "unavailable";
+          rankNode.textContent = "Current hero rank is unavailable.";
         });
     }
   }
