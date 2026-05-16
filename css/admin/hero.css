@@ -449,6 +449,31 @@
     color: #e2e8f0;
     padding: 8px;
 }
+.hero-rationale__field select {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: #0b1220;
+    color: #e2e8ff;
+    padding: 7px 8px;
+}
+.hero-rationale__compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    gap: 8px;
+}
+.hero-rationale__compare-card {
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background: rgba(15,23,42,.55);
+    padding: 8px;
+}
+.hero-rationale__compare-title { font-size: .72rem; color: #dbe7ff; margin-bottom: 6px; }
+.hero-rationale__compare-card img { width: 100%; max-height: 110px; object-fit: contain; background:#020617; border-radius:8px; border:1px solid rgba(148,163,235,.2); }
+.hero-rationale__compare-path { font-size: .68rem; color: var(--text-muted); margin-top: 6px; word-break: break-all; }
+.hero-rationale__compare-meta { font-size: .72rem; color: #cbd5e1; margin-top: 4px; }
+.hero-rationale__compare-empty { font-size: .72rem; color: var(--text-muted); padding: 14px 0; text-align:center; border:1px dashed rgba(148,163,235,.25); border-radius:8px; }
+.hero-rationale__panel-note { font-size: .76rem; color: #cbd5e1; }
 
 /* =========================================================
    hero-manager — shortlist preview
