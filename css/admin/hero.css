@@ -1034,3 +1034,5 @@
     font-size: 0.78rem;
     color: var(--text-muted);
 }
+
+.hero-override-candidates-heading { margin-top: 8px !important; }
