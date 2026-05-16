@@ -381,8 +381,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (rationaleNode && typeof applyStatusFromState === "function") {
             applyStatusFromState(rationaleNode);
           }
-          const profile = product.active_criteria_profile || "—";
-          const basis = product.shortlist_basis || "legacy_rank_placeholder";
           const challengeEndpoint = resolveChallengeUrl(product.challenge_endpoint, itemId);
           const reviewHref = `${baseUrl}/admin/hero-edit.php?id=${encodeURIComponent(itemId)}`;
 
@@ -403,11 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const makeShortlistFoot = () => {
             const foot = makeEl("div", "hero-shortlist-preview__foot");
-
-            foot.appendChild(makeEl("span", "hero-shortlist-preview__pill", `Profile: ${safeText(profile)}`));
-            foot.appendChild(makeEl("span", "hero-shortlist-preview__pill", `Basis: ${safeText(basis)}`));
-
-            const review = makeEl("a", "hero-shortlist-preview__action", "Review candidates");
+            const review = makeEl("a", "hero-shortlist-preview__action", "Review / change hero");
             review.href = reviewHref;
             foot.appendChild(review);
 
@@ -446,10 +440,6 @@ document.addEventListener("DOMContentLoaded", () => {
           node.appendChild(thumbsWrap);
 
           const current = makeEl("div", "hero-shortlist-preview__current", rankStatus.message);
-
-          if (rankStatus.outsideTopThree) {
-            current.appendChild(makeEl("span", "hero-shortlist-preview__flag", "Needs review"));
-          }
 
           node.appendChild(current);
           node.appendChild(makeShortlistFoot());
