@@ -545,7 +545,7 @@ admin_layout_start("Hero Manager");
                         <!-- badges -->
                         <div class="hero-card__badges">                            
                             <?php if ($override): ?>
-                                <span class="hero-badge hero-badge--manual">Manual override</span>
+                                <span class="hero-badge hero-badge--manual">Manual override active</span>
                             <?php elseif ($rejects > 0): ?>
                                 <span class="hero-badge hero-badge--governed">Governed automation</span>
                             <?php else: ?>
@@ -556,10 +556,6 @@ admin_layout_start("Hero Manager");
                                 <?= $score !== null ? "Score: " . number_format($score, 1) : "No score" ?>
                             </span>
                             <span class="hero-badge hero-badge--orientation<?= $orient === 'S' ? ' is-square' : '' ?>"><?= $orientLabel ?></span>
-
-                            <?php if ($override): ?>
-                                <span class="hero-badge hero-badge--override">Override active</span>
-                            <?php endif; ?>
 
 
                             <?php if ($autoImg && !admin_image_exists($autoImg)): ?>
@@ -596,7 +592,7 @@ admin_layout_start("Hero Manager");
                         <div class="hero-slot__label">
                             <span>Current hero</span>
                             <span class="hero-slot__tag">
-                                <?= $currentHeroSource === 'manual' ? 'Manual' : 'Auto-selected' ?>
+                                <?= $currentHeroSource === 'manual' ? 'Manual override' : 'Auto baseline' ?>
                             </span>
                         </div>
 
@@ -612,8 +608,12 @@ admin_layout_start("Hero Manager");
                         </div>
 
                         <div class="hero-slot__meta">
-                            <span>ratio: <?= $ratio !== null ? number_format($ratio, 3) : '—' ?></span>
-                            <span>score: <?= $score !== null ? number_format($score, 1) : '—' ?></span>
+                            <?php $metaBits = [
+                                'ratio: ' . ($ratio !== null ? number_format($ratio, 3) : '—'),
+                                strtolower($orientLabel),
+                                'score: ' . ($score !== null ? number_format($score, 1) : '—'),
+                            ]; ?>
+                            <span><?= htmlspecialchars(implode(' · ', $metaBits)) ?></span>
                         </div>
                     </div>
 
