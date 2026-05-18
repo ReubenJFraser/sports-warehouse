@@ -188,19 +188,20 @@
 
 .hero-slot__label {
     font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     color: var(--text-muted);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
-.hero-slot__label span {
-    max-width: 70%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.hero-slot__label > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #dbe7ff;
+    font-weight: 600;
 }
 
 .hero-slot__tag {
@@ -231,10 +232,13 @@
 
 .hero-slot__meta {
     font-size: 0.72rem;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
+    color: #cbd5e1;
+    line-height: 1.35;
+}
+
+.hero-slot__meta span {
+    display: block;
+    white-space: normal;
 }
 
 .hero-diagnostics {
