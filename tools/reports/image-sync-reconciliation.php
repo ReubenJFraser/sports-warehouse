@@ -31,6 +31,10 @@ function pickFirstHeader(array $headersMap, array $candidates): array {
     }
     return ['', -1];
 }
+
+function normalizeCsvHeader(string $name): string {
+    return trim(preg_replace('/^ï»¿/u', '', $name) ?? $name);
+}
 function pickFirstMysqlColumn(array $set, array $candidates): string {
     foreach ($candidates as $name) {
         if (isset($set[$name])) return $name;
@@ -95,7 +99,7 @@ $hasOverride=(int)(qAll($pdo,"SELECT COUNT(*) c FROM information_schema.tables W
 $overrideById=[]; if($hasOverride){ foreach(qAll($pdo,"SELECT itemId, chosen_image FROM hero_override") as $r){$overrideById[(int)$r['itemId']]=(string)($r['chosen_image']??'');}}
 $index=[];$itemById=[]; foreach($items as $it){$id=(int)$it['itemId'];$itemById[$id]=$it;$k=norm($it['brand']).'|'.norm($it['itemName']);$index[$k][]=$it;$mysqlKeyCounts[$k]=($mysqlKeyCounts[$k]??0)+1;if(count($mysqlKeySamples)<10)$mysqlKeySamples[]=$k;if($k==='|')$blankMysqlKeys++;}
 @mkdir(dirname($reportPath),0777,true);
-$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $headers=fgetcsv($in)?:[]; $h=[]; foreach($headers as $i=>$name){$h[trim((string)$name)]=$i;}
+$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $headers=fgetcsv($in)?:[]; $h=[]; foreach($headers as $i=>$name){$h[normalizeCsvHeader((string)$name)]=$i;}
 [$csvBrandHeader] = pickFirstHeader($h, ['brand','Brand','brandName','brand_name','vendor','merchant','label']);
 [$csvItemHeader] = pickFirstHeader($h, ['itemName','item_name','Item Name','name','product_name','title','productTitle']);
 [$csvDbItemIdHeader] = pickFirstHeader($h, ['db_itemId','db_item_id','itemId','item_id','mysql_itemId']);
