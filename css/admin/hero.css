@@ -1222,3 +1222,11 @@
         align-items: flex-start;
     }
 }
+
+.image-integrity-report .image-integrity-table td { font-size:.78rem; }
+.image-integrity-report .image-integrity-pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; border:1px solid transparent; }
+.image-integrity-report .image-integrity-pill.is-exists,
+.image-integrity-report .image-integrity-pill.is-info { color:#86efac; border-color:rgba(74,222,128,.55); background:rgba(22,101,52,.2); }
+.image-integrity-report .image-integrity-pill.is-missing,
+.image-integrity-report .image-integrity-pill.is-critical { color:#fca5a5; border-color:rgba(248,113,113,.6); background:rgba(127,29,29,.24); }
+.image-integrity-report .image-integrity-pill.is-warning { color:#fcd34d; border-color:rgba(251,191,36,.6); background:rgba(120,53,15,.25); }

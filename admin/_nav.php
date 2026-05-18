@@ -67,6 +67,11 @@ function admin_render_nav(): string
                 'label' => 'Hero Analysis'
             ],
             [
+                'href'  => $adminBase . '/image-integrity.php',
+                'icon'  => 'fa-solid fa-image',
+                'label' => 'Image Integrity'
+            ],
+            [
                 'href'      => $adminBase . '/sync-tool.php',
                 'icon'      => 'fa-solid fa-shuffle',
                 'label'     => 'Sync Tool',
