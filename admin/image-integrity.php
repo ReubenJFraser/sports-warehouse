@@ -7,14 +7,17 @@ $selectedBrand = trim((string)($_GET['brand'] ?? ''));
 $selectedSeverity = trim((string)($_GET['severity'] ?? 'all'));
 $selectedSource = trim((string)($_GET['source'] ?? 'all'));
 $selectedStatus = trim((string)($_GET['status'] ?? 'all'));
+$selectedRepairCategory = trim((string)($_GET['repair_category'] ?? 'all'));
 
 $allowedSeverities = ['all', 'critical', 'warning', 'info'];
 $allowedSources = ['all', 'chosen_image', 'hero_image', 'thumbnail_candidate', 'override_image'];
 $allowedStatuses = ['all', 'exists', 'missing'];
+$allowedRepairCategories = ['all', 'clean', 'optional_blank', 'missing_brands_segment', 'malformed_brands_path', 'missing_local_file', 'all_candidates_missing', 'media_video_reference', 'unknown_missing'];
 
 if (!in_array($selectedSeverity, $allowedSeverities, true)) $selectedSeverity = 'all';
 if (!in_array($selectedSource, $allowedSources, true)) $selectedSource = 'all';
 if (!in_array($selectedStatus, $allowedStatuses, true)) $selectedStatus = 'all';
+if (!in_array($selectedRepairCategory, $allowedRepairCategories, true)) $selectedRepairCategory = 'all';
 
 $sql = "
     SELECT
@@ -121,6 +124,9 @@ foreach ($imageRefs as $ref) {
     $notes = [];
     $severity = 'info';
     $status = 'missing';
+    $repairCategory = 'clean';
+    $suggestedPath = '';
+    $sqlPreview = '';
 
     $isBlank = ($raw === '');
     $hasBackslashes = strpos($raw, '\\') !== false;
@@ -131,6 +137,7 @@ foreach ($imageRefs as $ref) {
     $isVideo = !$isBlank && (bool)preg_match('/\.mp4($|\?)/i', $raw);
 
     if ($isBlank) {
+        $repairCategory = 'optional_blank';
         $notes[] = ($ref['source'] === 'chosen_image' || $ref['source'] === 'override_image')
             ? 'Blank path (optional unless needed as effective hero).'
             : 'Blank path.';
@@ -151,6 +158,7 @@ foreach ($imageRefs as $ref) {
 
     if ($isVideo) {
         $notes[] = 'Media/video reference (.mp4), not a still-image asset.';
+        if ($repairCategory === 'clean') $repairCategory = 'media_video_reference';
     }
 
     if (!$isBlank && !$isExternal) {
@@ -168,6 +176,7 @@ foreach ($imageRefs as $ref) {
         if ($exists) {
             $notes[] = 'Local file exists.';
         } else {
+            $repairCategory = 'missing_local_file';
             $notes[] = 'Local file missing.';
 
             $fsPath = $ref['resolved_fs_path'];
@@ -194,8 +203,30 @@ foreach ($imageRefs as $ref) {
                 $brandsCandidate = preg_replace('#(^|/)images/#i', '$0brands/', $pathForFs, 1);
                 if ($brandsCandidate && admin_image_exists($brandsCandidate)) {
                     $notes[] = 'Possible missing /brands/ segment; alternate path exists.';
+                    $suggestedPath = $brandsCandidate;
+                    $repairCategory = 'missing_brands_segment';
+                    $sqlPreview = "UPDATE item SET " . $ref['source'] . " = '" . str_replace("'", "''", $brandsCandidate) . "' WHERE itemId = " . (int)$ref['itemId'] . ";";
                     if ($severity !== 'critical') $severity = 'warning';
                 }
+            }
+
+            if (
+                $suggestedPath === ''
+                && preg_match('#(^|/)images/brands([^/]+)/#i', $pathForFs, $badBrandMatch)
+                && !preg_match('#(^|/)images/brands/#i', $pathForFs)
+            ) {
+                $fixedBrandPath = preg_replace('#(^|/)images/brands([^/]+)/#i', '$1images/brands/$2/', $pathForFs, 1);
+                if ($fixedBrandPath && admin_image_exists($fixedBrandPath)) {
+                    $notes[] = 'Malformed brands path; missing slash after /brands.';
+                    $suggestedPath = $fixedBrandPath;
+                    $repairCategory = 'malformed_brands_path';
+                    $sqlPreview = "UPDATE item SET " . $ref['source'] . " = '" . str_replace("'", "''", $fixedBrandPath) . "' WHERE itemId = " . (int)$ref['itemId'] . ";";
+                    if ($severity !== 'critical') $severity = 'warning';
+                }
+            }
+
+            if ($repairCategory === 'missing_local_file' && !$isVideo && !$isExternal) {
+                $repairCategory = 'unknown_missing';
             }
         }
     }
@@ -233,6 +264,9 @@ foreach ($imageRefs as $ref) {
     $row = $ref + [
         'status' => $status,
         'severity' => $severity,
+        'repair_category' => $repairCategory,
+        'suggested_path' => $suggestedPath,
+        'sql_preview' => $sqlPreview,
         'notes' => implode(' ', $notes),
     ];
 
@@ -240,6 +274,7 @@ foreach ($imageRefs as $ref) {
     if ($selectedSeverity !== 'all' && $row['severity'] !== $selectedSeverity) continue;
     if ($selectedSource !== 'all' && $row['source'] !== $selectedSource) continue;
     if ($selectedStatus !== 'all' && $row['status'] !== $selectedStatus) continue;
+    if ($selectedRepairCategory !== 'all' && $row['repair_category'] !== $selectedRepairCategory) continue;
 
     $finalRows[] = $row;
 
@@ -266,6 +301,7 @@ foreach ($itemCandidateStats as $itemId => $stats) {
             if ($rowRef['itemId'] === $itemId) {
                 $rowRef['notes'] .= ($rowRef['notes'] !== '' ? ' ' : '') . 'All product candidate paths appear missing.';
                 $rowRef['severity'] = 'critical';
+                $rowRef['repair_category'] = 'all_candidates_missing';
             }
         }
         unset($rowRef);
@@ -319,6 +355,12 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <option value="<?= $st ?>" <?= $selectedStatus === $st ? 'selected' : '' ?>><?= ucfirst($st) ?></option>
 <?php endforeach; ?>
 </select></label>
+<label>Repair category
+<select name="repair_category">
+<?php foreach ($allowedRepairCategories as $cat): ?>
+<option value="<?= $cat ?>" <?= $selectedRepairCategory === $cat ? 'selected' : '' ?>><?= htmlspecialchars($cat, ENT_QUOTES, 'UTF-8') ?></option>
+<?php endforeach; ?>
+</select></label>
 <button type="submit" class="btn btn--small">Apply</button>
 <a class="btn btn--small btn--ghost" href="./image-integrity.php">Reset</a>
 </form>
@@ -329,11 +371,11 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <div class="hero-report-table-wrap">
 <table class="hero-report-table image-integrity-table">
 <thead><tr>
-<th>Item</th><th>Brand</th><th>Source</th><th>Raw path</th><th>Normalized</th><th>Filesystem path</th><th>Status</th><th>Severity</th><th>Notes</th>
+<th>Item</th><th>Brand</th><th>Source</th><th>Raw path</th><th>Normalized</th><th>Filesystem path</th><th>Status</th><th>Severity</th><th>Repair category</th><th>Suggested path</th><th>SQL preview (read-only)</th><th>Notes</th>
 </tr></thead>
 <tbody>
 <?php if (empty($finalRows)): ?>
-<tr><td colspan="9" class="hero-report-muted">No references matched the current filters.</td></tr>
+<tr><td colspan="12" class="hero-report-muted">No references matched the current filters.</td></tr>
 <?php else: foreach ($finalRows as $r): ?>
 <tr>
 <td>#<?= (int)$r['itemId'] ?><br><?= htmlspecialchars($r['itemName'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -344,6 +386,9 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <td class="hero-report-path"><?= htmlspecialchars($r['resolved_fs_path'], ENT_QUOTES, 'UTF-8') ?></td>
 <td><span class="image-integrity-pill is-<?= htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8') ?></span></td>
 <td><span class="image-integrity-pill is-<?= htmlspecialchars($r['severity'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($r['severity'], ENT_QUOTES, 'UTF-8') ?></span></td>
+<td><code><?= htmlspecialchars($r['repair_category'], ENT_QUOTES, 'UTF-8') ?></code></td>
+<td class="hero-report-path"><?= htmlspecialchars($r['suggested_path'], ENT_QUOTES, 'UTF-8') ?></td>
+<td class="hero-report-path"><code><?= htmlspecialchars($r['sql_preview'], ENT_QUOTES, 'UTF-8') ?></code></td>
 <td><?= htmlspecialchars($r['notes'], ENT_QUOTES, 'UTF-8') ?></td>
 </tr>
 <?php endforeach; endif; ?>
