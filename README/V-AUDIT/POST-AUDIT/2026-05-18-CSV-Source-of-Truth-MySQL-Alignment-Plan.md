@@ -3,7 +3,7 @@
 ## Scope and constraints
 - **Objective:** plan structural and data alignment so MySQL `item` aligns to the Excel-derived CSV as the source of truth.
 - **No-write guardrails honored:** no DB writes, no migrations executed, no repair SQL run, no hero/image behavior changes.
-- **Identity direction:** `model_id` is treated as the proposed long-term catalogue identity; `db_itemId` is treated only as legacy back-reference.
+- **Identity direction:** `db_itemId` is a newly created/intended database linkage field for mapping CSV rows to existing MySQL `item` records; `model_id` is a new formula-derived catalogue fingerprint used for identity validation and stability governance.
 
 ## Inputs reviewed
 ### Repository snapshot analysis input
@@ -80,13 +80,13 @@
 - Duplicate `model_id` values: **1 value duplicated**
   - `nike_female_leggings` appears **2** times
 
-## 5) `db_itemId` audit (legacy back-reference only)
+## 5) `db_itemId` audit (new linkage field)
 - CSV rows with populated `db_itemId`: **54 distinct IDs referenced**.
-- Legacy mapping should be used only for transitional reconciliation and rollback traceability.
-- Do **not** elevate `db_itemId` to long-term identity.
+- `db_itemId` is intended to link CSV rows to existing MySQL `itemId`/`db_itemId` records when such records already exist.
+- Blank `db_itemId` is expected for new CSV rows not yet imported into MySQL.
 
 ## 6) Row classification (planning-grade, snapshot-based)
-Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` and name-delta checks:
+Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` linkage checks and name-delta diagnostics:
 
 - **Existing MySQL products mapped confidently:** **15**
   - (`db_itemId` present in snapshot and `itemName` unchanged)
@@ -97,8 +97,9 @@ Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` a
 - **Old MySQL products no longer represented in CSV:** **0** in this snapshot comparison
 
 Interpretation (snapshot-based):
-- High rename count confirms why normalized `brand + itemName` is unsafe as identity.
-- Review queue should be keyed on `model_id`, then adjudicated by legacy `db_itemId`, then human review where collisions/ambiguities remain.
+- High rename count confirms why normalized `brand + itemName` is unsafe as primary identity.
+- `itemName` drift during restructure is expected; it should be treated as a diagnostic signal, not identity authority.
+- Review queue should prioritize verified `db_itemId` linkage, then validate with `model_id`, then route ambiguities to human review.
 
 ## 7) Live local reconciliation buckets (DBeaver/MySQL report-based)
 From the live local reconciliation report (separate from repository snapshot analysis):
@@ -110,7 +111,7 @@ From the live local reconciliation report (separate from repository snapshot ana
 
 Interpretation (live report-based):
 - These counts reflect current local MySQL runtime state as seen by the reconciliation run, not the sanitized SQL dump snapshot.
-- `db_itemId` remains a legacy back-reference clue for reconciliation confidence only, not the long-term catalogue identity.
+- `db_itemId` remains a primary linkage signal for existing rows when populated and verified against MySQL identifiers.
 
 ## 8) Recommended alignment approach
 Yes—proceed with a staged, reviewable workflow:
@@ -123,8 +124,9 @@ Yes—proceed with a staged, reviewable workflow:
    - Load raw CSV into staging unchanged.
 3. **Reviewed import/update pipeline:**
    - Validation phase (required/enum/type/nullability + duplicate `model_id` stop condition).
-   - Match phase in priority order: `model_id` -> `db_itemId` -> manual queue.
-   - Action phase: INSERT new, UPDATE matched, flag unresolved for review.
+   - Match phase in priority order: verified `db_itemId` -> `model_id` validation -> `brand + itemName` fallback diagnostics -> manual queue.
+   - Classification rule: rows with blank `db_itemId` and valid unique `model_id` are likely new insert candidates.
+   - Action phase (future): INSERT new, UPDATE matched, flag unresolved for review.
    - Produce dry-run diff artifacts before any write execution.
 4. **Cutover rule:**
    - Treat staging+review outputs as gate; only then schedule controlled SQL migration/import.
@@ -142,5 +144,5 @@ Practical rule for future implementation:
 ## Proposed next steps (still plan-only)
 1. Draft target DDL (not executed) for missing columns and index strategy (`model_id` unique after duplicate resolution).
 2. Draft staging table DDL and CSV load spec (no run).
-3. Draft dry-run reconciliation SQL/report queries for the four classes above.
+3. Draft dry-run reconciliation SQL/report queries using verified `db_itemId` linkage, `model_id` validation, and `brand + itemName` fallback diagnostics.
 4. Resolve duplicate `model_id` (`nike_female_leggings`) in source CSV governance before any unique constraint rollout.
