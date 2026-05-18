@@ -12,8 +12,8 @@
 
 ### Live local reconciliation input (DBeaver/MySQL CLI report)
 - Reconciliation source: local DBeaver/MySQL report output (`tools/reports/image-sync-reconciliation.php` logic + local database state).
-- Reported buckets in the live run: matched rows **46**, `csv_future_or_staging` **66**, `csv_only_candidate` **8**, `mysql_only_legacy` **16`.
-- Live MySQL includes legacy `db_itemId` usage in reconciliation context.
+- Reported buckets in the live run: matched rows **46**, `csv_future_or_staging` **66**, `csv_only_candidate` **8**, `mysql_only_legacy` **16**.
+- Live MySQL includes a `db_itemId` column, and `db_itemId` is the intended database linkage field where populated in reconciliation context.
 
 ### Scope note on source freshness
 - The sanitized dump is a repository snapshot for planning and may be older than, or otherwise different from, the current live local DBeaver/MySQL schema and row state.
@@ -32,7 +32,7 @@
 > Note: `subCategory` vs `subcategory`, `activityTags` vs `activity_tags`, `ageGroup` vs `age_group`, `sizeType` vs `size_type`, `fitStyle` vs `fit_style` are semantic matches but naming-drifted.
 
 ## 2) CSV columns missing from MySQL `item` (schema alignment candidates)
-30 CSV columns are absent in current `item` schema:
+30 CSV columns are absent from the repository snapshot `item` schema:
 
 - `itemName_fully_derived`
 - `model_id`
@@ -65,8 +65,8 @@
 - `assignment_source`
 - `_images_helper_normalize`
 
-## 3) `model_id` as new identity (with validation)
-- `model_id` is present on every CSV row and should be promoted to canonical identity candidate.
+## 3) `model_id` as formula-derived catalogue fingerprint (with validation)
+- `model_id` is present on every CSV row and should be treated as a formula-derived catalogue fingerprint used for validation, duplicate detection, and stable product classification (not a numeric database ID).
 - Before adoption, enforce validation gates:
   1. nonblank required,
   2. uniqueness required,
