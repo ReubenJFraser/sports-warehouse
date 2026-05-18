@@ -6,11 +6,22 @@
 - **Identity direction:** `model_id` is treated as the proposed long-term catalogue identity; `db_itemId` is treated only as legacy back-reference.
 
 ## Inputs reviewed
+### Repository snapshot analysis input
 - CSV source: `docs/data/SportWarehouse_ProductDB.csv`
 - MySQL snapshot schema/data: `db/sportswh_dump_sanitized.sql` (`item` DDL + INSERT snapshot)
+
+### Live local reconciliation input (DBeaver/MySQL CLI report)
+- Reconciliation source: local DBeaver/MySQL report output (`tools/reports/image-sync-reconciliation.php` logic + local database state).
+- Reported buckets in the live run: matched rows **46**, `csv_future_or_staging` **66**, `csv_only_candidate` **8**, `mysql_only_legacy` **16`.
+- Live MySQL includes legacy `db_itemId` usage in reconciliation context.
+
+### Scope note on source freshness
+- The sanitized dump is a repository snapshot for planning and may be older than, or otherwise different from, the current live local DBeaver/MySQL schema and row state.
+- Therefore, snapshot-derived counts and live reconciliation counts are intentionally tracked separately in this document.
+
 - Identity contract context: `README/II-CONTRACTS/19-Model_ID_Generation_&_Identity_Governance_Contract.md`
 
-## 1) CSV columns vs MySQL `item` columns
+## 1) CSV columns vs MySQL `item` columns (snapshot-based)
 
 ### CSV columns (45)
 `brand, gender, itemName, itemName_fully_derived, model_id, product_domain, collection, model_family, subCategory, fabric, construction, seamless, scrunchFlag, invisibleFlag, neckline, strap_configuration, support_level, rise, length, variant, usage_category, usage_subtype, categoryName, parentCategory, ageGroup, sizeType, fitStyle, activityTags, price, salePrice, description, featured, images, thumbnails_json, external_item_id, campaign_or_series, altText, ariaText, videoAltText, videos, images2, CropAllowed, db_itemId, assignment_source, _images_helper_normalize`
@@ -74,7 +85,7 @@
 - Legacy mapping should be used only for transitional reconciliation and rollback traceability.
 - Do **not** elevate `db_itemId` to long-term identity.
 
-## 6) Row classification (planning-grade)
+## 6) Row classification (planning-grade, snapshot-based)
 Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` and name-delta checks:
 
 - **Existing MySQL products mapped confidently:** **15**
@@ -85,11 +96,23 @@ Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` a
   - (`db_itemId` blank or not found in snapshot)
 - **Old MySQL products no longer represented in CSV:** **0** in this snapshot comparison
 
-Interpretation:
+Interpretation (snapshot-based):
 - High rename count confirms why normalized `brand + itemName` is unsafe as identity.
 - Review queue should be keyed on `model_id`, then adjudicated by legacy `db_itemId`, then human review where collisions/ambiguities remain.
 
-## 7) Recommended alignment approach
+## 7) Live local reconciliation buckets (DBeaver/MySQL report-based)
+From the live local reconciliation report (separate from repository snapshot analysis):
+
+- **Matched rows:** **46**
+- **CSV future or staging:** **66** (`csv_future_or_staging`)
+- **CSV only candidate:** **8** (`csv_only_candidate`)
+- **MySQL only legacy:** **16** (`mysql_only_legacy`)
+
+Interpretation (live report-based):
+- These counts reflect current local MySQL runtime state as seen by the reconciliation run, not the sanitized SQL dump snapshot.
+- `db_itemId` remains a legacy back-reference clue for reconciliation confidence only, not the long-term catalogue identity.
+
+## 8) Recommended alignment approach
 Yes—proceed with a staged, reviewable workflow:
 
 1. **Schema alignment prep (design only now):**
@@ -106,7 +129,7 @@ Yes—proceed with a staged, reviewable workflow:
 4. **Cutover rule:**
    - Treat staging+review outputs as gate; only then schedule controlled SQL migration/import.
 
-## 8) Runtime/editor-managed fields to preserve
+## 9) Runtime/editor-managed fields to preserve
 During future alignment execution, explicitly preserve operational image overrides and runtime-managed selections:
 
 - `item.hero_image`
