@@ -33,7 +33,9 @@ function pickFirstHeader(array $headersMap, array $candidates): array {
 }
 
 function normalizeCsvHeader(string $name): string {
-    return trim(preg_replace('/^ï»¿/u', '', $name) ?? $name);
+    $withoutBom = preg_replace('/^\xEF\xBB\xBF/u', '', $name) ?? $name;
+    $withoutBom = preg_replace('/^\x{FEFF}/u', '', $withoutBom) ?? $withoutBom;
+    return trim($withoutBom);
 }
 function pickFirstMysqlColumn(array $set, array $candidates): string {
     foreach ($candidates as $name) {
@@ -99,7 +101,10 @@ $hasOverride=(int)(qAll($pdo,"SELECT COUNT(*) c FROM information_schema.tables W
 $overrideById=[]; if($hasOverride){ foreach(qAll($pdo,"SELECT itemId, chosen_image FROM hero_override") as $r){$overrideById[(int)$r['itemId']]=(string)($r['chosen_image']??'');}}
 $index=[];$itemById=[]; foreach($items as $it){$id=(int)$it['itemId'];$itemById[$id]=$it;$k=norm($it['brand']).'|'.norm($it['itemName']);$index[$k][]=$it;$mysqlKeyCounts[$k]=($mysqlKeyCounts[$k]??0)+1;if(count($mysqlKeySamples)<10)$mysqlKeySamples[]=$k;if($k==='|')$blankMysqlKeys++;}
 @mkdir(dirname($reportPath),0777,true);
-$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $headers=fgetcsv($in)?:[]; $h=[]; foreach($headers as $i=>$name){$h[normalizeCsvHeader((string)$name)]=$i;}
+$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $rawHeaders=fgetcsv($in)?:[]; $headers=[]; foreach($rawHeaders as $i=>$name){$headers[$i]=normalizeCsvHeader((string)$name);} $h=[]; foreach($headers as $i=>$name){$h[$name]=$i;}
+$rawFirstHeader = (string)($rawHeaders[0] ?? '');
+$rawFirstHeaderHex = strtoupper(bin2hex($rawFirstHeader));
+$normalizedFirstHeader = (string)($headers[0] ?? '');
 [$csvBrandHeader] = pickFirstHeader($h, ['brand','Brand','brandName','brand_name','vendor','merchant','label']);
 [$csvItemHeader] = pickFirstHeader($h, ['itemName','item_name','Item Name','name','product_name','title','productTitle']);
 [$csvDbItemIdHeader] = pickFirstHeader($h, ['db_itemId','db_item_id','itemId','item_id','mysql_itemId']);
@@ -110,7 +115,7 @@ $in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHead
 $mysqlBrandSource = pickFirstMysqlColumn($itemColsSet, ['brand','brandName','brand_name']);
 $mysqlItemNameSource = pickFirstMysqlColumn($itemColsSet, ['itemName','item_name','name','product_name','title']);
 $rowNum=1; $matched=[];
-while(($line=fgetcsv($in))!==false){$rowNum++;$counts['total CSV rows']++; $get=fn($k)=>isset($h[$k],$line[$h[$k]])?trim((string)$line[$h[$k]]):'';
+while(($line=fgetcsv($in))!==false){$rowNum++;$counts['total CSV rows']++; $rowAssoc=[]; foreach($h as $headerName=>$idx){$rowAssoc[$headerName]=isset($line[$idx])?trim((string)$line[$idx]):'';} $get=fn($k)=>$rowAssoc[$k]??'';
 $csvBrand=$csvBrandHeader!==''?$get($csvBrandHeader):'';$csvName=$csvItemHeader!==''?$get($csvItemHeader):'';$csvDbId=$csvDbItemIdHeader!==''?$get($csvDbItemIdHeader):'';$csvGender=$csvGenderHeader!==''?$get($csvGenderHeader):'';$csvImages=$csvImagesHeader!==''?$get($csvImagesHeader):'';$csvThumbs=$csvThumbsHeader!==''?$get($csvThumbsHeader):'';$csvVideos=$csvVideosHeader!==''?$get($csvVideosHeader):'';
 $csvKey=norm($csvBrand).'|'.norm($csvName);$cands=$index[$csvKey]??[]; $sel=null;$status='manual_review_required';$conf='low';$notes=[];$csvKeyCounts[$csvKey]=($csvKeyCounts[$csvKey]??0)+1;if(count($csvKeySamples)<10)$csvKeySamples[]=$csvKey;if($csvKey==='|')$blankCsvKeys++;
 if(count($cands)===1){$sel=$cands[0];$conf='high';} elseif(count($cands)>1){$status='ambiguous_match';$notes[]='Multiple MySQL rows match normalized brand+itemName.';} else {$status=$csvDbId===''?'csv_future_or_staging':'csv_only_candidate';$conf=$csvDbId===''?'medium':'low';$notes[]='No MySQL match by normalized brand+itemName.';}
@@ -133,7 +138,7 @@ else $runtimeNotes[] = "Demographic/report source column selected from item tabl
 if ($missingOptionalCols) $runtimeNotes[] = 'Missing optional item columns detected at runtime: ' . implode(', ', $missingOptionalCols) . '.';
 $dupCsv=count(array_filter($csvKeyCounts, static fn($c)=>$c>1));
 $dupMysql=count(array_filter($mysqlKeyCounts, static fn($c)=>$c>1));
-$csvCols = array_keys($h);
+$csvCols = $headers;
 $mysqlCols = $itemCols;
 $csvNotMysql = array_values(array_diff($csvCols, $mysqlCols));
 $mysqlNotCsv = array_values(array_diff($mysqlCols, $csvCols));
@@ -154,6 +159,8 @@ $md[]="";
 $md[]="## Detected headers / columns";
 $md[]="- CSV headers (" . count($csvCols) . "): " . ($csvCols ? implode(', ', $csvCols) : '(none)');
 $md[]="- MySQL item columns (" . count($mysqlCols) . "): " . ($mysqlCols ? implode(', ', $mysqlCols) : '(none)');
+$md[]="- CSV first header raw hex/codepoints before normalization: " . ($rawFirstHeaderHex !== '' ? $rawFirstHeaderHex : '(empty)');
+$md[]="- CSV first header after normalization: " . ($normalizedFirstHeader !== '' ? $normalizedFirstHeader : '(empty)');
 $md[]="";
 $md[]="## Schema/column comparison";
 $md[]="- CSV columns not present in MySQL item (" . count($csvNotMysql) . "): " . ($csvNotMysql ? implode(', ', $csvNotMysql) : '(none)');
