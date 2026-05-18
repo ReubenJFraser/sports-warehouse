@@ -570,7 +570,7 @@ admin_layout_start("Hero Manager");
 
                         <div class="hero-card__actions" aria-label="Hero item actions">
                             <a class="btn btn-primary" href="hero-edit.php?id=<?= $itemId ?>">
-                                <span class="btn__dot"></span> Edit hero
+                                Edit hero
                             </a>
 
                             <a class="btn btn-ghost" href="hero-manager.php?recalc=<?= $itemId ?>">
