@@ -35,6 +35,8 @@ $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 $allBrands = [];
 $imageRefs = [];
 $duplicateMap = [];
+$duplicateUsageMap = [];
+$itemEffectiveHeroRawMap = [];
 
 $referenceBuilder = static function (array $item, string $source, string $rawPath, bool $isEffectiveHero) {
     $rawPath = trim($rawPath);
@@ -67,6 +69,7 @@ foreach ($rows as $item) {
     $heroImage = trim((string)($item['hero_image'] ?? ''));
     $chosenImage = trim((string)($item['chosen_image'] ?? ''));
     $effectiveHero = $overrideImage !== '' ? $overrideImage : ($heroImage !== '' ? $heroImage : $chosenImage);
+    $itemEffectiveHeroRawMap[(int)$item['itemId']] = ($effectiveHero !== '');
 
     $refsForItem = [];
     $refsForItem[] = $referenceBuilder($item, 'chosen_image', $chosenImage, $effectiveHero !== '' && $effectiveHero === $chosenImage);
@@ -87,6 +90,11 @@ foreach ($rows as $item) {
         if ($ref['normalized_path'] !== '') {
             $key = strtolower($ref['normalized_path']);
             $duplicateMap[$key] = ($duplicateMap[$key] ?? 0) + 1;
+            $itemKey = (string)$ref['itemId'];
+            $sourceKey = (string)$ref['source'];
+            $duplicateUsageMap[$key] = $duplicateUsageMap[$key] ?? ['items' => [], 'sources' => []];
+            $duplicateUsageMap[$key]['items'][$itemKey] = true;
+            $duplicateUsageMap[$key]['sources'][$sourceKey] = ($duplicateUsageMap[$key]['sources'][$sourceKey] ?? 0) + 1;
         }
     }
 }
@@ -120,9 +128,15 @@ foreach ($imageRefs as $ref) {
     $outsideExpectedRoot = false;
     $exists = false;
 
+    $isVideo = !$isBlank && (bool)preg_match('/\.mp4($|\?)/i', $raw);
+
     if ($isBlank) {
-        $notes[] = 'Blank path.';
-        $severity = 'critical';
+        $notes[] = ($ref['source'] === 'chosen_image' || $ref['source'] === 'override_image')
+            ? 'Blank path (optional unless needed as effective hero).'
+            : 'Blank path.';
+        if ($ref['source'] === 'hero_image' || $ref['source'] === 'thumbnail_candidate') {
+            $severity = 'warning';
+        }
     }
 
     if ($isExternal) {
@@ -133,6 +147,10 @@ foreach ($imageRefs as $ref) {
     if ($hasBackslashes) {
         $notes[] = 'Path contains backslashes.';
         if ($severity !== 'critical') $severity = 'warning';
+    }
+
+    if ($isVideo) {
+        $notes[] = 'Media/video reference (.mp4), not a still-image asset.';
     }
 
     if (!$isBlank && !$isExternal) {
@@ -183,9 +201,21 @@ foreach ($imageRefs as $ref) {
     }
 
     $dupCount = $normalized !== '' ? (int)($duplicateMap[strtolower($normalized)] ?? 0) : 0;
-    if ($dupCount > 1) {
-        $notes[] = 'Duplicate path reused across references (' . $dupCount . ' uses).';
-        if ($severity !== 'critical') $severity = 'warning';
+    if ($dupCount > 1 && $normalized !== '') {
+        $dupMeta = $duplicateUsageMap[strtolower($normalized)] ?? ['items' => [], 'sources' => []];
+        $crossItemReuse = count($dupMeta['items']) > 1;
+        $sameSourceRepeat = false;
+        foreach (($dupMeta['sources'] ?? []) as $sourceCount) {
+            if ((int)$sourceCount > 1) {
+                $sameSourceRepeat = true;
+                break;
+            }
+        }
+
+        if ($crossItemReuse || $sameSourceRepeat) {
+            $notes[] = 'Suspicious duplicate path reuse (' . $dupCount . ' uses).';
+            if ($severity !== 'critical') $severity = 'warning';
+        }
     }
 
     $itemId = $ref['itemId'];
@@ -221,6 +251,16 @@ foreach ($imageRefs as $ref) {
 }
 
 foreach ($itemCandidateStats as $itemId => $stats) {
+    if (($itemEffectiveHeroRawMap[$itemId] ?? false) === false) {
+        foreach ($finalRows as &$rowRef) {
+            if ($rowRef['itemId'] === $itemId) {
+                $rowRef['notes'] .= ($rowRef['notes'] !== '' ? ' ' : '') . 'Missing current effective hero image.';
+                $rowRef['severity'] = 'critical';
+            }
+        }
+        unset($rowRef);
+    }
+
     if ($stats['total'] > 0 && $stats['exists'] === 0) {
         foreach ($finalRows as &$rowRef) {
             if ($rowRef['itemId'] === $itemId) {
