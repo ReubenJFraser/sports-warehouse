@@ -40,6 +40,7 @@ $imageRefs = [];
 $duplicateMap = [];
 $duplicateUsageMap = [];
 $itemEffectiveHeroRawMap = [];
+$itemThumbnailData = [];
 
 $referenceBuilder = static function (array $item, string $source, string $rawPath, bool $isEffectiveHero) {
     $rawPath = trim($rawPath);
@@ -65,6 +66,7 @@ $referenceBuilder = static function (array $item, string $source, string $rawPat
 };
 
 foreach ($rows as $item) {
+    $itemId = (int)$item['itemId'];
     $brand = trim((string)($item['brand'] ?? ''));
     if ($brand !== '') $allBrands[$brand] = true;
 
@@ -72,7 +74,7 @@ foreach ($rows as $item) {
     $heroImage = trim((string)($item['hero_image'] ?? ''));
     $chosenImage = trim((string)($item['chosen_image'] ?? ''));
     $effectiveHero = $overrideImage !== '' ? $overrideImage : ($heroImage !== '' ? $heroImage : $chosenImage);
-    $itemEffectiveHeroRawMap[(int)$item['itemId']] = ($effectiveHero !== '');
+    $itemEffectiveHeroRawMap[$itemId] = ($effectiveHero !== '');
 
     $refsForItem = [];
     $refsForItem[] = $referenceBuilder($item, 'chosen_image', $chosenImage, $effectiveHero !== '' && $effectiveHero === $chosenImage);
@@ -80,6 +82,10 @@ foreach ($rows as $item) {
     $refsForItem[] = $referenceBuilder($item, 'override_image', $overrideImage, $effectiveHero !== '' && $effectiveHero === $overrideImage);
 
     $thumbs = array_filter(array_map('trim', explode(';', (string)($item['thumbnails_json'] ?? ''))), static fn($p) => $p !== '');
+    $itemThumbnailData[$itemId] = [
+        'raw' => (string)($item['thumbnails_json'] ?? ''),
+        'parts' => array_values($thumbs),
+    ];
     if (empty($thumbs)) {
         $refsForItem[] = $referenceBuilder($item, 'thumbnail_candidate', '', false);
     } else {
@@ -115,6 +121,33 @@ $summary = [
 
 $finalRows = [];
 $itemCandidateStats = [];
+$itemIssues = [];
+
+$sqlPreviewBySource = static function (array $ref, string $suggestedPath, array $itemThumbnailData): string {
+    if ($suggestedPath === '') {
+        return '';
+    }
+    $escapedPath = str_replace("'", "''", $suggestedPath);
+    $itemId = (int)$ref['itemId'];
+    if ($ref['source'] === 'hero_image' || $ref['source'] === 'chosen_image') {
+        return "UPDATE item SET {$ref['source']} = '{$escapedPath}' WHERE itemId = {$itemId};";
+    }
+    if ($ref['source'] === 'override_image') {
+        return "UPDATE hero_override SET chosen_image = '{$escapedPath}' WHERE itemId = {$itemId};";
+    }
+    if ($ref['source'] === 'thumbnail_candidate') {
+        $parts = $itemThumbnailData[$itemId]['parts'] ?? [];
+        $oldPath = trim((string)$ref['raw_path']);
+        $rebuiltParts = [];
+        foreach ($parts as $part) {
+            $rebuiltParts[] = trim((string)$part) === $oldPath ? $suggestedPath : $part;
+        }
+        $rebuilt = implode(';', $rebuiltParts);
+        $escapedRebuilt = str_replace("'", "''", $rebuilt);
+        return "PREVIEW ONLY: UPDATE item SET thumbnails_json = '{$escapedRebuilt}' WHERE itemId = {$itemId};";
+    }
+    return '';
+};
 
 foreach ($imageRefs as $ref) {
     $raw = $ref['raw_path'];
@@ -205,7 +238,7 @@ foreach ($imageRefs as $ref) {
                     $notes[] = 'Possible missing /brands/ segment; alternate path exists.';
                     $suggestedPath = $brandsCandidate;
                     $repairCategory = 'missing_brands_segment';
-                    $sqlPreview = "UPDATE item SET " . $ref['source'] . " = '" . str_replace("'", "''", $brandsCandidate) . "' WHERE itemId = " . (int)$ref['itemId'] . ";";
+                    $sqlPreview = $sqlPreviewBySource($ref, $brandsCandidate, $itemThumbnailData);
                     if ($severity !== 'critical') $severity = 'warning';
                 }
             }
@@ -220,7 +253,7 @@ foreach ($imageRefs as $ref) {
                     $notes[] = 'Malformed brands path; missing slash after /brands.';
                     $suggestedPath = $fixedBrandPath;
                     $repairCategory = 'malformed_brands_path';
-                    $sqlPreview = "UPDATE item SET " . $ref['source'] . " = '" . str_replace("'", "''", $fixedBrandPath) . "' WHERE itemId = " . (int)$ref['itemId'] . ";";
+                    $sqlPreview = $sqlPreviewBySource($ref, $fixedBrandPath, $itemThumbnailData);
                     if ($severity !== 'critical') $severity = 'warning';
                 }
             }
@@ -286,7 +319,10 @@ foreach ($imageRefs as $ref) {
 }
 
 foreach ($itemCandidateStats as $itemId => $stats) {
+    $itemIssue = 'none';
+
     if (($itemEffectiveHeroRawMap[$itemId] ?? false) === false) {
+        $itemIssue = 'effective_hero_missing';
         foreach ($finalRows as &$rowRef) {
             if ($rowRef['itemId'] === $itemId) {
                 $rowRef['notes'] .= ($rowRef['notes'] !== '' ? ' ' : '') . 'Missing current effective hero image.';
@@ -297,16 +333,23 @@ foreach ($itemCandidateStats as $itemId => $stats) {
     }
 
     if ($stats['total'] > 0 && $stats['exists'] === 0) {
+        $itemIssue = 'all_candidates_missing';
         foreach ($finalRows as &$rowRef) {
             if ($rowRef['itemId'] === $itemId) {
                 $rowRef['notes'] .= ($rowRef['notes'] !== '' ? ' ' : '') . 'All product candidate paths appear missing.';
                 $rowRef['severity'] = 'critical';
-                $rowRef['repair_category'] = 'all_candidates_missing';
             }
         }
         unset($rowRef);
     }
+
+    $itemIssues[$itemId] = $itemIssue;
 }
+
+foreach ($finalRows as &$rowRef) {
+    $rowRef['item_issue'] = $itemIssues[$rowRef['itemId']] ?? 'none';
+}
+unset($rowRef);
 
 admin_layout_start('Image Integrity');
 admin_header('Image Integrity Report', 'Read-only database-led audit of live image references for active products.', [
@@ -371,11 +414,11 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <div class="hero-report-table-wrap">
 <table class="hero-report-table image-integrity-table">
 <thead><tr>
-<th>Item</th><th>Brand</th><th>Source</th><th>Raw path</th><th>Normalized</th><th>Filesystem path</th><th>Status</th><th>Severity</th><th>Repair category</th><th>Suggested path</th><th>SQL preview (read-only)</th><th>Notes</th>
+<th>Item</th><th>Brand</th><th>Source</th><th>Raw path</th><th>Normalized</th><th>Filesystem path</th><th>Status</th><th>Severity</th><th>Repair category</th><th>Item issue</th><th>Suggested path</th><th>SQL preview (read-only)</th><th>Notes</th>
 </tr></thead>
 <tbody>
 <?php if (empty($finalRows)): ?>
-<tr><td colspan="12" class="hero-report-muted">No references matched the current filters.</td></tr>
+<tr><td colspan="13" class="hero-report-muted">No references matched the current filters.</td></tr>
 <?php else: foreach ($finalRows as $r): ?>
 <tr>
 <td>#<?= (int)$r['itemId'] ?><br><?= htmlspecialchars($r['itemName'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -387,6 +430,7 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <td><span class="image-integrity-pill is-<?= htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8') ?></span></td>
 <td><span class="image-integrity-pill is-<?= htmlspecialchars($r['severity'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($r['severity'], ENT_QUOTES, 'UTF-8') ?></span></td>
 <td><code><?= htmlspecialchars($r['repair_category'], ENT_QUOTES, 'UTF-8') ?></code></td>
+<td><code><?= htmlspecialchars($r['item_issue'], ENT_QUOTES, 'UTF-8') ?></code></td>
 <td class="hero-report-path"><?= htmlspecialchars($r['suggested_path'], ENT_QUOTES, 'UTF-8') ?></td>
 <td class="hero-report-path"><code><?= htmlspecialchars($r['sql_preview'], ENT_QUOTES, 'UTF-8') ?></code></td>
 <td><?= htmlspecialchars($r['notes'], ENT_QUOTES, 'UTF-8') ?></td>
