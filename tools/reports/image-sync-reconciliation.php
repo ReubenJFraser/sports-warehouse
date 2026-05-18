@@ -25,6 +25,41 @@ function tableColumns(PDO $pdo, string $table): array {
     $rows = qAll($pdo, "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=:t", ['t'=>$table]);
     return array_values(array_map(static fn($r)=>(string)$r['COLUMN_NAME'], $rows));
 }
+function pickFirstHeader(array $headersMap, array $candidates): array {
+    foreach ($candidates as $name) {
+        if (isset($headersMap[$name])) return [$name, $headersMap[$name]];
+    }
+    return ['', -1];
+}
+function pickFirstMysqlColumn(array $set, array $candidates): string {
+    foreach ($candidates as $name) {
+        if (isset($set[$name])) return $name;
+    }
+    return '';
+}
+function closePairs(array $leftCols, array $rightCols): array {
+    $pairs = [];
+    foreach ($leftCols as $lc) {
+        $nl = norm($lc);
+        if ($nl === '') continue;
+        $best = '';
+        $bestDist = 999;
+        foreach ($rightCols as $rc) {
+            $nr = norm($rc);
+            if ($nr === '') continue;
+            similar_text($nl, $nr, $pct);
+            $dist = levenshtein($nl, $nr);
+            if ($pct >= 72.0 || $dist <= 4) {
+                if ($dist < $bestDist) {
+                    $bestDist = $dist;
+                    $best = $rc;
+                }
+            }
+        }
+        if ($best !== '') $pairs[] = "{$lc} ~ {$best}";
+    }
+    return array_values(array_unique($pairs));
+}
 function parsePathList(?string $v): array { $v=trim((string)$v); if($v==='') return []; return array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/',$v) ?: []), fn($x)=>$x!=='')); }
 function parseJsonArray(?string $v): array { $v=trim((string)$v); if($v==='') return []; $d=json_decode($v,true); if(!is_array($d)) return []; return array_values(array_filter(array_map(fn($x)=>trim((string)$x),$d),fn($x)=>$x!=='')); }
 function pathExistsLocal(string $imagesRoot, string $path): bool { $p=ltrim(str_replace('\\','/',trim($path)),'/'); if($p==='') return true; if(str_starts_with($p,'images/')) return is_file(dirname($imagesRoot).'/'.$p); return is_file($imagesRoot.'/'.$p); }
@@ -60,9 +95,19 @@ $hasOverride=(int)(qAll($pdo,"SELECT COUNT(*) c FROM information_schema.tables W
 $overrideById=[]; if($hasOverride){ foreach(qAll($pdo,"SELECT itemId, chosen_image FROM hero_override") as $r){$overrideById[(int)$r['itemId']]=(string)($r['chosen_image']??'');}}
 $index=[];$itemById=[]; foreach($items as $it){$id=(int)$it['itemId'];$itemById[$id]=$it;$k=norm($it['brand']).'|'.norm($it['itemName']);$index[$k][]=$it;$mysqlKeyCounts[$k]=($mysqlKeyCounts[$k]??0)+1;if(count($mysqlKeySamples)<10)$mysqlKeySamples[]=$k;if($k==='|')$blankMysqlKeys++;}
 @mkdir(dirname($reportPath),0777,true);
-$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $headers=fgetcsv($in)?:[]; $h=[]; foreach($headers as $i=>$name){$h[trim((string)$name)]=$i;} $rowNum=1; $matched=[];
+$in=fopen($csvPath,'rb'); $out=fopen($reportPath,'wb'); fputcsv($out,$reportHeaders); $headers=fgetcsv($in)?:[]; $h=[]; foreach($headers as $i=>$name){$h[trim((string)$name)]=$i;}
+[$csvBrandHeader] = pickFirstHeader($h, ['brand','Brand','brandName','brand_name','vendor','merchant','label']);
+[$csvItemHeader] = pickFirstHeader($h, ['itemName','item_name','Item Name','name','product_name','title','productTitle']);
+[$csvDbItemIdHeader] = pickFirstHeader($h, ['db_itemId','db_item_id','itemId','item_id','mysql_itemId']);
+[$csvGenderHeader] = pickFirstHeader($h, ['gender','Gender','demographic','age_group','size_type']);
+[$csvImagesHeader] = pickFirstHeader($h, ['images','image_paths','imagePathList']);
+[$csvThumbsHeader] = pickFirstHeader($h, ['thumbnails_json','thumbnail_json','thumbnails']);
+[$csvVideosHeader] = pickFirstHeader($h, ['videos','video_urls']);
+$mysqlBrandSource = pickFirstMysqlColumn($itemColsSet, ['brand','brandName','brand_name']);
+$mysqlItemNameSource = pickFirstMysqlColumn($itemColsSet, ['itemName','item_name','name','product_name','title']);
+$rowNum=1; $matched=[];
 while(($line=fgetcsv($in))!==false){$rowNum++;$counts['total CSV rows']++; $get=fn($k)=>isset($h[$k],$line[$h[$k]])?trim((string)$line[$h[$k]]):'';
-$csvBrand=$get('brand');$csvName=$get('itemName');$csvDbId=$get('db_itemId');$csvGender=$get('gender');$csvImages=$get('images');$csvThumbs=$get('thumbnails_json');$csvVideos=$get('videos');
+$csvBrand=$csvBrandHeader!==''?$get($csvBrandHeader):'';$csvName=$csvItemHeader!==''?$get($csvItemHeader):'';$csvDbId=$csvDbItemIdHeader!==''?$get($csvDbItemIdHeader):'';$csvGender=$csvGenderHeader!==''?$get($csvGenderHeader):'';$csvImages=$csvImagesHeader!==''?$get($csvImagesHeader):'';$csvThumbs=$csvThumbsHeader!==''?$get($csvThumbsHeader):'';$csvVideos=$csvVideosHeader!==''?$get($csvVideosHeader):'';
 $csvKey=norm($csvBrand).'|'.norm($csvName);$cands=$index[$csvKey]??[]; $sel=null;$status='manual_review_required';$conf='low';$notes=[];$csvKeyCounts[$csvKey]=($csvKeyCounts[$csvKey]??0)+1;if(count($csvKeySamples)<10)$csvKeySamples[]=$csvKey;if($csvKey==='|')$blankCsvKeys++;
 if(count($cands)===1){$sel=$cands[0];$conf='high';} elseif(count($cands)>1){$status='ambiguous_match';$notes[]='Multiple MySQL rows match normalized brand+itemName.';} else {$status=$csvDbId===''?'csv_future_or_staging':'csv_only_candidate';$conf=$csvDbId===''?'medium':'low';$notes[]='No MySQL match by normalized brand+itemName.';}
 $mysql=['id'=>'','brand'=>'','name'=>'','gender'=>'','thumbs'=>'','hero'=>'','chosen'=>'','override'=>''];$heroStatus='protected_fields_no_blind_overwrite';$overrideStatus=$hasOverride?'override_table_present':'override_table_missing';$thumbStatus='manual_review_required';$fs='not_checked';$action='manual_review_required';
@@ -75,7 +120,7 @@ if(in_array($thumbStatus,['identical','same_set_different_order'],true)){$status
 if($sel)$counts['matched rows']++;
 fputcsv($out,[$status,$conf,$rowNum,$csvDbId,$mysql['id'],$csvBrand,$mysql['brand'],$csvName,$mysql['name'],$csvGender,$mysql['gender'],$csvImages,$csvThumbs,$mysql['thumbs'],$thumbStatus,$csvVideos,$mysql['hero'],$mysql['chosen'],$mysql['override'],$heroStatus,$overrideStatus,$fs,$action,implode(' | ',array_merge($notes,['Never blind-overwrite item.hero_image, item.chosen_image, hero_override.chosen_image.']))]);
 }
-foreach($itemById as $id=>$it){if(isset($matched[$id]))continue; $counts['mysql_only_legacy']++; fputcsv($out,['mysql_only_legacy','medium','','',(string)$id,'',(string)$it['brand'],'',(string)$it['itemName'],'',(string)($it['mysql_gender_or_demographic']??''),'','',(string)($it['thumbnails_json']??''),'manual_review_required','',(string)($it['hero_image']??''),(string)($it['chosen_image']??''),(string)($overrideById[$id]??''),'protected_fields_no_blind_overwrite',$hasOverride?'override_table_present':'override_table_missing','not_checked','manual_review_required','Present in MySQL but not matched from CSV rows.']);}
+foreach($itemById as $id=>$it){if(isset($matched[$id]))continue; $counts['mysql_only_legacy']++; fputcsv($out,['mysql_only_legacy','medium','','',(string)$id,'',(string)$it['brand'],'',(string)$it['itemName'],'',(string)($it['mysql_gender_or_demographic']??''),'','',(string)($it['thumbnails_json']??''),'manual_review_required','',(string)($it['hero_image']??''),(string)($it['chosen_image']??''),(string)($overrideById[$id]??''),'protected_fields_no_blind_overwrite',$hasOverride?'override_table_present':'override_table_missing','not_checked','manual_review_required','Present in MySQL local snapshot but not matched from newer CSV catalog rows.']);}
 fclose($in); fclose($out);
 $reportIn=fopen($reportPath,'rb');$reportHdr=fgetcsv($reportIn)?:[];$statusIdx=array_search('match_status',$reportHdr,true);if($statusIdx!==false){while(($r=fgetcsv($reportIn))!==false){$st=trim((string)($r[$statusIdx]??''));if($st!==''&&isset($counts[$st]))$counts[$st]++;}}fclose($reportIn);
 $runtimeNotes = [];
@@ -84,7 +129,33 @@ else $runtimeNotes[] = "Demographic/report source column selected from item tabl
 if ($missingOptionalCols) $runtimeNotes[] = 'Missing optional item columns detected at runtime: ' . implode(', ', $missingOptionalCols) . '.';
 $dupCsv=count(array_filter($csvKeyCounts, static fn($c)=>$c>1));
 $dupMysql=count(array_filter($mysqlKeyCounts, static fn($c)=>$c>1));
+$csvCols = array_keys($h);
+$mysqlCols = $itemCols;
+$csvNotMysql = array_values(array_diff($csvCols, $mysqlCols));
+$mysqlNotCsv = array_values(array_diff($mysqlCols, $csvCols));
+$likelyPairs = closePairs($csvNotMysql, $mysqlNotCsv);
+$counts['mysql_only_legacy'] = min($counts['mysql_only_legacy'], $counts['total active MySQL items considered']);
 $md=["# Image Sync Reconciliation Summary","","Generated: ".gmdate('Y-m-d H:i:s')." UTC","","## Counts"]; foreach($counts as $k=>$v){$md[]="- {$k}: {$v}";} $md[]="";
+$md[]="## Source context";
+$md[]="- CSV is the newer Excel-derived product source.";
+$md[]="- MySQL appears to be an older local database snapshot.";
+$md[]="- mismatch may come from broader schema/catalogue restructuring (columns, naming, categorisation, new rows, and db_itemId drift), not only image paths.";
+$md[]="";
+$md[]="## Detected source columns used for matching";
+$md[]="- CSV brand source: " . ($csvBrandHeader !== '' ? $csvBrandHeader : '(not found)');
+$md[]="- CSV itemName source: " . ($csvItemHeader !== '' ? $csvItemHeader : '(not found)');
+$md[]="- MySQL brand source: " . ($mysqlBrandSource !== '' ? $mysqlBrandSource : 'brand (selected query alias)');
+$md[]="- MySQL itemName source: " . ($mysqlItemNameSource !== '' ? $mysqlItemNameSource : 'itemName (selected query alias)');
+$md[]="";
+$md[]="## Detected headers / columns";
+$md[]="- CSV headers (" . count($csvCols) . "): " . ($csvCols ? implode(', ', $csvCols) : '(none)');
+$md[]="- MySQL item columns (" . count($mysqlCols) . "): " . ($mysqlCols ? implode(', ', $mysqlCols) : '(none)');
+$md[]="";
+$md[]="## Schema/column comparison";
+$md[]="- CSV columns not present in MySQL item (" . count($csvNotMysql) . "): " . ($csvNotMysql ? implode(', ', $csvNotMysql) : '(none)');
+$md[]="- MySQL item columns not present in CSV (" . count($mysqlNotCsv) . "): " . ($mysqlNotCsv ? implode(', ', $mysqlNotCsv) : '(none)');
+$md[]="- likely equivalent columns if names are close: " . ($likelyPairs ? implode('; ', array_slice($likelyPairs, 0, 30)) : '(none)');
+$md[]="";
 $md[]="## Key diagnostics";
 $md[]="- first 10 normalized CSV brand+itemName keys: " . ($csvKeySamples ? implode(', ', $csvKeySamples) : '(none)');
 $md[]="- first 10 normalized MySQL brand+itemName keys: " . ($mysqlKeySamples ? implode(', ', $mysqlKeySamples) : '(none)');
@@ -92,5 +163,9 @@ $md[]="- blank CSV key count: {$blankCsvKeys}";
 $md[]="- blank MySQL key count: {$blankMysqlKeys}";
 $md[]="- duplicate CSV key count: {$dupCsv}";
 $md[]="- duplicate MySQL key count: {$dupMysql}";
-$md[]=""; $md[]="## Runtime schema notes"; foreach($runtimeNotes as $n){$md[]="- {$n}";} $md[]=""; $md[]='Interpretation note: zero matches can be legitimate evidence that MySQL is stale/legacy relative to CSV; this report does not assume a matching bug.'; $md[]='This is a read-only analysis. No SQL writes/migrations/repairs were executed.'; file_put_contents($summaryPath,implode("\n",$md)."\n");
+$md[]="";
+$md[]="## Image comparison notes";
+$md[]='Image-path/thumbnails comparison is one section of this analysis only; it is not treated as the sole root cause explanation.';
+$md[]="";
+$md[]="## Runtime schema notes"; foreach($runtimeNotes as $n){$md[]="- {$n}";} $md[]=""; $md[]='Interpretation note: zero matches can be legitimate evidence that MySQL is stale/legacy relative to CSV; this report does not assume a matching bug.'; $md[]='This is a read-only analysis. SELECT-only safeguards remain. No SQL writes/migrations/repairs/importers were executed.'; file_put_contents($summaryPath,implode("\n",$md)."\n");
 echo "Report: {$reportPath}\nSummary: {$summaryPath}\n"; foreach($counts as $k=>$v) echo "{$k}: {$v}\n";
