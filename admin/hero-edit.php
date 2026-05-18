@@ -12,13 +12,108 @@ require_once __DIR__ . '/../inc/hero/authority.php';
 // --------------------------------------------------------
 $itemId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($itemId <= 0) {
+    $landingSql = "
+        SELECT
+            i.itemId,
+            i.itemName,
+            i.brand,
+            i.gender,
+            i.age_group,
+            i.categoryName,
+            i.subcategory
+        FROM item i
+        WHERE i.is_active = 1
+        ORDER BY i.brand ASC, i.itemName ASC, i.itemId ASC
+    ";
+    $landingItems = $pdo->query($landingSql)->fetchAll(PDO::FETCH_ASSOC);
+
+    $itemsByBrand = [];
+    foreach ($landingItems as $landingItem) {
+        $brandKey = trim((string)($landingItem['brand'] ?? ''));
+        if ($brandKey === '') {
+            $brandKey = 'Unbranded';
+        }
+        if (!isset($itemsByBrand[$brandKey])) {
+            $itemsByBrand[$brandKey] = [];
+        }
+        $itemsByBrand[$brandKey][] = $landingItem;
+    }
+
+    uksort($itemsByBrand, 'strcasecmp');
+
     admin_layout_start("Hero Editor");
     ?>
-    <div class="admin-wrapper">
-        <p class="flash flash--error">
-            <span class="flash__pill"></span>
-            <span>Missing or invalid <code>id</code> parameter.</span>
-        </p>
+    <div class="hero-admin hero-landing">
+        <header class="hero-admin__header">
+            <h1 class="hero-admin__title">Hero Editor</h1>
+            <p class="hero-admin__subtitle hero-landing__subtitle">Choose a product to edit</p>
+            <p class="hero-landing__intro">
+                The Hero Editor works on one product at a time. Select a product below, or open Hero Manager for the full overview.
+            </p>
+            <div class="hero-landing__actions">
+                <a class="btn btn--primary" href="hero-manager.php">Open Hero Manager</a>
+            </div>
+        </header>
+
+        <section class="hero-landing__panel" aria-label="Products by brand">
+            <h2 class="hero-landing__section-title">Products by brand</h2>
+
+            <?php if (empty($itemsByBrand)): ?>
+                <p class="hero-landing__empty">No active products were found.</p>
+            <?php else: ?>
+                <div class="hero-landing__brands">
+                    <?php foreach ($itemsByBrand as $brandName => $brandItems): ?>
+                        <details class="hero-landing__brand"<?= count($brandItems) <= 8 ? ' open' : '' ?>>
+                            <summary class="hero-landing__brand-summary">
+                                <span class="hero-landing__brand-name"><?= htmlspecialchars($brandName) ?></span>
+                                <span class="hero-landing__brand-count"><?= count($brandItems) ?></span>
+                            </summary>
+                            <div class="hero-landing__rows">
+                                <?php foreach ($brandItems as $product): ?>
+                                    <?php
+                                        $itemIdText = (string)($product['itemId'] ?? '');
+                                        $itemNameText = trim((string)($product['itemName'] ?? 'Untitled item'));
+                                        $brandText = trim((string)($product['brand'] ?? ''));
+                                        $genderText = trim((string)($product['gender'] ?? ''));
+                                        $ageGroupText = trim((string)($product['age_group'] ?? ''));
+                                        $categoryText = trim((string)($product['categoryName'] ?? ''));
+                                        $subcategoryText = trim((string)($product['subcategory'] ?? ''));
+
+                                        $demographic = $genderText !== '' ? $genderText : $ageGroupText;
+                                        $taxonomy = '';
+                                        if ($categoryText !== '' && $subcategoryText !== '') {
+                                            $taxonomy = $categoryText . ' / ' . $subcategoryText;
+                                        } elseif ($categoryText !== '') {
+                                            $taxonomy = $categoryText;
+                                        } elseif ($subcategoryText !== '') {
+                                            $taxonomy = $subcategoryText;
+                                        }
+                                    ?>
+                                    <article class="hero-landing__row">
+                                        <div class="hero-landing__row-main">
+                                            <p class="hero-landing__row-title">
+                                                <span class="hero-landing__item-id">#<?= htmlspecialchars($itemIdText) ?></span>
+                                                <span class="hero-landing__item-name"><?= htmlspecialchars($itemNameText) ?></span>
+                                            </p>
+                                            <p class="hero-landing__row-meta">
+                                                <span><?= htmlspecialchars($brandText !== '' ? $brandText : 'Unbranded') ?></span>
+                                                <?php if ($demographic !== ''): ?>
+                                                    <span>· <?= htmlspecialchars($demographic) ?></span>
+                                                <?php endif; ?>
+                                                <?php if ($taxonomy !== ''): ?>
+                                                    <span>· <?= htmlspecialchars($taxonomy) ?></span>
+                                                <?php endif; ?>
+                                            </p>
+                                        </div>
+                                        <a class="btn btn--ghost btn--small" href="hero-edit.php?id=<?= urlencode($itemIdText) ?>">Edit hero</a>
+                                    </article>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
     </div>
     <?php
     admin_layout_end();
