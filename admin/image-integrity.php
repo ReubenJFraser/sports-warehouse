@@ -122,6 +122,7 @@ $summary = [
 $finalRows = [];
 $itemCandidateStats = [];
 $itemIssues = [];
+$consolidatedThumbnailPreviews = [];
 
 $sqlPreviewBySource = static function (array $ref, string $suggestedPath, array $itemThumbnailData): string {
     if ($suggestedPath === '') {
@@ -135,17 +136,7 @@ $sqlPreviewBySource = static function (array $ref, string $suggestedPath, array 
     if ($ref['source'] === 'override_image') {
         return "UPDATE hero_override SET chosen_image = '{$escapedPath}' WHERE itemId = {$itemId};";
     }
-    if ($ref['source'] === 'thumbnail_candidate') {
-        $parts = $itemThumbnailData[$itemId]['parts'] ?? [];
-        $oldPath = trim((string)$ref['raw_path']);
-        $rebuiltParts = [];
-        foreach ($parts as $part) {
-            $rebuiltParts[] = trim((string)$part) === $oldPath ? $suggestedPath : $part;
-        }
-        $rebuilt = implode(';', $rebuiltParts);
-        $escapedRebuilt = str_replace("'", "''", $rebuilt);
-        return "PREVIEW ONLY: UPDATE item SET thumbnails_json = '{$escapedRebuilt}' WHERE itemId = {$itemId};";
-    }
+    if ($ref['source'] === 'thumbnail_candidate') return '';
     return '';
 };
 
@@ -191,7 +182,7 @@ foreach ($imageRefs as $ref) {
 
     if ($isVideo) {
         $notes[] = 'Media/video reference (.mp4), not a still-image asset.';
-        if ($repairCategory === 'clean') $repairCategory = 'media_video_reference';
+        $repairCategory = 'media_video_reference';
     }
 
     if (!$isBlank && !$isExternal) {
@@ -209,7 +200,9 @@ foreach ($imageRefs as $ref) {
         if ($exists) {
             $notes[] = 'Local file exists.';
         } else {
-            $repairCategory = 'missing_local_file';
+            if (!$isVideo) {
+                $repairCategory = 'missing_local_file';
+            }
             $notes[] = 'Local file missing.';
 
             $fsPath = $ref['resolved_fs_path'];
@@ -303,6 +296,23 @@ foreach ($imageRefs as $ref) {
         'notes' => implode(' ', $notes),
     ];
 
+    if ($row['source'] === 'thumbnail_candidate') {
+        if ($row['suggested_path'] !== '') {
+            $itemId = (int)$row['itemId'];
+            $oldPath = trim((string)$row['raw_path']);
+            if ($oldPath !== '') {
+                $consolidatedThumbnailPreviews[$itemId] = $consolidatedThumbnailPreviews[$itemId] ?? [
+                    'itemId' => $itemId,
+                    'itemName' => (string)$row['itemName'],
+                    'brand' => (string)$row['brand'],
+                    'replacement_map' => [],
+                ];
+                $consolidatedThumbnailPreviews[$itemId]['replacement_map'][$oldPath] = (string)$row['suggested_path'];
+            }
+        }
+        $row['sql_preview'] = 'See consolidated thumbnail repair preview.';
+    }
+
     if ($selectedBrand !== '' && strcasecmp($row['brand'], $selectedBrand) !== 0) continue;
     if ($selectedSeverity !== 'all' && $row['severity'] !== $selectedSeverity) continue;
     if ($selectedSource !== 'all' && $row['source'] !== $selectedSource) continue;
@@ -350,6 +360,32 @@ foreach ($finalRows as &$rowRef) {
     $rowRef['item_issue'] = $itemIssues[$rowRef['itemId']] ?? 'none';
 }
 unset($rowRef);
+
+$consolidatedPreviewRows = [];
+foreach ($consolidatedThumbnailPreviews as $itemId => $previewMeta) {
+    $parts = $itemThumbnailData[$itemId]['parts'] ?? [];
+    if (empty($parts) || empty($previewMeta['replacement_map'])) {
+        continue;
+    }
+    $rebuiltParts = [];
+    foreach ($parts as $part) {
+        $normalizedPart = trim((string)$part);
+        $rebuiltParts[] = $previewMeta['replacement_map'][$normalizedPart] ?? $normalizedPart;
+    }
+    $rebuilt = implode(';', $rebuiltParts);
+    $escapedRebuilt = str_replace("'", "''", $rebuilt);
+    $sqlPreview = "PREVIEW ONLY: UPDATE item SET thumbnails_json = '{$escapedRebuilt}' WHERE itemId = {$itemId};";
+    $consolidatedPreviewRows[] = [
+        'itemId' => $itemId,
+        'itemName' => (string)$previewMeta['itemName'],
+        'brand' => (string)$previewMeta['brand'],
+        'field_table' => 'item.thumbnails_json',
+        'repair_type' => 'thumbnail_consolidated_rebuild',
+        'sql_preview' => $sqlPreview,
+        'notes' => 'Applies all available thumbnail suggested_path replacements for this item; unknown or unresolved paths are unchanged.',
+    ];
+}
+usort($consolidatedPreviewRows, static fn(array $a, array $b) => $a['itemId'] <=> $b['itemId']);
 
 admin_layout_start('Image Integrity');
 admin_header('Image Integrity Report', 'Read-only database-led audit of live image references for active products.', [
@@ -434,6 +470,31 @@ admin_header('Image Integrity Report', 'Read-only database-led audit of live ima
 <td class="hero-report-path"><?= htmlspecialchars($r['suggested_path'], ENT_QUOTES, 'UTF-8') ?></td>
 <td class="hero-report-path"><code><?= htmlspecialchars($r['sql_preview'], ENT_QUOTES, 'UTF-8') ?></code></td>
 <td><?= htmlspecialchars($r['notes'], ENT_QUOTES, 'UTF-8') ?></td>
+</tr>
+<?php endforeach; endif; ?>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="hero-report-section">
+<h2>Consolidated repair previews</h2>
+<div class="hero-report-table-wrap">
+<table class="hero-report-table image-integrity-table">
+<thead><tr>
+<th>Item</th><th>Brand</th><th>Field/Table</th><th>Repair type</th><th>SQL preview (read-only)</th><th>Notes</th>
+</tr></thead>
+<tbody>
+<?php if (empty($consolidatedPreviewRows)): ?>
+<tr><td colspan="6" class="hero-report-muted">No consolidated thumbnail repairs available.</td></tr>
+<?php else: foreach ($consolidatedPreviewRows as $preview): ?>
+<tr>
+<td>#<?= (int)$preview['itemId'] ?><br><?= htmlspecialchars($preview['itemName'], ENT_QUOTES, 'UTF-8') ?></td>
+<td><?= htmlspecialchars($preview['brand'], ENT_QUOTES, 'UTF-8') ?></td>
+<td><code><?= htmlspecialchars($preview['field_table'], ENT_QUOTES, 'UTF-8') ?></code></td>
+<td><code><?= htmlspecialchars($preview['repair_type'], ENT_QUOTES, 'UTF-8') ?></code></td>
+<td class="hero-report-path"><code><?= htmlspecialchars($preview['sql_preview'], ENT_QUOTES, 'UTF-8') ?></code></td>
+<td><?= htmlspecialchars($preview['notes'], ENT_QUOTES, 'UTF-8') ?></td>
 </tr>
 <?php endforeach; endif; ?>
 </tbody>
