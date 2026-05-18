@@ -568,12 +568,12 @@ admin_layout_start("Hero Manager");
 
                         </div>
 
-                        <div class="hero-card__actions" aria-label="Hero item actions">
-                            <a class="btn btn-primary" href="hero-edit.php?id=<?= $itemId ?>">
+                        <div class="hero-card__actions hero-card__actions--compact" aria-label="Hero item actions">
+                            <a class="btn btn-primary hero-card__action-button hero-card__action-button--primary" href="hero-edit.php?id=<?= $itemId ?>">
                                 Edit hero
                             </a>
 
-                            <a class="btn btn-ghost" href="hero-manager.php?recalc=<?= $itemId ?>">
+                            <a class="btn btn-ghost hero-card__action-button hero-card__action-button--secondary" href="hero-manager.php?recalc=<?= $itemId ?>">
                                 Recalculate
                             </a>
                         </div>

@@ -286,7 +286,8 @@
 
 .hero-card__actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: flex-start;
     gap: 8px;
     margin-top: 10px;
@@ -295,6 +296,23 @@
 .hero-card__actions .btn {
     min-width: 132px;
     justify-content: center;
+}
+
+.hero-card__actions--compact {
+    align-items: center;
+}
+
+.hero-card__action-button {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.2;
+    border-radius: 999px;
+}
+
+.hero-card__action-button--primary {
+    box-shadow: none;
 }
 
 .hero-editor-actions__row {
@@ -371,11 +389,6 @@
 
     .hero-list .hero-card__insights {
         grid-column: 1 / -1;
-    }
-
-    .hero-list .hero-card__actions {
-        flex-direction: row;
-        flex-wrap: wrap;
     }
 
     .hero-list .hero-card > .context-note {
