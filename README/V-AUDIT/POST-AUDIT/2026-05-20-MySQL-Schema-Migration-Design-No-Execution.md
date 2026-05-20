@@ -75,14 +75,22 @@ Fields that should remain out of production `item` as persistent runtime columns
 | CSV column | Proposed runtime DB column | Action type | Suggested data type | Null/default recommendation | Notes |
 |---|---|---|---|---|---|
 | db_itemId | db_itemId (current live) | verify live schema first; keep existing | BIGINT or INT (match live) | nullable for new rows | Do not auto-add `db_item_id`; treat snake_case standardisation as deliberate compatibility rollout. |
+| brand | brand | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| gender | gender | keep existing | VARCHAR(80) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | model_id | model_id | add new column or verify existing first | VARCHAR(191) | nullable initially; no unique default | Add/verify first; defer `UNIQUE` until duplicate is resolved. |
 | itemName | itemName | keep existing | VARCHAR(255) | NOT NULL (runtime expectation) | Display/runtime product name. |
 | itemName_fully_derived | item_name_fully_derived (or mapped alias) | add new column or map alias | VARCHAR(255) or TEXT | nullable | Preserve derived-system source text separately from display name. |
+| categoryName | categoryName | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| parentCategory | parentCategory | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | subCategory | subcategory | map alias | VARCHAR(120) | nullable | Maintain compatibility in importer/query projection. |
 | ageGroup | age_group | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
 | sizeType | size_type | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
 | fitStyle | fit_style | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
 | activityTags | activity_tags | map alias | TEXT | nullable | Keep parser/normalizer stable during rollout. |
+| price | price | keep existing | DECIMAL(10,2) (or live equivalent) | nullable default NULL | Same-name runtime field; keep existing live numeric strategy. |
+| salePrice | salePrice | keep existing | DECIMAL(10,2) (or live equivalent) | nullable default NULL | Same-name runtime field; keep existing live numeric strategy. |
+| description | description | keep existing | TEXT | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| featured | featured | keep existing | TINYINT(1) or BOOLEAN-like | nullable default NULL | Same-name runtime field; preserve existing boolean normalization behavior. |
 | CropAllowed | crop_allowed (or CropAllowed if live) | verify live schema first; map alias | TINYINT(1) or BOOLEAN-like | nullable default NULL | Do not create both forms blindly. Select canonical name after live verification. |
 | product_domain | product_domain | add new column | VARCHAR(120) | nullable | Domain taxonomy field. |
 | collection | collection | add new column | VARCHAR(120) | nullable | Collection taxonomy field. |
@@ -104,6 +112,9 @@ Fields that should remain out of production `item` as persistent runtime columns
 | campaign_or_series | campaign_or_series | add new column | VARCHAR(191) | nullable | Campaign lineage metadata. |
 | images | images | keep existing | LONGTEXT/TEXT | nullable | Runtime media pointer field. |
 | thumbnails_json | thumbnails_json | keep existing | LONGTEXT/TEXT/JSON | nullable | Runtime thumbnail payload. |
+| altText | altText | keep existing | TEXT | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| ariaText | ariaText | keep existing | TEXT | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| videoAltText | videoAltText | keep existing | TEXT | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | videos | videos | keep existing | LONGTEXT/TEXT/JSON | nullable | Runtime video payload. |
 | images2 | (none in item) | staging only / import only | TEXT | nullable | Helper image source; avoid adding to runtime `item` by default. |
 | assignment_source | (none in item) | staging only / import only | VARCHAR(120) | nullable | Provenance for audit/staging only. |
@@ -135,6 +146,10 @@ Fields that should remain out of production `item` as persistent runtime columns
 5. **Media field distinction (`images`, `thumbnails_json`, `videos`, `images2`)**
    - `images`, `thumbnails_json`, `videos` are runtime-consumed media fields and remain in `item`.
    - `images2` is helper/import-only and should stay in staging/import pipeline unless a later runtime requirement is approved.
+
+6. **Post-insert `db_itemId` assignment/backfill planning**
+   - For the **66 likely new insert rows** (currently blank `db_itemId`), future import execution planning must explicitly decide how `db_itemId` is assigned and/or backfilled after insertion.
+   - This design document does not execute or prescribe that assignment mechanism; it flags the requirement for the next approved execution phase.
 
 ---
 
