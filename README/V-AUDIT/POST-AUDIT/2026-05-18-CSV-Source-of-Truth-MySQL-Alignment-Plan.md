@@ -23,19 +23,21 @@ Known readiness facts to preserve:
 
 ---
 
-## 1) CSV columns vs live MySQL `item` columns
+## 1) CSV columns vs repository snapshot `item` columns
+
+Note: this section compares CSV headers to the repository SQL snapshot (`db/sportswh_dump.sql`), not a guaranteed live-production schema snapshot.
 
 ### CSV columns (45)
 `brand, gender, itemName, itemName_fully_derived, model_id, product_domain, collection, model_family, subCategory, fabric, construction, seamless, scrunchFlag, invisibleFlag, neckline, strap_configuration, support_level, rise, length, variant, usage_category, usage_subtype, categoryName, parentCategory, ageGroup, sizeType, fitStyle, activityTags, price, salePrice, description, featured, images, thumbnails_json, external_item_id, campaign_or_series, altText, ariaText, videoAltText, videos, images2, CropAllowed, db_itemId, assignment_source, _images_helper_normalize`
 
-### MySQL `item` columns (24 in repo snapshot DDL)
+### Repository snapshot `item` columns (23 in `db/sportswh_dump.sql`)
 `itemId, itemName, brand, gender, subcategory, price, salePrice, description, featured, categoryId, categoryName, parentCategory, activity_tags, age_group, size_type, fit_style, images, orientation, thumbnails_json, altText, ariaText, videoAltText, videos`
 
 ---
 
 ## 2) CSV column classification
 
-## A) Already present in MySQL with same name
+### A) Already present in snapshot with same name
 - `brand`
 - `gender`
 - `itemName`
@@ -52,14 +54,14 @@ Known readiness facts to preserve:
 - `videoAltText`
 - `videos`
 
-## B) Present with naming difference (semantic match; normalize to snake_case in DB)
-- CSV `subCategory` → MySQL `subcategory`
-- CSV `ageGroup` → MySQL `age_group`
-- CSV `sizeType` → MySQL `size_type`
-- CSV `fitStyle` → MySQL `fit_style`
-- CSV `activityTags` → MySQL `activity_tags`
+### B) Present with naming difference (semantic match; normalize via mapping)
+- CSV `subCategory` -> MySQL `subcategory`
+- CSV `ageGroup` -> MySQL `age_group`
+- CSV `sizeType` -> MySQL `size_type`
+- CSV `fitStyle` -> MySQL `fit_style`
+- CSV `activityTags` -> MySQL `activity_tags`
 
-## C) Missing from MySQL `item` and should be added as runtime columns
+### C) Missing from repository snapshot `item` and candidates for future runtime columns
 - `itemName_fully_derived`
 - `model_id`
 - `product_domain`
@@ -83,7 +85,7 @@ Known readiness facts to preserve:
 - `CropAllowed`
 - `db_itemId`
 
-## D) Helper/import-only fields (do NOT become runtime `item` columns)
+### D) Helper/import-only fields (do NOT become runtime `item` columns)
 - `images2` (helper image set / staging helper)
 - `assignment_source` (import trace/provenance)
 - `_images_helper_normalize` (import normalization helper)
@@ -122,27 +124,30 @@ Naming convention: snake_case for DB columns, with targeted compatibility bridgi
   - `db_item_id`
 
 Compatibility guidance:
-- Preserve CSV header vocabulary as ingestion aliases (e.g., `subCategory` maps to `subcategory`; `db_itemId` maps to `db_item_id`).
-- Keep `itemId` as PK; `db_item_id` is import linkage authority.
+- Preserve CSV header vocabulary as ingestion aliases (e.g., `subCategory` maps to `subcategory`; `db_itemId` maps to canonical linkage naming).
+- Readiness audit evidence indicates live MySQL already uses `item.db_itemId`; do not treat that live column as missing.
+- If future standardization to snake_case `db_item_id` is desired, plan it as an explicit rename/compatibility rollout (or view-layer alias), not as a blind duplicate-column add.
+- `CropAllowed` vs `crop_allowed` should be treated as a naming-normalization decision that requires live-schema verification before choosing canonical runtime naming.
+- Keep `itemId` as PK; DB linkage field naming should remain backward-compatible across importer/query paths.
 - Add a unique index on `model_id` only after duplicate `nike_female_leggings` is resolved.
 
 ---
 
 ## 4) PHP files / query paths likely impacted by field alignment
 
-## Customer-facing catalog and filters
+### Customer-facing catalog and filters
 - `inc/catalog-query.php` (main item select, filters, projection).
 - `inc/filters/color-facets.php` (age/size filtering and item joins).
 - `inc/cards/product-grid.php` and `inc/cards/utils.php` (item projection assumptions and image fallback behavior).
 
-## Product/admin hero surfaces (must preserve protected image behavior)
+### Product/admin hero surfaces (must preserve protected image behavior)
 - `admin/hero-edit.php`
 - `admin/hero-rationale-report.php`
 - `admin/image-integrity.php`
 - `inc/hero/candidates.php`
 - `inc/hero/authority.php`
 
-## Import/audit/report tooling
+### Import/audit/report tooling
 - `tools/reports/image-sync-reconciliation.php` (already performs column-presence adaptation and protected-field messaging).
 - `tools/reports/generate_db_itemid_modelid_readiness_audit.php`
 - `tools/importers/import_productdb_to_db.php`
@@ -150,7 +155,7 @@ Compatibility guidance:
 - `tools/importers/diagnostic_external_item_id.php`
 - `tools/importers/regenerate_derived_system_fields.php`
 
-## Image/orientation scripts (read impact only in this phase)
+### Image/orientation scripts (read impact only in this phase)
 - `scripts/update-orientations.php`
 - `scripts/generate-item-orientations.php`
 - `scripts/rebuild-image-meta.php`
@@ -178,18 +183,18 @@ For all future import/update SQL paths:
 
 ## 7) Staged implementation plan (no-write execution sequence)
 
-## Stage A — Schema migration design (draft only)
+### Stage A — Schema migration design (draft only)
 1. Draft DDL to add missing runtime columns with nullable defaults.
 2. Normalize new runtime names to snake_case.
 3. Do not rename legacy columns yet; use compatibility mapping in importer/query layer first.
 4. Defer `UNIQUE(model_id)` until duplicate remediation is approved.
 
-## Stage B — Staging/import design (draft only)
+### Stage B — Staging/import design (draft only)
 1. Define `item_csv_staging` with near-raw CSV header compatibility (including helper fields).
 2. Load CSV raw values into staging in future execution phase.
 3. Add deterministic mapping view/step from staging headers to runtime DB names.
 
-## Stage C — Dry-run validation design
+### Stage C — Dry-run validation design
 1. Validation gates:
    - row count sanity (expect 120 rows),
    - required fields nonblank (`model_id`, `itemName`, `brand`),
@@ -201,7 +206,7 @@ For all future import/update SQL paths:
    - explicit duplicate queue for `nike_female_leggings`.
 3. Produce diff artifacts only (no write SQL execution).
 
-## Stage D — Reviewed execution plan (future gated phase)
+### Stage D — Reviewed execution plan (future gated phase)
 1. Human review and sign-off of dry-run outputs.
 2. Execute schema migration first, then controlled import/update batches.
 3. Enforce protected-field exclusion in all update statements.
