@@ -52,7 +52,7 @@ CREATE TABLE item_staging (
   brand VARCHAR(100) NULL,
   gender VARCHAR(50) NULL,
   itemName TEXT NULL,
-  itemName_fully_derived VARCHAR(10) NULL,
+  itemName_fully_derived VARCHAR(255) NULL,
   model_id VARCHAR(255) NULL,
   product_domain VARCHAR(100) NULL,
   collection VARCHAR(255) NULL,
@@ -109,7 +109,7 @@ Only runtime candidate catalogue fields are shown below.
 -- DRAFT / ILLUSTRATIVE ONLY / NOT FOR EXECUTION
 ALTER TABLE item
   ADD COLUMN model_id VARCHAR(255) NULL,
-  ADD COLUMN itemName_fully_derived VARCHAR(10) NULL,
+  ADD COLUMN itemName_fully_derived VARCHAR(255) NULL,
   ADD COLUMN product_domain VARCHAR(100) NULL,
   ADD COLUMN collection VARCHAR(255) NULL,
   ADD COLUMN model_family VARCHAR(255) NULL,
