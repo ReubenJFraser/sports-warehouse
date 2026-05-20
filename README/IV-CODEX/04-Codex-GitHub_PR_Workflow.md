@@ -83,7 +83,7 @@ It means Codex should be given bounded authority.
 
 There are two workflow errors to avoid.
 
-### Error 1 — Reckless Implementation
+### Error 1 - Reckless Implementation
 
 Do not prompt Codex with broad instructions such as:
 
@@ -97,7 +97,7 @@ This creates scope drift and review instability.
 
 ---
 
-### Error 2 — Excessive Conservatism
+### Error 2 - Excessive Conservatism
 
 Do not reduce Codex to trivial changes such as:
 
@@ -240,7 +240,7 @@ It must be fixed through Codex environment settings, not by repeated prompting.
 
 ## Standard Codex Workflow
 
-### Step 1 — Prepare Local Main
+### Step 1 - Prepare Local Main
 
 Before starting a new Codex task, local `main` should be current and clean.
 
@@ -264,7 +264,7 @@ If local state is not clean, stop and resolve it before starting Codex work.
 
 ---
 
-### Step 2 — Start a Fresh Codex Task
+### Step 2 - Start a Fresh Codex Task
 
 Begin from the Codex task home screen.
 
@@ -274,14 +274,14 @@ Do not start new implementation work inside:
 - an archived task
 - a stale PR task
 - a task whose PR number is unclear
-- a prior task’s request-change box
+- a prior task's request-change box
 - a GitHub comment thread unless the workflow explicitly requires it
 
 Each implementation stage should start as a fresh Codex task unless the task is receiving one narrow correction before merge.
 
 ---
 
-### Step 3 — Give Codex One Bounded Objective
+### Step 3 - Give Codex One Bounded Objective
 
 The prompt must define:
 
@@ -295,13 +295,13 @@ The prompt must define:
 - completion requirement
 - workflow expectation
 
-Codex should not be asked to “continue everything” or “fix the whole project.”
+Codex should not be asked to "continue everything" or "fix the whole project."
 
 A task should produce one coherent reviewable outcome.
 
 ---
 
-### Step 4 — Review Codex Output
+### Step 4 - Review Codex Output
 
 When Codex finishes, review:
 
@@ -317,7 +317,7 @@ If unexpected files changed, stop and inspect before proceeding.
 
 ---
 
-### Step 5 — Create PR Through Codex UI
+### Step 5 - Create PR Through Codex UI
 
 If Codex shows `Create PR`, use the Codex PR workflow.
 
@@ -341,7 +341,7 @@ Do not treat the task as complete until GitHub shows a real PR.
 
 ---
 
-### Step 6 — Review PR in GitHub
+### Step 6 - Review PR in GitHub
 
 In GitHub, open `Files changed`.
 
@@ -361,7 +361,7 @@ If the PR is a draft, mark it ready for review only after the changed files are 
 
 ---
 
-### Step 7 — Merge Only When Stable
+### Step 7 - Merge Only When Stable
 
 Merge only when:
 
@@ -378,7 +378,7 @@ GitHub mergeability is authoritative.
 
 ---
 
-### Step 8 — Pull Merged Work Locally
+### Step 8 - Pull Merged Work Locally
 
 After merge, update local `main`.
 
@@ -398,7 +398,7 @@ Expected result:
 
 ---
 
-### Step 9 — Verify Runtime Behaviour
+### Step 9 - Verify Runtime Behaviour
 
 For UI, PHP, CSS, JavaScript, route, or endpoint work:
 
@@ -419,7 +419,7 @@ Local runtime verification is final acceptance.
 
 ---
 
-### Step 10 — End the Task
+### Step 10 - End the Task
 
 After merge and local verification, the Codex task is finished.
 
@@ -549,7 +549,7 @@ Confusion is a stop signal.
 
 ---
 
-## Recovery Procedure A — Fresh Restart
+## Recovery Procedure A - Fresh Restart
 
 Use this when the implementation is reproducible.
 
@@ -567,7 +567,7 @@ This is the preferred recovery path for small and medium changes.
 
 ---
 
-## Recovery Procedure B — Local-First Recovery
+## Recovery Procedure B - Local-First Recovery
 
 Use this when the Codex implementation is valuable but the PR workflow is unstable.
 
@@ -590,7 +590,7 @@ It should be used when Codex task state has become unreliable.
 
 ---
 
-## Recovery Procedure C — Patch Recovery
+## Recovery Procedure C - Patch Recovery
 
 Use this only when the patch is small enough to verify safely.
 
@@ -618,7 +618,7 @@ Use local-first recovery or fresh restart.
 
 ---
 
-## Recovery Procedure D — Full File or Section Replacement
+## Recovery Procedure D - Full File or Section Replacement
 
 Use this when patch recovery is too fragile.
 
