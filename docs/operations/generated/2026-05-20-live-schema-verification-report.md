@@ -1,6 +1,6 @@
 # Live Schema Verification Report (Read-Only)
 
-- Generated: 2026-05-20 06:06:25 UTC
+- Generated: 2026-05-20 06:30:10 UTC
 - Source CSV: `docs/data/SportWarehouse_ProductDB.csv`
 - Migration design reference: `README/V-AUDIT/POST-AUDIT/2026-05-20-MySQL-Schema-Migration-Design-No-Execution.md`
 - DB status: connection failed (`SQLSTATE[HY000] [2002] Connection refused`)
@@ -62,51 +62,51 @@
 ## 6) CSV-to-live schema comparison
 | CSV column | Expected runtime decision | Exact live item column exists | Alias/mapped live item column exists | Recommended planning status |
 |---|---|---|---|---|
-| `brand` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `gender` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `itemName` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `itemName_fully_derived` | add new column or map alias | no | no | missing runtime candidate |
-| `model_id` | add new column or verify existing first | no | no | missing runtime candidate |
-| `product_domain` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `collection` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `model_family` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `subCategory` | map alias to subcategory | no | no | missing runtime candidate |
-| `fabric` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `construction` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `seamless` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `scrunchFlag` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `invisibleFlag` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `neckline` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `strap_configuration` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `support_level` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `rise` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `length` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `variant` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `usage_category` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `usage_subtype` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `categoryName` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `parentCategory` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `ageGroup` | map alias to age_group | no | no | missing runtime candidate |
-| `sizeType` | map alias to size_type | no | no | missing runtime candidate |
-| `fitStyle` | map alias to fit_style | no | no | missing runtime candidate |
-| `activityTags` | map alias to activity_tags | no | no | missing runtime candidate |
-| `price` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `salePrice` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `description` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `featured` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `images` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `thumbnails_json` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `external_item_id` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `campaign_or_series` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `altText` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `ariaText` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `videoAltText` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `videos` | not explicitly specified in migration design | no | no | missing runtime candidate |
-| `images2` | staging/import only | no | no | staging/import only |
-| `CropAllowed` | verify-first naming decision | no | no | verify-first compatibility decision |
-| `db_itemId` | verify live schema first; keep existing | no | no | verify-first compatibility decision |
+| `brand` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `gender` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `itemName` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `itemName_fully_derived` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
+| `model_id` | missing in some live environments; candidate runtime column addition with verify-first gating | no | no | missing runtime candidate |
+| `product_domain` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `collection` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `model_family` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `subCategory` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
+| `fabric` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `construction` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `seamless` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `scrunchFlag` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
+| `invisibleFlag` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
+| `neckline` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `strap_configuration` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `support_level` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `rise` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `length` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `variant` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `usage_category` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `usage_subtype` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `categoryName` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `parentCategory` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `ageGroup` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
+| `sizeType` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
+| `fitStyle` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
+| `activityTags` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
+| `price` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `salePrice` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `description` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `featured` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `images` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `thumbnails_json` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `external_item_id` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `campaign_or_series` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `altText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `ariaText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `videoAltText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `videos` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `images2` | existing live column, but design classifies as staging/import-only | no | no | staging/import only |
+| `CropAllowed` | manual governance pending; values differ in live data | no | no | verify-first compatibility decision |
+| `db_itemId` | keep current live db_itemId linkage field | no | no | verify-first compatibility decision |
 | `assignment_source` | existing live column, but design classifies as staging/import-only; manual decision required before import allowlist | no | no | staging/import only |
-| `_images_helper_normalize` | staging/import only | no | no | staging/import only |
+| `_images_helper_normalize` | existing live column, but design classifies as staging/import-only | no | no | staging/import only |
 
 ## 7) Protected-field verification
 - `item.hero_image` exists: **no**
