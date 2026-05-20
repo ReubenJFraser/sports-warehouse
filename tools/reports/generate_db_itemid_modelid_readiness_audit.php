@@ -206,7 +206,7 @@ $md[] = "- Blank model_id rows: **{$csvModelBlank}**";
 $md[] = "- Duplicate model_id values: **" . count($csvModelDupes) . "**";
 $md[] = '- Duplicate model_id list:';
 foreach ($csvModelDupes as $v => $c) {
-    $md[] = "  - `{$v}` × {$c}";
+    $md[] = "  - `{$v}` x {$c}";
 }
 $md[] = '';
 $md[] = '## 5) Classification';
