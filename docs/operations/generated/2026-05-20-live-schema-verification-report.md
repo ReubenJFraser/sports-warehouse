@@ -1,6 +1,6 @@
 # Live Schema Verification Report (Read-Only)
 
-- Generated: 2026-05-20 06:30:10 UTC
+- Generated: 2026-05-20 06:39:35 UTC
 - Source CSV: `docs/data/SportWarehouse_ProductDB.csv`
 - Migration design reference: `README/V-AUDIT/POST-AUDIT/2026-05-20-MySQL-Schema-Migration-Design-No-Execution.md`
 - DB status: connection failed (`SQLSTATE[HY000] [2002] Connection refused`)
@@ -62,51 +62,51 @@
 ## 6) CSV-to-live schema comparison
 | CSV column | Expected runtime decision | Exact live item column exists | Alias/mapped live item column exists | Recommended planning status |
 |---|---|---|---|---|
-| `brand` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `gender` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `itemName` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `itemName_fully_derived` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
+| `brand` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `gender` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `itemName` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `itemName_fully_derived` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
 | `model_id` | missing in some live environments; candidate runtime column addition with verify-first gating | no | no | missing runtime candidate |
-| `product_domain` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `collection` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `model_family` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `subCategory` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
-| `fabric` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `construction` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `seamless` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `scrunchFlag` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
-| `invisibleFlag` | existing live column or compatibility alias acceptable; keep CSV field in import mapping | no | no | missing runtime candidate |
-| `neckline` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `strap_configuration` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `support_level` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `rise` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `length` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `variant` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `usage_category` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `usage_subtype` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `categoryName` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `parentCategory` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
+| `product_domain` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `collection` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `model_family` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `subCategory` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `fabric` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `construction` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `seamless` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `scrunchFlag` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `invisibleFlag` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `neckline` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `strap_configuration` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `support_level` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `rise` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `length` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `variant` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `usage_category` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `usage_subtype` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `categoryName` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `parentCategory` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
 | `ageGroup` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
 | `sizeType` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
 | `fitStyle` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
 | `activityTags` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
-| `price` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `salePrice` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `description` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `featured` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `images` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `thumbnails_json` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `external_item_id` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `campaign_or_series` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `altText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `ariaText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `videoAltText` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `videos` | existing live column; keep as canonical CSV/camelCase import field | no | no | missing runtime candidate |
-| `images2` | existing live column, but design classifies as staging/import-only | no | no | staging/import only |
+| `price` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `salePrice` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `description` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `featured` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `images` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `thumbnails_json` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `external_item_id` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `campaign_or_series` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `altText` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `ariaText` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `videoAltText` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `videos` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `images2` | staging/import-only by design; do not add to runtime item unless later re-scoped. | no | no | staging/import only |
 | `CropAllowed` | manual governance pending; values differ in live data | no | no | verify-first compatibility decision |
 | `db_itemId` | keep current live db_itemId linkage field | no | no | verify-first compatibility decision |
 | `assignment_source` | existing live column, but design classifies as staging/import-only; manual decision required before import allowlist | no | no | staging/import only |
-| `_images_helper_normalize` | existing live column, but design classifies as staging/import-only | no | no | staging/import only |
+| `_images_helper_normalize` | staging/import-only by design; do not add to runtime item unless later re-scoped. | no | no | staging/import only |
 
 ## 7) Protected-field verification
 - `item.hero_image` exists: **no**

@@ -38,7 +38,7 @@ $runtimeDecisions = [
     'itemName' => 'existing live column; keep as canonical CSV/camelCase import field',
     'itemName_fully_derived' => 'existing live column or compatibility alias acceptable; keep CSV field in import mapping',
     'model_id' => 'missing in some live environments; candidate runtime column addition with verify-first gating',
-    'product_domain' => 'existing live column; keep as canonical CSV/camelCase import field',
+    'product_domain' => 'candidate runtime field from CSV source; missing in live item.',
     'collection' => 'existing live column; keep as canonical CSV/camelCase import field',
     'model_family' => 'existing live column; keep as canonical CSV/camelCase import field',
     'subCategory' => 'existing live column or compatibility alias acceptable; keep CSV field in import mapping',
@@ -73,11 +73,11 @@ $runtimeDecisions = [
     'ariaText' => 'existing live column; keep as canonical CSV/camelCase import field',
     'videoAltText' => 'existing live column; keep as canonical CSV/camelCase import field',
     'videos' => 'existing live column; keep as canonical CSV/camelCase import field',
-    'images2' => 'existing live column, but design classifies as staging/import-only',
+    'images2' => 'staging/import-only by design; do not add to runtime item unless later re-scoped.',
     'CropAllowed' => 'manual governance pending; values differ in live data',
     'db_itemId' => 'keep current live db_itemId linkage field',
     'assignment_source' => 'existing live column, but design classifies as staging/import-only; manual decision required before import allowlist',
-    '_images_helper_normalize' => 'existing live column, but design classifies as staging/import-only',
+    '_images_helper_normalize' => 'staging/import-only by design; do not add to runtime item unless later re-scoped.',
 ];
 
 $aliasPairs = [
@@ -245,9 +245,19 @@ foreach ($headers as $csvCol) {
         $csvMissingRuntime++;
     }
 
+
+    $decision = $runtimeDecisions[$csvCol] ?? 'unknown CSV column; manual migration-design decision required';
+    if ($status === 'missing runtime candidate' && !isset($runtimeDecisions[$csvCol])) {
+        $decision = 'candidate runtime column; add only through approved migration';
+    } elseif ($status === 'missing runtime candidate' && str_contains($decision, 'existing live column')) {
+        $decision = 'candidate runtime field from CSV source; missing in live item.';
+    } elseif ($status === 'staging/import only' && $csvCol !== 'assignment_source' && !$exact && str_contains($decision, 'existing live column')) {
+        $decision = 'staging/import-only by design; do not add to runtime item unless later re-scoped.';
+    }
+
     $comparisonRows[] = [
         'csv' => $csvCol,
-        'decision' => $runtimeDecisions[$csvCol] ?? 'unknown CSV column; manual migration-design decision required',
+        'decision' => $decision,
         'exact' => $exact ? 'yes' : 'no',
         'alias' => $aliasFound ? ('yes (`' . $aliasTarget . '`)') : 'no',
         'status' => $status,
