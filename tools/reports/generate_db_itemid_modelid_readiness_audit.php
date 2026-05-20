@@ -129,17 +129,19 @@ foreach ($csvDbUnique as $v) {
     if (!$hitItem && !$hitDb) $csvNotFound[] = $v;
 }
 
-$mysqlUnrepresented = [];
+$mysqlItemIdUnrepresented = [];
 foreach (array_keys($itemIdSet) as $id) {
-    if (!isset($csvSet[$id])) $mysqlUnrepresented[] = "itemId:{$id}";
+    if (!isset($csvSet[$id])) $mysqlItemIdUnrepresented[] = $id;
 }
+
+$mysqlDbItemIdUnrepresented = [];
 if ($hasDbItemId) {
     foreach (array_keys($itemDbSet) as $id) {
-        if (!isset($csvSet[$id])) $mysqlUnrepresented[] = "db_itemId:{$id}";
+        if (!isset($csvSet[$id])) $mysqlDbItemIdUnrepresented[] = $id;
     }
 }
 
-$linkedByDb = count($csvMatchesItemId) + count(array_diff($csvMatchesDbItemId, $csvMatchesItemId));
+$linkedByDb = count($csvMatchesDbItemId);
 $uniqueModelSet = array_filter($csvModelCounts, fn($c)=>$c===1);
 $insertCandidates = 0;
 $manualMapping = 0;
@@ -194,7 +196,8 @@ $md[] = '## 3) Cross-check';
 $md[] = '- CSV db_itemId values matching MySQL itemId: **' . count($csvMatchesItemId) . '**';
 $md[] = '- CSV db_itemId values matching MySQL db_itemId: **' . count($csvMatchesDbItemId) . '**';
 $md[] = '- CSV db_itemId values not found in MySQL: **' . count($csvNotFound) . '**';
-$md[] = '- MySQL itemId/db_itemId values not represented in CSV: **' . count($mysqlUnrepresented) . '**';
+$md[] = '- MySQL itemId values not represented in CSV db_itemId: **' . count($mysqlItemIdUnrepresented) . '**';
+$md[] = '- MySQL db_itemId values not represented in CSV db_itemId: **' . count($mysqlDbItemIdUnrepresented) . '**';
 $md[] = '';
 $md[] = '## 4) model_id audit';
 $md[] = "- Total CSV rows: **{$totalCsvRows}**";
@@ -211,9 +214,15 @@ $md[] = "- Existing rows confidently linked by db_itemId: **{$linkedByDb}**";
 $md[] = "- Likely new insert candidates (blank db_itemId + unique nonblank model_id): **{$insertCandidates}**";
 $md[] = "- Rows requiring manual mapping: **{$manualMapping}**";
 $md[] = '';
+$md[] = '## 6) Conclusion';
+$md[] = "- `db_itemId` is usable for the **{$linkedByDb}** existing imported products matched on MySQL `db_itemId`.";
+$md[] = "- **{$insertCandidates}** CSV rows with blank `db_itemId` are likely new insert candidates.";
+$md[] = '- Duplicate `model_id` value `nike_female_leggings` requires manual review before import.';
+$md[] = '';
 $md[] = '## Appendix (samples)';
 $md[] = '- Sample CSV db_itemId not found in MySQL (first 20): `' . implode('`, `', array_slice($csvNotFound, 0, 20)) . '`';
-$md[] = '- Sample MySQL values not in CSV (first 20): `' . implode('`, `', array_slice($mysqlUnrepresented, 0, 20)) . '`';
+$md[] = '- Sample MySQL itemId values not in CSV db_itemId (first 20): `' . implode('`, `', array_slice($mysqlItemIdUnrepresented, 0, 20)) . '`';
+$md[] = '- Sample MySQL db_itemId values not in CSV db_itemId (first 20): `' . implode('`, `', array_slice($mysqlDbItemIdUnrepresented, 0, 20)) . '`';
 
 file_put_contents($outPath, implode("\n", $md) . "\n");
 echo "Wrote {$outPath}\n";
