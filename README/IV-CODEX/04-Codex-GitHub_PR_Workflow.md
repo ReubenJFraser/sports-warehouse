@@ -249,8 +249,9 @@ Run:
 - `sports-warehouse`
 - `git checkout main`
 - `git pull origin main`
+- `git fetch --prune`
 - `git status --short`
-- `git log --oneline -5`
+- `git log --oneline -8`
 
 Expected result:
 
@@ -386,8 +387,9 @@ Run:
 - `sports-warehouse`
 - `git checkout main`
 - `git pull origin main`
+- `git fetch --prune`
 - `git status --short`
-- `git log --oneline -5`
+- `git log --oneline -8`
 
 Expected result:
 
@@ -902,15 +904,79 @@ Before merging any Codex PR, confirm:
 
 ---
 
+## Human-in-the-Loop Operator Sequence
+
+Between Codex completion and local acceptance, the operator often performs mechanical integration steps across:
+
+- ChatGPT task instructions
+- Codex task execution
+- GitHub PR review and merge
+- local PowerShell synchronization
+- Laragon runtime verification
+- DBeaver inspection where needed
+- local generated report output review
+
+This manual coordination is expected workflow behaviour.
+
+It is not a workflow failure.
+
+The disciplined requirement is that each handoff point stays explicit, observable, and reversible.
+
+---
+
 ## Required Local Post-Merge Checklist
 
-After merging any PR:
+After merging any PR, decide the local sequence by working tree state:
+
+- if the working tree is clean, run the normal local post-merge sequence
+- if tracked generated reports are modified and disposable/regenerable, restore them before pulling
+- if local changes are intentional, commit or stash deliberately before pulling
+
+### Normal Local Post-Merge Sequence
+
+Run:
 
 - `sports-warehouse`
 - `git checkout main`
 - `git pull origin main`
+- `git fetch --prune`
 - `git status --short`
-- `git log --oneline -5`
+- `git log --oneline -8`
+
+### Tracked Generated Report Variation
+
+Files under `docs/operations/generated/` may be tracked by Git.
+
+If a local PHP report generator rewrites tracked generated files, `git status --short` can show modified entries such as:
+
+- `M docs/operations/generated/2026-05-20-live-schema-verification-report.md`
+- `M docs/operations/generated/2026-05-18-db_itemid-model_id-readiness-audit.md`
+
+A later `git pull origin main` can be blocked when the merged PR also changed one of those tracked files.
+
+Typical error:
+
+- `Your local changes to the following files would be overwritten by merge`
+
+When those local report outputs are disposable, regenerable, and not intended for commit, use this safe recovery sequence:
+
+- `git restore -- docs\operations\generated\2026-05-20-live-schema-verification-report.md`
+- `git restore -- docs\operations\generated\2026-05-18-db_itemid-model_id-readiness-audit.md`
+- `git pull origin main`
+- `git fetch --prune`
+- `git status --short`
+- `git log --oneline -8`
+
+Use this restore flow only when the local generated output is not intended to be committed.
+
+If the generated report output is intended to become a committed artifact, do not restore blindly; review it and commit it deliberately.
+
+Untracked generated files shown with `??` usually do not block `git pull`, for example:
+
+- `?? docs/operations/generated/image-sync-reconciliation-report.csv`
+- `?? docs/operations/generated/image-sync-reconciliation-summary.md`
+
+Do not add untracked generated outputs unless they are intentionally part of the stage scope.
 
 Then run checks relevant to the changed files.
 
