@@ -35,6 +35,18 @@ Preserved readiness facts:
 
 ---
 
+## 3.1) Live naming-governance findings (verification update)
+Latest live verification indicates duplicate camelCase/snake_case pairs exist in `item` and cannot be auto-canonicalized in this planning phase:
+- `ageGroup` / `age_group`: camelCase populated, snake_case mostly blank -> prefer CSV/camelCase input naming.
+- `sizeType` / `size_type`: camelCase populated, snake_case mostly blank -> prefer CSV/camelCase input naming.
+- `fitStyle` / `fit_style`: camelCase populated, snake_case mostly blank -> prefer CSV/camelCase input naming.
+- `activityTags` / `activity_tags`: camelCase populated, snake_case blank -> prefer CSV/camelCase input naming.
+- `CropAllowed` / `crop_allowed`: both populated but values differ on inspected rows; **manual governance decision required**. `CropAllowed` currently carries meaningful Yes/No-style values, while `crop_allowed` appears defaulted to `1`.
+
+Governance rule for next phases: migration/import SQL must **not** drop, rename, or overwrite duplicate columns until naming governance is explicitly approved.
+
+---
+
 ## 4) Proposed schema-alignment categories
 
 ### A. Already present runtime fields (keep)
@@ -44,10 +56,10 @@ Representative CSV/runtime fields already expected in runtime workflows:
 ### B. Naming-drift fields requiring mapping
 CSV-to-runtime compatibility mapping (examples):
 - `subCategory` -> `subcategory`
-- `ageGroup` -> `age_group`
-- `sizeType` -> `size_type`
-- `fitStyle` -> `fit_style`
-- `activityTags` -> `activity_tags`
+- `ageGroup` -> (`ageGroup` preferred from live data; map to `age_group` only in an approved compatibility rollout)
+- `sizeType` -> (`sizeType` preferred from live data; map to `size_type` only in an approved compatibility rollout)
+- `fitStyle` -> (`fitStyle` preferred from live data; map to `fit_style` only in an approved compatibility rollout)
+- `activityTags` -> (`activityTags` preferred from live data; map to `activity_tags` only in an approved compatibility rollout)
 - `CropAllowed` <-> `crop_allowed` (**verification-first naming decision; do not duplicate blindly**)
 - `db_itemId` <-> `db_item_id` (**compatibility rollout decision; do not auto-add duplicate**)
 
@@ -83,15 +95,15 @@ Fields that should remain out of production `item` as persistent runtime columns
 | categoryName | categoryName | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | parentCategory | parentCategory | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | subCategory | subcategory | map alias | VARCHAR(120) | nullable | Maintain compatibility in importer/query projection. |
-| ageGroup | age_group | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
-| sizeType | size_type | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
-| fitStyle | fit_style | map alias | VARCHAR(80) | nullable | Existing runtime naming convention is snake_case. |
-| activityTags | activity_tags | map alias | TEXT | nullable | Keep parser/normalizer stable during rollout. |
+| ageGroup | ageGroup (preferred) / age_group (compat alias only) | map alias | VARCHAR(80) | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |
+| sizeType | sizeType (preferred) / size_type (compat alias only) | map alias | VARCHAR(80) | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |
+| fitStyle | fitStyle (preferred) / fit_style (compat alias only) | map alias | VARCHAR(80) | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |
+| activityTags | activityTags (preferred) / activity_tags (compat alias only) | map alias | TEXT | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |
 | price | price | keep existing | DECIMAL(10,2) (or live equivalent) | nullable default NULL | Same-name runtime field; keep existing live numeric strategy. |
 | salePrice | salePrice | keep existing | DECIMAL(10,2) (or live equivalent) | nullable default NULL | Same-name runtime field; keep existing live numeric strategy. |
 | description | description | keep existing | TEXT | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | featured | featured | keep existing | TINYINT(1) or BOOLEAN-like | nullable default NULL | Same-name runtime field; preserve existing boolean normalization behavior. |
-| CropAllowed | crop_allowed (or CropAllowed if live) | verify live schema first; map alias | TINYINT(1) or BOOLEAN-like | nullable default NULL | Do not create both forms blindly. Select canonical name after live verification. |
+| CropAllowed | CropAllowed / crop_allowed (manual governance pending) | verify live schema first; map alias | TINYINT(1) or BOOLEAN-like | nullable default NULL | Values differ in live data; do not canonicalize automatically or overwrite either column until approved decision. |
 | product_domain | product_domain | add new column | VARCHAR(120) | nullable | Domain taxonomy field. |
 | collection | collection | add new column | VARCHAR(120) | nullable | Collection taxonomy field. |
 | model_family | model_family | add new column | VARCHAR(120) | nullable | Family taxonomy field. |
@@ -136,18 +148,23 @@ Fields that should remain out of production `item` as persistent runtime columns
 
 3. **`CropAllowed` / `crop_allowed` decision**
    - Verify live schema first.
-   - Canonicalize through mapping/compatibility plan; do **not** create duplicate columns by default.
+   - Live values currently differ between columns, so this remains a **manual naming-governance decision**.
+   - Do **not** auto-canonicalize, drop, rename, or overwrite either duplicate form until governance approval.
 
-4. **`itemName` / `item_name_fully_derived` relationship**
+4. **`ageGroup`, `sizeType`, `fitStyle`, `activityTags` duplicate-pair decisions**
+   - Live data currently supports preferring the camelCase fields (`ageGroup`, `sizeType`, `fitStyle`, `activityTags`) as source-value inputs.
+   - Snake_case counterparts may be retained as compatibility aliases only, pending deliberate rollout approval.
+
+5. **`itemName` / `item_name_fully_derived` relationship**
    - `itemName`: runtime display/product label used across catalogue and cards.
    - `item_name_fully_derived`: derived-system canonical text snapshot for reproducibility/audit.
    - Keep relationship explicit in importer mapping so display naming does not accidentally erase derivation provenance.
 
-5. **Media field distinction (`images`, `thumbnails_json`, `videos`, `images2`)**
+6. **Media field distinction (`images`, `thumbnails_json`, `videos`, `images2`)**
    - `images`, `thumbnails_json`, `videos` are runtime-consumed media fields and remain in `item`.
    - `images2` is helper/import-only and should stay in staging/import pipeline unless a later runtime requirement is approved.
 
-6. **Post-insert `db_itemId` assignment/backfill planning**
+7. **Post-insert `db_itemId` assignment/backfill planning**
    - For the **66 likely new insert rows** (currently blank `db_itemId`), future import execution planning must explicitly decide how `db_itemId` is assigned and/or backfilled after insertion.
    - This design document does not execute or prescribe that assignment mechanism; it flags the requirement for the next approved execution phase.
 
@@ -203,3 +220,4 @@ Focus areas:
 - Do **not** create executable SQL migration files yet in this phase.
 - If SQL-like snippets are later added to planning docs, they must be clearly labeled **illustrative only / not for execution**.
 - Execution-grade SQL must be separated into a future, explicitly approved migration phase with rollback planning.
+- Future migration/import SQL must **not** drop, rename, or overwrite duplicate camelCase/snake_case columns until explicit naming-governance approval is recorded.
