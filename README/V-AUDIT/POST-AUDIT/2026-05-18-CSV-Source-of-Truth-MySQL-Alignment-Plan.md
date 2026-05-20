@@ -1,45 +1,70 @@
 # CSV-as-Source-of-Truth MySQL Alignment Plan (No-Write)
 
 ## Scope and constraints
-- **Objective:** plan structural and data alignment so MySQL `item` aligns to the Excel-derived CSV as the source of truth.
-- **No-write guardrails honored:** no DB writes, no migrations executed, no repair SQL run, no hero/image behavior changes.
-- **Identity direction:** `db_itemId` is a newly created/intended database linkage field for mapping CSV rows to existing MySQL `item` records; `model_id` is a new formula-derived catalogue fingerprint used for identity validation and stability governance.
+- Objective: align MySQL runtime schema and PHP field usage with `docs/data/SportWarehouse_ProductDB.csv` as the current source of truth.
+- This is planning only; no SQL writes, no migrations applied, no importer execution.
+- Protected image fields must be preserved during any later execution:
+  - `item.hero_image`
+  - `item.chosen_image`
+  - `hero_override.chosen_image`
+- No Hero Manager / Hero Editor behavior changes in this phase.
 
-## Inputs reviewed
-### Repository snapshot analysis input
-- CSV source: `docs/data/SportWarehouse_ProductDB.csv`
-- MySQL snapshot schema/data: `db/sportswh_dump_sanitized.sql` (`item` DDL + INSERT snapshot)
+## Baseline inputs used
+- CSV header source: `docs/data/SportWarehouse_ProductDB.csv`.
+- MySQL `item` schema source: `db/sportswh_dump.sql` (`CREATE TABLE item`).
+- Runtime/read-path scan source: PHP and tooling query surfaces under `inc/`, `admin/`, `tools/`, `scripts/`.
+- Readiness audit reference: `tools/reports/generate_db_itemid_modelid_readiness_audit.php` and generated output in `docs/operations/generated/2026-05-18-db_itemid-model_id-readiness-audit.md`.
 
-### Live local reconciliation input (DBeaver/MySQL CLI report)
-- Reconciliation source: local DBeaver/MySQL report output (`tools/reports/image-sync-reconciliation.php` logic + local database state).
-- Reported buckets in the live run: matched rows **46**, `csv_future_or_staging` **66**, `csv_only_candidate` **8**, `mysql_only_legacy` **16**.
-- Live MySQL includes a `db_itemId` column, and `db_itemId` is the intended database linkage field where populated in reconciliation context.
+Known readiness facts to preserve:
+- CSV rows: **120**
+- Existing products confidently linked by `db_itemId`: **54**
+- Likely new insert candidates with blank `db_itemId`: **66**
+- Duplicate `model_id`: `nike_female_leggings` appears **2** times
 
-### Scope note on source freshness
-- The sanitized dump is a repository snapshot for planning and may be older than, or otherwise different from, the current live local DBeaver/MySQL schema and row state.
-- Therefore, snapshot-derived counts and live reconciliation counts are intentionally tracked separately in this document.
+---
 
-- Identity contract context: `README/II-CONTRACTS/19-Model_ID_Generation_&_Identity_Governance_Contract.md`
-
-## 1) CSV columns vs MySQL `item` columns (snapshot-based)
+## 1) CSV columns vs live MySQL `item` columns
 
 ### CSV columns (45)
 `brand, gender, itemName, itemName_fully_derived, model_id, product_domain, collection, model_family, subCategory, fabric, construction, seamless, scrunchFlag, invisibleFlag, neckline, strap_configuration, support_level, rise, length, variant, usage_category, usage_subtype, categoryName, parentCategory, ageGroup, sizeType, fitStyle, activityTags, price, salePrice, description, featured, images, thumbnails_json, external_item_id, campaign_or_series, altText, ariaText, videoAltText, videos, images2, CropAllowed, db_itemId, assignment_source, _images_helper_normalize`
 
-### MySQL `item` columns in snapshot (24)
+### MySQL `item` columns (24 in repo snapshot DDL)
 `itemId, itemName, brand, gender, subcategory, price, salePrice, description, featured, categoryId, categoryName, parentCategory, activity_tags, age_group, size_type, fit_style, images, orientation, thumbnails_json, altText, ariaText, videoAltText, videos`
 
-> Note: `subCategory` vs `subcategory`, `activityTags` vs `activity_tags`, `ageGroup` vs `age_group`, `sizeType` vs `size_type`, `fitStyle` vs `fit_style` are semantic matches but naming-drifted.
+---
 
-## 2) CSV columns missing from MySQL `item` (schema alignment candidates)
-30 CSV columns are absent from the repository snapshot `item` schema:
+## 2) CSV column classification
 
+## A) Already present in MySQL with same name
+- `brand`
+- `gender`
+- `itemName`
+- `categoryName`
+- `parentCategory`
+- `price`
+- `salePrice`
+- `description`
+- `featured`
+- `images`
+- `thumbnails_json`
+- `altText`
+- `ariaText`
+- `videoAltText`
+- `videos`
+
+## B) Present with naming difference (semantic match; normalize to snake_case in DB)
+- CSV `subCategory` → MySQL `subcategory`
+- CSV `ageGroup` → MySQL `age_group`
+- CSV `sizeType` → MySQL `size_type`
+- CSV `fitStyle` → MySQL `fit_style`
+- CSV `activityTags` → MySQL `activity_tags`
+
+## C) Missing from MySQL `item` and should be added as runtime columns
 - `itemName_fully_derived`
 - `model_id`
 - `product_domain`
 - `collection`
 - `model_family`
-- `subCategory` (case/shape mismatch vs `subcategory`)
 - `fabric`
 - `construction`
 - `seamless`
@@ -53,96 +78,140 @@
 - `variant`
 - `usage_category`
 - `usage_subtype`
-- `ageGroup` (shape mismatch vs `age_group`)
-- `sizeType` (shape mismatch vs `size_type`)
-- `fitStyle` (shape mismatch vs `fit_style`)
-- `activityTags` (shape mismatch vs `activity_tags`)
 - `external_item_id`
 - `campaign_or_series`
-- `images2`
 - `CropAllowed`
 - `db_itemId`
-- `assignment_source`
-- `_images_helper_normalize`
 
-## 3) `model_id` as formula-derived catalogue fingerprint (with validation)
-- `model_id` is present on every CSV row and should be treated as a formula-derived catalogue fingerprint used for validation, duplicate detection, and stable product classification (not a numeric database ID).
-- Before adoption, enforce validation gates:
-  1. nonblank required,
-  2. uniqueness required,
-  3. normalization consistency (trim/lower/slug policy),
-  4. immutability governance post-publication.
+## D) Helper/import-only fields (do NOT become runtime `item` columns)
+- `images2` (helper image set / staging helper)
+- `assignment_source` (import trace/provenance)
+- `_images_helper_normalize` (import normalization helper)
 
-## 4) `model_id` audit
-- Total CSV rows: **120**
-- Nonblank `model_id`: **120**
-- Blank `model_id`: **0**
-- Duplicate `model_id` values: **1 value duplicated**
-  - `nike_female_leggings` appears **2** times
+Recommendation: keep helper/import-only fields in staging/audit tables, not in production `item`.
 
-## 5) `db_itemId` audit (new linkage field)
-- CSV rows with populated `db_itemId`: **54 distinct IDs referenced**.
-- `db_itemId` is intended to link CSV rows to existing MySQL `itemId`/`db_itemId` records when such records already exist.
-- Blank `db_itemId` is expected for new CSV rows not yet imported into MySQL.
+---
 
-## 6) Row classification (planning-grade, snapshot-based)
-Using CSV + MySQL snapshot (`db/sportswh_dump_sanitized.sql`) with `db_itemId` linkage checks and name-delta diagnostics:
+## 3) Recommended final MySQL column names
 
-- **Existing MySQL products mapped confidently:** **15**
-  - (`db_itemId` present in snapshot and `itemName` unchanged)
-- **Renamed products requiring manual mapping review:** **33**
-  - (`db_itemId` present in snapshot but `itemName` changed)
-- **New CSV products not yet in MySQL snapshot:** **72**
-  - (`db_itemId` blank or not found in snapshot)
-- **Old MySQL products no longer represented in CSV:** **0** in this snapshot comparison
+Naming convention: snake_case for DB columns, with targeted compatibility bridging in importer/UI mapping.
 
-Interpretation (snapshot-based):
-- High rename count confirms why normalized `brand + itemName` is unsafe as primary identity.
-- `itemName` drift during restructure is expected; it should be treated as a diagnostic signal, not identity authority.
-- Review queue should prioritize verified `db_itemId` linkage, then validate with `model_id`, then route ambiguities to human review.
+- Keep existing snake_case runtime columns: `subcategory`, `age_group`, `size_type`, `fit_style`, `activity_tags`.
+- Add new columns using snake_case:
+  - `item_name_fully_derived`
+  - `model_id`
+  - `product_domain`
+  - `collection`
+  - `model_family`
+  - `fabric`
+  - `construction`
+  - `seamless`
+  - `scrunch_flag`
+  - `invisible_flag`
+  - `neckline`
+  - `strap_configuration`
+  - `support_level`
+  - `rise`
+  - `length`
+  - `variant`
+  - `usage_category`
+  - `usage_subtype`
+  - `external_item_id`
+  - `campaign_or_series`
+  - `crop_allowed`
+  - `db_item_id`
 
-## 7) Live local reconciliation buckets (DBeaver/MySQL report-based)
-From the live local reconciliation report (separate from repository snapshot analysis):
+Compatibility guidance:
+- Preserve CSV header vocabulary as ingestion aliases (e.g., `subCategory` maps to `subcategory`; `db_itemId` maps to `db_item_id`).
+- Keep `itemId` as PK; `db_item_id` is import linkage authority.
+- Add a unique index on `model_id` only after duplicate `nike_female_leggings` is resolved.
 
-- **Matched rows:** **46**
-- **CSV future or staging:** **66** (`csv_future_or_staging`)
-- **CSV only candidate:** **8** (`csv_only_candidate`)
-- **MySQL only legacy:** **16** (`mysql_only_legacy`)
+---
 
-Interpretation (live report-based):
-- These counts reflect current local MySQL runtime state as seen by the reconciliation run, not the sanitized SQL dump snapshot.
-- `db_itemId` remains a primary linkage signal for existing rows when populated and verified against MySQL identifiers.
+## 4) PHP files / query paths likely impacted by field alignment
 
-## 8) Recommended alignment approach
-Yes—proceed with a staged, reviewable workflow:
+## Customer-facing catalog and filters
+- `inc/catalog-query.php` (main item select, filters, projection).
+- `inc/filters/color-facets.php` (age/size filtering and item joins).
+- `inc/cards/product-grid.php` and `inc/cards/utils.php` (item projection assumptions and image fallback behavior).
 
-1. **Schema alignment prep (design only now):**
-   - Add missing authoritative CSV columns to MySQL (or a parallel catalog table) so CSV semantics can land losslessly.
-   - Add `model_id` column with planned unique index after duplicate cleanup.
-2. **Create CSV staging table:**
-   - `item_staging_csv` mirroring CSV headers (including helper/trace columns).
-   - Load raw CSV into staging unchanged.
-3. **Reviewed import/update pipeline:**
-   - Validation phase (required/enum/type/nullability + duplicate `model_id` stop condition).
-   - Match phase in priority order: verified `db_itemId` -> `model_id` validation -> `brand + itemName` fallback diagnostics -> manual queue.
-   - Classification rule: rows with blank `db_itemId` and valid unique `model_id` are likely new insert candidates.
-   - Action phase (future): INSERT new, UPDATE matched, flag unresolved for review.
-   - Produce dry-run diff artifacts before any write execution.
-4. **Cutover rule:**
-   - Treat staging+review outputs as gate; only then schedule controlled SQL migration/import.
+## Product/admin hero surfaces (must preserve protected image behavior)
+- `admin/hero-edit.php`
+- `admin/hero-rationale-report.php`
+- `admin/image-integrity.php`
+- `inc/hero/candidates.php`
+- `inc/hero/authority.php`
 
-## 9) Runtime/editor-managed fields to preserve
-During future alignment execution, explicitly preserve operational image overrides and runtime-managed selections:
+## Import/audit/report tooling
+- `tools/reports/image-sync-reconciliation.php` (already performs column-presence adaptation and protected-field messaging).
+- `tools/reports/generate_db_itemid_modelid_readiness_audit.php`
+- `tools/importers/import_productdb_to_db.php`
+- `tools/importers/import_external_item_id.php`
+- `tools/importers/diagnostic_external_item_id.php`
+- `tools/importers/regenerate_derived_system_fields.php`
 
-- `item.hero_image`
-- `item.chosen_image`
-- `hero_override.chosen_image`
+## Image/orientation scripts (read impact only in this phase)
+- `scripts/update-orientations.php`
+- `scripts/generate-item-orientations.php`
+- `scripts/rebuild-image-meta.php`
 
-Practical rule for future implementation:
-- Do not overwrite these fields from CSV import paths unless a dedicated override workflow explicitly authorizes it.
+---
 
-## Proposed next steps (still plan-only)
-1. Draft target DDL (not executed) for missing columns and index strategy (`model_id` unique after duplicate resolution).
-2. Draft staging table DDL and CSV load spec (no run).
-3. Draft dry-run reconciliation SQL/report queries using verified `db_itemId` linkage, `model_id` validation, and `brand + itemName` fallback diagnostics.
-4. Resolve duplicate `model_id` (`nike_female_leggings`) in source CSV governance before any unique constraint rollout.
+## 5) Admin forms/reports affected
+- Hero Editor: taxonomy/meta display currently relies on existing naming (`subcategory`, `age_group`) and must continue to work after CSV/DB mapping normalization.
+- Hero rationale report: depends on `subcategory` and category fields in joins.
+- Image Integrity admin page: reads `chosen_image`, `hero_image`, `thumbnails_json`, and `hero_override.chosen_image`; must not be altered by schema rollout.
+- Reconciliation/report tooling: consumes `db_itemId`/`model_id` semantics and should be updated to support canonical DB names via explicit mapping layer.
+
+---
+
+## 6) Protected-field preservation contract (hard guard)
+For all future import/update SQL paths:
+- Never blind-overwrite:
+  - `item.hero_image`
+  - `item.chosen_image`
+  - `hero_override.chosen_image`
+- Enforce column-level allowlist updates so protected fields are excluded by default.
+- Any change to these fields must stay in dedicated hero workflows, not catalog import flow.
+
+---
+
+## 7) Staged implementation plan (no-write execution sequence)
+
+## Stage A — Schema migration design (draft only)
+1. Draft DDL to add missing runtime columns with nullable defaults.
+2. Normalize new runtime names to snake_case.
+3. Do not rename legacy columns yet; use compatibility mapping in importer/query layer first.
+4. Defer `UNIQUE(model_id)` until duplicate remediation is approved.
+
+## Stage B — Staging/import design (draft only)
+1. Define `item_csv_staging` with near-raw CSV header compatibility (including helper fields).
+2. Load CSV raw values into staging in future execution phase.
+3. Add deterministic mapping view/step from staging headers to runtime DB names.
+
+## Stage C — Dry-run validation design
+1. Validation gates:
+   - row count sanity (expect 120 rows),
+   - required fields nonblank (`model_id`, `itemName`, `brand`),
+   - duplicate detection (`model_id`),
+   - linkage diagnostics (`db_itemId` against `itemId` / `db_item_id`).
+2. Classification outputs (expected):
+   - 54 confidently linked existing rows,
+   - 66 likely inserts,
+   - explicit duplicate queue for `nike_female_leggings`.
+3. Produce diff artifacts only (no write SQL execution).
+
+## Stage D — Reviewed execution plan (future gated phase)
+1. Human review and sign-off of dry-run outputs.
+2. Execute schema migration first, then controlled import/update batches.
+3. Enforce protected-field exclusion in all update statements.
+4. Post-run reconciliation and rollback plan pre-authored before execution.
+
+---
+
+## 8) Explicit non-goals for this planning pass
+- No database schema change execution.
+- No data import execution.
+- No repair SQL.
+- No image mutation.
+- No Hero Manager / Hero Editor behavior changes.
