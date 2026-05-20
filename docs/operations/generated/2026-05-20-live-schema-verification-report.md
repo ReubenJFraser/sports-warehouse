@@ -1,6 +1,6 @@
 # Live Schema Verification Report (Read-Only)
 
-- Generated: 2026-05-20 05:45:00 UTC
+- Generated: 2026-05-20 06:06:25 UTC
 - Source CSV: `docs/data/SportWarehouse_ProductDB.csv`
 - Migration design reference: `README/V-AUDIT/POST-AUDIT/2026-05-20-MySQL-Schema-Migration-Design-No-Execution.md`
 - DB status: connection failed (`SQLSTATE[HY000] [2002] Connection refused`)
@@ -49,6 +49,16 @@
 | `fitStyle` / `fit_style` | alias/mapping required | Neither form exists; importer mapping needed if required by CSV. |
 | `activityTags` / `activity_tags` | alias/mapping required | Neither form exists; importer mapping needed if required by CSV. |
 
+## 5A) Naming convention / duplicate-column governance
+- This section treats camelCase/snake_case duplicates as a **naming-governance architecture decision**, not simple schema drift.
+| Pair | camelCase in live `item` | snake_case in live `item` | CSV header form | Data occupancy/read-only comparison | Recommendation |
+|---|---|---|---|---|---|
+| `ageGroup` / `age_group` | no | no | camelCase (`ageGroup`) | DB unavailable or both columns not present for live read-only comparison. | manual decision required |
+| `sizeType` / `size_type` | no | no | camelCase (`sizeType`) | DB unavailable or both columns not present for live read-only comparison. | manual decision required |
+| `fitStyle` / `fit_style` | no | no | camelCase (`fitStyle`) | DB unavailable or both columns not present for live read-only comparison. | manual decision required |
+| `activityTags` / `activity_tags` | no | no | camelCase (`activityTags`) | DB unavailable or both columns not present for live read-only comparison. | manual decision required |
+| `CropAllowed` / `crop_allowed` | no | no | camelCase (`CropAllowed`) | DB unavailable or both columns not present for live read-only comparison. | manual decision required |
+
 ## 6) CSV-to-live schema comparison
 | CSV column | Expected runtime decision | Exact live item column exists | Alias/mapped live item column exists | Recommended planning status |
 |---|---|---|---|---|
@@ -95,7 +105,7 @@
 | `images2` | staging/import only | no | no | staging/import only |
 | `CropAllowed` | verify-first naming decision | no | no | verify-first compatibility decision |
 | `db_itemId` | verify live schema first; keep existing | no | no | verify-first compatibility decision |
-| `assignment_source` | staging/import only | no | no | staging/import only |
+| `assignment_source` | existing live column, but design classifies as staging/import-only; manual decision required before import allowlist | no | no | staging/import only |
 | `_images_helper_normalize` | staging/import only | no | no | staging/import only |
 
 ## 7) Protected-field verification
@@ -112,5 +122,9 @@
 - CSV columns supported via alias: **0**
 - CSV columns missing from live item and candidate runtime additions: **40**
 - CSV columns classified as staging/import only: **3**
+- Duplicate naming pairs detected: **5**
+- Duplicate naming pairs with both columns present: **0**
+- Duplicate naming pairs with value differences: **0**
 - Verify-first compatibility decisions: **2**
+- Manual naming-governance decisions required: **0**
 - Recommendation: DB was unreachable, so manual live schema review is still required before drafting illustrative migration SQL.

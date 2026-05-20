@@ -63,6 +63,14 @@ $aliasPairs = [
 $stagingOnly = ['images2', 'assignment_source', '_images_helper_normalize'];
 $verifyFirst = ['CropAllowed', 'db_itemId'];
 
+$duplicateGovernancePairs = [
+    ['camel' => 'ageGroup', 'snake' => 'age_group'],
+    ['camel' => 'sizeType', 'snake' => 'size_type'],
+    ['camel' => 'fitStyle', 'snake' => 'fit_style'],
+    ['camel' => 'activityTags', 'snake' => 'activity_tags'],
+    ['camel' => 'CropAllowed', 'snake' => 'crop_allowed'],
+];
+
 $dbHost = sw_env('DB_HOST', '127.0.0.1');
 $dbName = sw_env('DB_NAME', 'sportswh');
 $dbUser = sw_env('DB_USER', 'root');
@@ -72,6 +80,7 @@ $dbError = null;
 $tableExists = ['item' => false, 'hero_override' => false];
 $itemColumns = [];
 $heroOverrideColumns = [];
+$duplicatePairStats = [];
 
 try {
     $pdo = new PDO(
@@ -96,6 +105,43 @@ try {
         );
         $stmt->execute(['schema' => $dbName, 'table_name' => 'item']);
         $itemColumns = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        foreach ($duplicateGovernancePairs as $pair) {
+            $camel = $pair['camel'];
+            $snake = $pair['snake'];
+            $quotedCamel = '`' . str_replace('`', '``', $camel) . '`';
+            $quotedSnake = '`' . str_replace('`', '``', $snake) . '`';
+            $sql = "SELECT
+                    COUNT(*) AS total_rows,
+                    SUM(CASE WHEN (NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NULL) AND (NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NULL) THEN 1 ELSE 0 END) AS both_blank,
+                    SUM(CASE WHEN (NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NOT NULL) AND (NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NULL) THEN 1 ELSE 0 END) AS only_camel,
+                    SUM(CASE WHEN (NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NULL) AND (NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NOT NULL) THEN 1 ELSE 0 END) AS only_snake,
+                    SUM(CASE WHEN (NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NOT NULL) AND (NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NOT NULL) AND (TRIM(CAST({$quotedCamel} AS CHAR)) = TRIM(CAST({$quotedSnake} AS CHAR))) THEN 1 ELSE 0 END) AS both_same,
+                    SUM(CASE WHEN (NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NOT NULL) AND (NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NOT NULL) AND (TRIM(CAST({$quotedCamel} AS CHAR)) <> TRIM(CAST({$quotedSnake} AS CHAR))) THEN 1 ELSE 0 END) AS both_diff
+                FROM item";
+            $pairStmt = $pdo->query($sql);
+            $stats = $pairStmt ? ($pairStmt->fetch(PDO::FETCH_ASSOC) ?: []) : [];
+
+            $diffSql = "SELECT itemId, itemName, CAST({$quotedCamel} AS CHAR) AS camel_value, CAST({$quotedSnake} AS CHAR) AS snake_value
+                        FROM item
+                        WHERE NULLIF(TRIM(COALESCE({$quotedCamel}, '')), '') IS NOT NULL
+                          AND NULLIF(TRIM(COALESCE({$quotedSnake}, '')), '') IS NOT NULL
+                          AND TRIM(CAST({$quotedCamel} AS CHAR)) <> TRIM(CAST({$quotedSnake} AS CHAR))
+                        ORDER BY itemId ASC
+                        LIMIT 10";
+            $diffStmt = $pdo->query($diffSql);
+            $diffExamples = $diffStmt ? ($diffStmt->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+
+            $duplicatePairStats[$camel . '|' . $snake] = [
+                'total_rows' => (int)($stats['total_rows'] ?? 0),
+                'both_blank' => (int)($stats['both_blank'] ?? 0),
+                'only_camel' => (int)($stats['only_camel'] ?? 0),
+                'only_snake' => (int)($stats['only_snake'] ?? 0),
+                'both_same' => (int)($stats['both_same'] ?? 0),
+                'both_diff' => (int)($stats['both_diff'] ?? 0),
+                'diff_examples' => $diffExamples,
+            ];
+        }
     }
 
     if ($tableExists['hero_override']) {
@@ -133,6 +179,7 @@ $driftPairs = [
 
 $csvExact = 0;
 $csvAlias = 0;
+$csvDuplicateRisk = 0;
 $csvMissingRuntime = 0;
 $csvStaging = 0;
 $csvVerifyFirst = 0;
@@ -151,8 +198,13 @@ foreach ($headers as $csvCol) {
         $status = 'verify-first compatibility decision';
         $csvVerifyFirst++;
     } elseif ($exact) {
-        $status = 'already supported';
-        $csvExact++;
+        if ($aliasFound && in_array($csvCol, array_column($duplicateGovernancePairs, 'camel'), true)) {
+            $status = 'supported, but duplicate naming decision required';
+            $csvDuplicateRisk++;
+        } else {
+            $status = 'already supported';
+            $csvExact++;
+        }
     } elseif ($aliasFound) {
         $status = 'supported via alias';
         $csvAlias++;
@@ -162,7 +214,9 @@ foreach ($headers as $csvCol) {
 
     $comparisonRows[] = [
         'csv' => $csvCol,
-        'decision' => $runtimeDecisions[$csvCol] ?? 'not explicitly specified in migration design',
+        'decision' => $csvCol === 'assignment_source'
+            ? 'existing live column, but design classifies as staging/import-only; manual decision required before import allowlist'
+            : ($runtimeDecisions[$csvCol] ?? 'not explicitly specified in migration design'),
         'exact' => $exact ? 'yes' : 'no',
         'alias' => $aliasFound ? ('yes (`' . $aliasTarget . '`)') : 'no',
         'status' => $status,
@@ -252,6 +306,69 @@ foreach ($driftPairs as [$a, $b]) {
     $md[] = '| `' . $a . '` / `' . $b . '` | ' . $class . ' | ' . $notes . ' |';
 }
 $md[] = '';
+$md[] = '## 5A) Naming convention / duplicate-column governance';
+$md[] = '- This section treats camelCase/snake_case duplicates as a **naming-governance architecture decision**, not simple schema drift.';
+$md[] = '| Pair | camelCase in live `item` | snake_case in live `item` | CSV header form | Data occupancy/read-only comparison | Recommendation |';
+$md[] = '|---|---|---|---|---|---|';
+foreach ($duplicateGovernancePairs as $pair) {
+    $camel = $pair['camel'];
+    $snake = $pair['snake'];
+    $hasCamel = isset($itemColumnSet[$camel]);
+    $hasSnake = isset($itemColumnSet[$snake]);
+    $csvForm = in_array($camel, $headers, true) ? ('camelCase (`' . $camel . '`)') : (in_array($snake, $headers, true) ? ('snake_case (`' . $snake . '`)') : 'not present in CSV headers');
+
+    $comparison = 'DB unavailable or both columns not present for live read-only comparison.';
+    $recommendation = 'manual decision required';
+
+    if ($dbError === null && $tableExists['item'] && $hasCamel && $hasSnake) {
+        $key = $camel . '|' . $snake;
+        $stats = $duplicatePairStats[$key] ?? null;
+        if ($stats !== null) {
+            if ($stats['both_diff'] > 0) {
+                $relationship = 'both columns contain differing values';
+                $recommendation = 'manual decision required';
+            } elseif ($stats['only_snake'] > 0 && $stats['only_camel'] === 0) {
+                $relationship = 'snake_case mostly populated, camelCase mostly blank';
+                $recommendation = 'prefer runtime snake_case';
+            } elseif ($stats['only_camel'] > 0 && $stats['only_snake'] === 0) {
+                $relationship = 'camelCase mostly populated, snake_case mostly blank';
+                $recommendation = 'prefer CSV camelCase';
+            } elseif ($stats['both_same'] > 0 && $stats['only_camel'] === 0 && $stats['only_snake'] === 0) {
+                $relationship = 'values identical where populated';
+                $recommendation = 'keep existing temporarily with alias mapping';
+            } else {
+                $relationship = 'mixed occupancy across both naming forms';
+                $recommendation = 'manual decision required';
+            }
+            $comparison = sprintf(
+                'rows=%d; both blank=%d; only camel=%d; only snake=%d; both same=%d; both different=%d; %s',
+                $stats['total_rows'],
+                $stats['both_blank'],
+                $stats['only_camel'],
+                $stats['only_snake'],
+                $stats['both_same'],
+                $stats['both_diff'],
+                $relationship
+            );
+        }
+    }
+
+    $md[] = '| `' . $camel . '` / `' . $snake . '` | ' . ($hasCamel ? 'yes' : 'no') . ' | ' . ($hasSnake ? 'yes' : 'no') . ' | ' . $csvForm . ' | ' . $comparison . ' | ' . $recommendation . ' |';
+
+    if ($dbError === null && $tableExists['item'] && $hasCamel && $hasSnake) {
+        $key = $camel . '|' . $snake;
+        $stats = $duplicatePairStats[$key] ?? null;
+        if ($stats !== null && $stats['both_diff'] > 0) {
+            $md[] = '';
+            $md[] = '- First 10 differing examples for `' . $camel . '` vs `' . $snake . '`: ';
+            $md[] = '  - Columns: `itemId`, `itemName`, camelCase value, snake_case value';
+            foreach ($stats['diff_examples'] as $ex) {
+                $md[] = '  - `itemId=' . (string)$ex['itemId'] . '`, `itemName=' . str_replace('`', '\`', (string)$ex['itemName']) . '`, camel=`' . str_replace('`', '\`', (string)$ex['camel_value']) . '`, snake=`' . str_replace('`', '\`', (string)$ex['snake_value']) . '`';
+            }
+        }
+    }
+}
+$md[] = '';
 $md[] = '## 6) CSV-to-live schema comparison';
 $md[] = '| CSV column | Expected runtime decision | Exact live item column exists | Alias/mapped live item column exists | Recommended planning status |';
 $md[] = '|---|---|---|---|---|';
@@ -273,7 +390,26 @@ $md[] = '- CSV columns already supported exactly: **' . $csvExact . '**';
 $md[] = '- CSV columns supported via alias: **' . $csvAlias . '**';
 $md[] = '- CSV columns missing from live item and candidate runtime additions: **' . $csvMissingRuntime . '**';
 $md[] = '- CSV columns classified as staging/import only: **' . $csvStaging . '**';
+$duplicateDetected = count($duplicateGovernancePairs);
+$duplicateBothPresent = 0;
+$duplicateWithDiffs = 0;
+foreach ($duplicateGovernancePairs as $pair) {
+    $camel = $pair['camel'];
+    $snake = $pair['snake'];
+    if (isset($itemColumnSet[$camel]) && isset($itemColumnSet[$snake])) {
+        $duplicateBothPresent++;
+        $stats = $duplicatePairStats[$camel . '|' . $snake] ?? null;
+        if ($stats !== null && $stats['both_diff'] > 0) {
+            $duplicateWithDiffs++;
+        }
+    }
+}
+$manualNamingGovernance = $duplicateBothPresent;
+$md[] = '- Duplicate naming pairs detected: **' . $duplicateDetected . '**';
+$md[] = '- Duplicate naming pairs with both columns present: **' . $duplicateBothPresent . '**';
+$md[] = '- Duplicate naming pairs with value differences: **' . $duplicateWithDiffs . '**';
 $md[] = '- Verify-first compatibility decisions: **' . $csvVerifyFirst . '**';
+$md[] = '- Manual naming-governance decisions required: **' . $manualNamingGovernance . '**';
 if ($dbError !== null) {
     $md[] = '- Recommendation: DB was unreachable, so manual live schema review is still required before drafting illustrative migration SQL.';
 } elseif (!$tableExists['item']) {
