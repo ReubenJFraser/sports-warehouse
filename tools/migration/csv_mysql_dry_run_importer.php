@@ -87,8 +87,17 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- write/execution flags remain unsupported\n");
 };
 
+$printNoSideEffectSafety = static function (): void {
+    fwrite(STDOUT, "No CSV was read.\n");
+    fwrite(STDOUT, "No database connection was opened.\n");
+    fwrite(STDOUT, "No SQL was executed.\n");
+    fwrite(STDOUT, "No reports were generated.\n");
+    fwrite(STDOUT, "No files were written.\n");
+};
+
 if ($detectedWriteLikeFlags !== []) {
     fwrite(STDERR, "Write/execution flags are not supported by this skeleton: " . implode(', ', $detectedWriteLikeFlags) . "\n");
+    $printNoSideEffectSafety();
     exit(1);
 }
 
@@ -102,6 +111,7 @@ $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
     fwrite(STDERR, "Unsupported option(s): " . implode(', ', $unknownArgs) . ". Use --help.\n");
+    $printNoSideEffectSafety();
     exit(1);
 }
 
@@ -117,11 +127,7 @@ if (in_array('--status', $args, true)) {
 
 if (in_array('--dry-run', $args, true)) {
     fwrite(STDERR, "--dry-run is planned but not implemented in this approved skeleton stage.\n");
-    fwrite(STDOUT, "No CSV was read.\n");
-    fwrite(STDOUT, "No database connection was opened.\n");
-    fwrite(STDOUT, "No SQL was executed.\n");
-    fwrite(STDOUT, "No reports were generated.\n");
-    fwrite(STDOUT, "No files were written.\n");
+    $printNoSideEffectSafety();
     exit(1);
 }
 
