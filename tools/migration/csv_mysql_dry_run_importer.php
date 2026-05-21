@@ -78,13 +78,12 @@ $printHelp = static function (): void {
 $printStatus = static function (): void {
     fwrite(STDOUT, "Skeleton status:\n");
     fwrite(STDOUT, "- skeleton exists\n");
-    fwrite(STDOUT, "- implementation not approved\n");
+    fwrite(STDOUT, "- Importer implementation approved: no\n");
     fwrite(STDOUT, "- CSV header check implemented: yes\n");
     fwrite(STDOUT, "- Full CSV row reading implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
+    fwrite(STDOUT, "- SQL execution implemented: no\n");
     fwrite(STDOUT, "- Report generation implemented: no\n");
-    fwrite(STDOUT, "- database connection not implemented\n");
-    fwrite(STDOUT, "- SQL execution not implemented\n");
     fwrite(STDOUT, "- protected fields remain excluded by governance\n");
     fwrite(STDOUT, "- deferred governance fields remain excluded\n");
     fwrite(STDOUT, "- write/execution flags remain unsupported\n");
