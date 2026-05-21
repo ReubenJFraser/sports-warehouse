@@ -53,6 +53,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --help     Show this usage/help text and exit successfully.\n");
     fwrite(STDOUT, "  --status   Show skeleton/readiness status and exit successfully.\n");
     fwrite(STDOUT, "  --check-csv-header  Read only the CSV header row and print a safe header summary.\n");
+    fwrite(STDOUT, "  --check-csv-row-count  Count CSV data rows and blank/non-blank db_itemId values without importing.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -68,7 +69,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --write-reports\n\n");
 
     fwrite(STDOUT, "Safety guarantees:\n");
-    fwrite(STDOUT, "  - no CSV read (except first/header row when --check-csv-header is used)\n");
+    fwrite(STDOUT, "  - no CSV read (except first/header row when --check-csv-header is used, or safe row counting when --check-csv-row-count is used)\n");
     fwrite(STDOUT, "  - no DB connection\n");
     fwrite(STDOUT, "  - no SQL execution\n");
     fwrite(STDOUT, "  - no report generation\n");
@@ -80,6 +81,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- skeleton exists\n");
     fwrite(STDOUT, "- Importer implementation approved: no\n");
     fwrite(STDOUT, "- CSV header check implemented: yes\n");
+    fwrite(STDOUT, "- CSV row-count check implemented: yes\n");
+    fwrite(STDOUT, "- CSV row-count check scope: counting only (no full product-row processing/classification)\n");
     fwrite(STDOUT, "- Full CSV row reading implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
     fwrite(STDOUT, "- SQL execution implemented: no\n");
@@ -198,6 +201,105 @@ $checkCsvHeader = static function () use ($printNoSideEffectSafetyHeaderCheck): 
     return $missingRequired === [] ? 0 : 1;
 };
 
+$printNoSideEffectSafetyRowCountCheck = static function (): void {
+    fwrite(STDOUT, "Only CSV rows needed for safe counting were read.\n");
+    fwrite(STDOUT, "No product field comparison was performed.\n");
+    fwrite(STDOUT, "No importer row classification was performed beyond blank/non-blank db_itemId counts.\n");
+    fwrite(STDOUT, "No database connection was opened.\n");
+    fwrite(STDOUT, "No SQL was executed.\n");
+    fwrite(STDOUT, "No reports were generated.\n");
+    fwrite(STDOUT, "No files were written.\n");
+};
+
+$checkCsvRowCount = static function () use ($printNoSideEffectSafetyRowCountCheck): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $expectedTotalRows = 120;
+    $expectedLinkedRows = 54;
+    $expectedBlankRows = 66;
+
+    fwrite(STDOUT, "CSV path: {$csvPath}\n");
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        $printNoSideEffectSafetyRowCountCheck();
+        return 1;
+    }
+
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read-only counting.\n");
+        $printNoSideEffectSafetyRowCountCheck();
+        return 1;
+    }
+
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        $printNoSideEffectSafetyRowCountCheck();
+        return 1;
+    }
+
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+
+    $bomDetectedInFirstHeaderField = false;
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $bomDetectedInFirstHeaderField = true;
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
+    if ($dbItemIdColumnIndex === false) {
+        fclose($handle);
+        fwrite(STDERR, "Required header column missing: db_itemId.\n");
+        $printNoSideEffectSafetyRowCountCheck();
+        return 1;
+    }
+
+    $totalDataRows = 0;
+    $nonBlankDbItemIdRows = 0;
+    $blankDbItemIdRows = 0;
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $totalDataRows++;
+        $dbItemIdValue = array_key_exists($dbItemIdColumnIndex, $row) ? trim((string) $row[$dbItemIdColumnIndex]) : '';
+        if ($dbItemIdValue === '') {
+            $blankDbItemIdRows++;
+        } else {
+            $nonBlankDbItemIdRows++;
+        }
+    }
+
+    fclose($handle);
+
+    $totalMatchesExpected = ($totalDataRows === $expectedTotalRows);
+    $nonBlankMatchesExpected = ($nonBlankDbItemIdRows === $expectedLinkedRows);
+    $blankMatchesExpected = ($blankDbItemIdRows === $expectedBlankRows);
+
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "Total data row count: {$totalDataRows}\n");
+    fwrite(STDOUT, "Expected data row count: {$expectedTotalRows}\n");
+    fwrite(STDOUT, "Total data row count matches expected: " . ($totalMatchesExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Non-blank db_itemId row count: {$nonBlankDbItemIdRows}\n");
+    fwrite(STDOUT, "Expected linked db_itemId row count: {$expectedLinkedRows}\n");
+    fwrite(STDOUT, "Non-blank db_itemId row count matches expected: " . ($nonBlankMatchesExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Blank db_itemId row count: {$blankDbItemIdRows}\n");
+    fwrite(STDOUT, "Expected blank db_itemId row count: {$expectedBlankRows}\n");
+    fwrite(STDOUT, "Blank db_itemId row count matches expected: " . ($blankMatchesExpected ? 'yes' : 'no') . "\n");
+
+    $printNoSideEffectSafetyRowCountCheck();
+
+    return ($totalMatchesExpected && $nonBlankMatchesExpected && $blankMatchesExpected) ? 0 : 1;
+};
+
 $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No CSV was read.\n");
     fwrite(STDOUT, "No database connection was opened.\n");
@@ -217,7 +319,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -244,6 +346,10 @@ if (in_array('--dry-run', $args, true)) {
 
 if (in_array('--check-csv-header', $args, true)) {
     exit($checkCsvHeader());
+}
+
+if (in_array('--check-csv-row-count', $args, true)) {
+    exit($checkCsvRowCount());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
