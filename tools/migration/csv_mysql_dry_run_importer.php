@@ -143,6 +143,16 @@ $checkCsvHeader = static function () use ($printNoSideEffectSafetyHeaderCheck): 
     }
 
     $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+
+    $bomDetectedInFirstHeaderField = false;
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $bomDetectedInFirstHeaderField = true;
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
     $headerSet = array_fill_keys($header, true);
 
     $missingRequired = array_values(array_filter(
@@ -174,6 +184,7 @@ $checkCsvHeader = static function () use ($printNoSideEffectSafetyHeaderCheck): 
     ));
 
     fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
     fwrite(STDOUT, "Required header fields present: " . ($missingRequired === [] ? 'yes' : 'no') . "\n");
     fwrite(STDOUT, "Missing required header fields: " . ($missingRequired === [] ? '(none)' : implode(', ', $missingRequired)) . "\n");
     fwrite(STDOUT, "Deferred governance fields found: " . ($foundDeferred === [] ? '(none)' : implode(', ', $foundDeferred)) . "\n");
