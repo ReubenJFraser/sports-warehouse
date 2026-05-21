@@ -54,6 +54,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --status   Show skeleton/readiness status and exit successfully.\n");
     fwrite(STDOUT, "  --check-csv-header  Read only the CSV header row and print a safe header summary.\n");
     fwrite(STDOUT, "  --check-csv-row-count  Count CSV data rows and blank/non-blank db_itemId values without importing.\n");
+    fwrite(STDOUT, "  --check-model-id-duplicates  Count duplicate model_id values in the CSV without importing.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -83,7 +84,9 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV header check implemented: yes\n");
     fwrite(STDOUT, "- CSV row-count check implemented: yes\n");
     fwrite(STDOUT, "- CSV row-count check scope: counting only (no full product-row processing/classification)\n");
-    fwrite(STDOUT, "- Full CSV row reading implemented: no\n");
+    fwrite(STDOUT, "- CSV model_id duplicate check implemented: yes\n");
+    fwrite(STDOUT, "- CSV model_id duplicate check scope: duplicate counting only (no importer classification or database comparison)\n");
+    fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
     fwrite(STDOUT, "- SQL execution implemented: no\n");
     fwrite(STDOUT, "- Report generation implemented: no\n");
@@ -300,6 +303,133 @@ $checkCsvRowCount = static function () use ($printNoSideEffectSafetyRowCountChec
     return ($totalMatchesExpected && $nonBlankMatchesExpected && $blankMatchesExpected) ? 0 : 1;
 };
 
+
+$printNoSideEffectSafetyModelIdDuplicateCheck = static function (): void {
+    fwrite(STDOUT, "Only CSV rows needed for safe model_id duplicate counting were read.\n");
+    fwrite(STDOUT, "No product field comparison was performed.\n");
+    fwrite(STDOUT, "No importer row classification was performed beyond duplicate model_id counting.\n");
+    fwrite(STDOUT, "No database comparison was performed.\n");
+    fwrite(STDOUT, "No database connection was opened.\n");
+    fwrite(STDOUT, "No SQL was executed.\n");
+    fwrite(STDOUT, "No reports were generated.\n");
+    fwrite(STDOUT, "No files were written.\n");
+};
+
+$checkModelIdDuplicates = static function () use ($printNoSideEffectSafetyModelIdDuplicateCheck): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $expectedDuplicateModelId = 'nike_female_leggings';
+    $expectedDuplicateCount = 2;
+
+    fwrite(STDOUT, "CSV path: {$csvPath}\n");
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        $printNoSideEffectSafetyModelIdDuplicateCheck();
+        return 1;
+    }
+
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read-only model_id duplicate counting.\n");
+        $printNoSideEffectSafetyModelIdDuplicateCheck();
+        return 1;
+    }
+
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        $printNoSideEffectSafetyModelIdDuplicateCheck();
+        return 1;
+    }
+
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+
+    $bomDetectedInFirstHeaderField = false;
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $bomDetectedInFirstHeaderField = true;
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $modelIdColumnIndex = array_search('model_id', $header, true);
+    if ($modelIdColumnIndex === false) {
+        fclose($handle);
+        fwrite(STDERR, "Required header column missing: model_id.\n");
+        $printNoSideEffectSafetyModelIdDuplicateCheck();
+        return 1;
+    }
+
+    $totalDataRows = 0;
+    $nonBlankModelIdRows = 0;
+    $blankModelIdRows = 0;
+    $modelIdCounts = [];
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $totalDataRows++;
+        $modelIdValue = array_key_exists($modelIdColumnIndex, $row) ? trim((string) $row[$modelIdColumnIndex]) : '';
+
+        if ($modelIdValue === '') {
+            $blankModelIdRows++;
+            continue;
+        }
+
+        $nonBlankModelIdRows++;
+        $modelIdCounts[$modelIdValue] = ($modelIdCounts[$modelIdValue] ?? 0) + 1;
+    }
+
+    fclose($handle);
+
+    $duplicateGroups = array_filter($modelIdCounts, static fn (int $count): bool => $count > 1);
+    ksort($duplicateGroups);
+
+    $duplicateGroupCount = count($duplicateGroups);
+    $duplicateRowCount = array_sum($duplicateGroups);
+
+    $expectedDuplicatePresent = isset($duplicateGroups[$expectedDuplicateModelId]);
+    $expectedDuplicateCountMatches = $expectedDuplicatePresent && $duplicateGroups[$expectedDuplicateModelId] === $expectedDuplicateCount;
+
+    $unexpectedDuplicateGroups = $duplicateGroups;
+    if (isset($unexpectedDuplicateGroups[$expectedDuplicateModelId]) && $unexpectedDuplicateGroups[$expectedDuplicateModelId] === $expectedDuplicateCount) {
+        unset($unexpectedDuplicateGroups[$expectedDuplicateModelId]);
+    }
+
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
+    fwrite(STDOUT, "Non-blank model_id count: {$nonBlankModelIdRows}\n");
+    fwrite(STDOUT, "Blank model_id count: {$blankModelIdRows}\n");
+    fwrite(STDOUT, "Duplicate model_id group count: {$duplicateGroupCount}\n");
+    fwrite(STDOUT, "Duplicate model_id row count: {$duplicateRowCount}\n");
+    fwrite(STDOUT, "Duplicate model_id groups: " . ($duplicateGroups === [] ? '(none)' : '') . "\n");
+
+    foreach ($duplicateGroups as $modelId => $count) {
+        fwrite(STDOUT, "  - {$modelId} x {$count}\n");
+    }
+
+    fwrite(STDOUT, "Expected duplicate group: {$expectedDuplicateModelId} x {$expectedDuplicateCount}\n");
+    fwrite(STDOUT, "Expected duplicate group present: " . ($expectedDuplicatePresent ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Expected duplicate group count matches {$expectedDuplicateCount}: " . ($expectedDuplicateCountMatches ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Unexpected duplicate groups found: " . ($unexpectedDuplicateGroups === [] ? 'no' : 'yes') . "\n");
+
+    if ($unexpectedDuplicateGroups !== []) {
+        fwrite(STDOUT, "Unexpected duplicate model_id groups:\n");
+        foreach ($unexpectedDuplicateGroups as $modelId => $count) {
+            fwrite(STDOUT, "  - {$modelId} x {$count}\n");
+        }
+    }
+
+    $printNoSideEffectSafetyModelIdDuplicateCheck();
+
+    return ($expectedDuplicatePresent && $expectedDuplicateCountMatches && $unexpectedDuplicateGroups === []) ? 0 : 1;
+};
+
 $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No CSV was read.\n");
     fwrite(STDOUT, "No database connection was opened.\n");
@@ -319,7 +449,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -350,6 +480,10 @@ if (in_array('--check-csv-header', $args, true)) {
 
 if (in_array('--check-csv-row-count', $args, true)) {
     exit($checkCsvRowCount());
+}
+
+if (in_array('--check-model-id-duplicates', $args, true)) {
+    exit($checkModelIdDuplicates());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
