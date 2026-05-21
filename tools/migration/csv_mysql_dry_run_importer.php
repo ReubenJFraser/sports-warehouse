@@ -55,6 +55,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-csv-header  Read only the CSV header row and print a safe header summary.\n");
     fwrite(STDOUT, "  --check-csv-row-count  Count CSV data rows and blank/non-blank db_itemId values without importing.\n");
     fwrite(STDOUT, "  --check-model-id-duplicates  Count duplicate model_id values in the CSV without importing.\n");
+    fwrite(STDOUT, "  --check-db-item-id-integrity  Check CSV db_itemId blank/non-blank counts, uniqueness, and numeric format without importing.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -86,6 +87,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV row-count check scope: counting only (no full product-row processing/classification)\n");
     fwrite(STDOUT, "- CSV model_id duplicate check implemented: yes\n");
     fwrite(STDOUT, "- CSV model_id duplicate check scope: duplicate counting only (no importer classification or database comparison)\n");
+    fwrite(STDOUT, "- CSV db_itemId integrity check implemented: yes\n");
+    fwrite(STDOUT, "- CSV db_itemId integrity check scope: CSV-only integrity counting/validation (no database existence checks, row matching, importer classification, inserts, updates, or backfill)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
     fwrite(STDOUT, "- SQL execution implemented: no\n");
@@ -430,6 +433,135 @@ $checkModelIdDuplicates = static function () use ($printNoSideEffectSafetyModelI
     return ($expectedDuplicatePresent && $expectedDuplicateCountMatches && $unexpectedDuplicateGroups === []) ? 0 : 1;
 };
 
+$printNoSideEffectSafetyDbItemIdIntegrityCheck = static function (): void {
+    fwrite(STDOUT, "Only CSV rows needed for safe db_itemId integrity counting/validation were read.\n");
+    fwrite(STDOUT, "No product field comparison was performed.\n");
+    fwrite(STDOUT, "No importer row classification was performed beyond db_itemId blank/non-blank counting, duplicate detection, and numeric-format validation.\n");
+    fwrite(STDOUT, "No database existence checks were performed.\n");
+    fwrite(STDOUT, "No row matching, inserts, updates, or backfill were performed.\n");
+    fwrite(STDOUT, "No database connection was opened.\n");
+    fwrite(STDOUT, "No SQL was executed.\n");
+    fwrite(STDOUT, "No reports were generated.\n");
+    fwrite(STDOUT, "No files were written.\n");
+};
+
+$checkDbItemIdIntegrity = static function () use ($printNoSideEffectSafetyDbItemIdIntegrityCheck): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $expectedTotalRows = 120;
+    $expectedNonBlankDbItemIdRows = 54;
+    $expectedBlankDbItemIdRows = 66;
+
+    fwrite(STDOUT, "CSV path: {$csvPath}\n");
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        $printNoSideEffectSafetyDbItemIdIntegrityCheck();
+        return 1;
+    }
+
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read-only db_itemId integrity checks.\n");
+        $printNoSideEffectSafetyDbItemIdIntegrityCheck();
+        return 1;
+    }
+
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        $printNoSideEffectSafetyDbItemIdIntegrityCheck();
+        return 1;
+    }
+
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+
+    $bomDetectedInFirstHeaderField = false;
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $bomDetectedInFirstHeaderField = true;
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
+    if ($dbItemIdColumnIndex === false) {
+        fclose($handle);
+        fwrite(STDERR, "Required header column missing: db_itemId.\n");
+        $printNoSideEffectSafetyDbItemIdIntegrityCheck();
+        return 1;
+    }
+
+    $totalDataRows = 0;
+    $nonBlankDbItemIdRows = 0;
+    $blankDbItemIdRows = 0;
+    $dbItemIdCounts = [];
+    $invalidDbItemIdValues = [];
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $totalDataRows++;
+        $dbItemIdValue = array_key_exists($dbItemIdColumnIndex, $row) ? trim((string) $row[$dbItemIdColumnIndex]) : '';
+        if ($dbItemIdValue === '') {
+            $blankDbItemIdRows++;
+            continue;
+        }
+
+        $nonBlankDbItemIdRows++;
+        if (!preg_match('/^[1-9][0-9]*$/', $dbItemIdValue)) {
+            $invalidDbItemIdValues[$dbItemIdValue] = true;
+            continue;
+        }
+
+        $dbItemIdCounts[$dbItemIdValue] = ($dbItemIdCounts[$dbItemIdValue] ?? 0) + 1;
+    }
+
+    fclose($handle);
+
+    $duplicateDbItemIdGroups = array_filter($dbItemIdCounts, static fn (int $count): bool => $count > 1);
+    ksort($duplicateDbItemIdGroups);
+    $duplicateDbItemIdGroupCount = count($duplicateDbItemIdGroups);
+
+    $invalidDbItemIdValues = array_keys($invalidDbItemIdValues);
+    sort($invalidDbItemIdValues);
+    $invalidDbItemIdValueCount = count($invalidDbItemIdValues);
+
+    $totalMatchesExpected = ($totalDataRows === $expectedTotalRows);
+    $nonBlankMatchesExpected = ($nonBlankDbItemIdRows === $expectedNonBlankDbItemIdRows);
+    $blankMatchesExpected = ($blankDbItemIdRows === $expectedBlankDbItemIdRows);
+    $allNonBlankUnique = ($duplicateDbItemIdGroupCount === 0);
+    $allNonBlankValidNumeric = ($invalidDbItemIdValueCount === 0);
+
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
+    fwrite(STDOUT, "Expected total data rows: {$expectedTotalRows}\n");
+    fwrite(STDOUT, "Total data row count matches expected: " . ($totalMatchesExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Non-blank db_itemId row count: {$nonBlankDbItemIdRows}\n");
+    fwrite(STDOUT, "Expected non-blank db_itemId rows: {$expectedNonBlankDbItemIdRows}\n");
+    fwrite(STDOUT, "Non-blank db_itemId row count matches expected: " . ($nonBlankMatchesExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Blank db_itemId row count: {$blankDbItemIdRows}\n");
+    fwrite(STDOUT, "Expected blank db_itemId rows: {$expectedBlankDbItemIdRows}\n");
+    fwrite(STDOUT, "Blank db_itemId row count matches expected: " . ($blankMatchesExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Duplicate non-blank db_itemId group count: {$duplicateDbItemIdGroupCount}\n");
+    fwrite(STDOUT, "Duplicate non-blank db_itemId groups: " . ($duplicateDbItemIdGroups === [] ? '(none)' : '') . "\n");
+    foreach ($duplicateDbItemIdGroups as $dbItemId => $count) {
+        fwrite(STDOUT, "  - {$dbItemId} x {$count}\n");
+    }
+    fwrite(STDOUT, "All non-blank db_itemId values are unique: " . ($allNonBlankUnique ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Invalid non-blank db_itemId value count: {$invalidDbItemIdValueCount}\n");
+    fwrite(STDOUT, "Invalid non-blank db_itemId values: " . ($invalidDbItemIdValues === [] ? '(none)' : implode(', ', $invalidDbItemIdValues)) . "\n");
+    fwrite(STDOUT, "All non-blank db_itemId values are valid numeric IDs: " . ($allNonBlankValidNumeric ? 'yes' : 'no') . "\n");
+
+    $printNoSideEffectSafetyDbItemIdIntegrityCheck();
+
+    return ($totalMatchesExpected && $nonBlankMatchesExpected && $blankMatchesExpected && $allNonBlankUnique && $allNonBlankValidNumeric) ? 0 : 1;
+};
+
 $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No CSV was read.\n");
     fwrite(STDOUT, "No database connection was opened.\n");
@@ -449,7 +581,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -484,6 +616,10 @@ if (in_array('--check-csv-row-count', $args, true)) {
 
 if (in_array('--check-model-id-duplicates', $args, true)) {
     exit($checkModelIdDuplicates());
+}
+
+if (in_array('--check-db-item-id-integrity', $args, true)) {
+    exit($checkDbItemIdIntegrity());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
