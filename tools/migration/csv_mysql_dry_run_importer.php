@@ -56,6 +56,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-csv-row-count  Count CSV data rows and blank/non-blank db_itemId values without importing.\n");
     fwrite(STDOUT, "  --check-model-id-duplicates  Count duplicate model_id values in the CSV without importing.\n");
     fwrite(STDOUT, "  --check-db-item-id-integrity  Check CSV db_itemId blank/non-blank counts, uniqueness, and numeric format without importing.\n");
+    fwrite(STDOUT, "  --check-csv-baseline  Run all safe CSV-only baseline checks without importing.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -82,6 +83,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "Skeleton status:\n");
     fwrite(STDOUT, "- skeleton exists\n");
     fwrite(STDOUT, "- Importer implementation approved: no\n");
+    fwrite(STDOUT, "- CSV baseline check implemented: yes\n");
     fwrite(STDOUT, "- CSV header check implemented: yes\n");
     fwrite(STDOUT, "- CSV row-count check implemented: yes\n");
     fwrite(STDOUT, "- CSV row-count check scope: counting only (no full product-row processing/classification)\n");
@@ -89,6 +91,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV model_id duplicate check scope: duplicate counting only (no importer classification or database comparison)\n");
     fwrite(STDOUT, "- CSV db_itemId integrity check implemented: yes\n");
     fwrite(STDOUT, "- CSV db_itemId integrity check scope: CSV-only integrity counting/validation (no database existence checks, row matching, importer classification, inserts, updates, or backfill)\n");
+    fwrite(STDOUT, "- CSV baseline check scope: existing CSV-only checks only (no database comparison, importer classification, inserts, updates, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
     fwrite(STDOUT, "- SQL execution implemented: no\n");
@@ -570,6 +573,45 @@ $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No files were written.\n");
 };
 
+$checkCsvBaseline = static function () use (
+    $checkCsvHeader,
+    $checkCsvRowCount,
+    $checkModelIdDuplicates,
+    $checkDbItemIdIntegrity,
+    $printNoSideEffectSafety
+): int {
+    $checks = [
+        'CSV header check' => $checkCsvHeader,
+        'CSV row-count check' => $checkCsvRowCount,
+        'CSV model_id duplicate check' => $checkModelIdDuplicates,
+        'CSV db_itemId integrity check' => $checkDbItemIdIntegrity,
+    ];
+
+    $results = [];
+
+    fwrite(STDOUT, "CSV baseline check: running safe CSV-only checks.\n");
+    fwrite(STDOUT, "CSV baseline check scope: no database comparison, no importer classification, no inserts/updates/backfill, no report generation, no writes.\n");
+
+    foreach ($checks as $label => $check) {
+        fwrite(STDOUT, "\n=== {$label} ===\n");
+        $exitCode = $check();
+        $passed = ($exitCode === 0);
+        $results[$label] = $passed;
+        fwrite(STDOUT, "Sub-check result ({$label}): " . ($passed ? 'PASS' : 'FAIL') . "\n");
+    }
+
+    $allPassed = !in_array(false, $results, true);
+
+    fwrite(STDOUT, "\n=== CSV baseline summary ===\n");
+    foreach ($results as $label => $passed) {
+        fwrite(STDOUT, "- {$label}: " . ($passed ? 'PASS' : 'FAIL') . "\n");
+    }
+    fwrite(STDOUT, "Overall baseline result: " . ($allPassed ? 'PASS' : 'FAIL') . "\n");
+
+    $printNoSideEffectSafety();
+    return $allPassed ? 0 : 1;
+};
+
 if ($detectedWriteLikeFlags !== []) {
     fwrite(STDERR, "Write/execution flags are not supported by this skeleton: " . implode(', ', $detectedWriteLikeFlags) . "\n");
     $printNoSideEffectSafety();
@@ -581,7 +623,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -620,6 +662,10 @@ if (in_array('--check-model-id-duplicates', $args, true)) {
 
 if (in_array('--check-db-item-id-integrity', $args, true)) {
     exit($checkDbItemIdIntegrity());
+}
+
+if (in_array('--check-csv-baseline', $args, true)) {
+    exit($checkCsvBaseline());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
