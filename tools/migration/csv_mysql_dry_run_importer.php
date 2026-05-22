@@ -58,6 +58,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-db-item-id-integrity  Check CSV db_itemId blank/non-blank counts, uniqueness, and numeric format without importing.\n");
     fwrite(STDOUT, "  --check-csv-baseline  Run all safe CSV-only baseline checks without importing.\n");
     fwrite(STDOUT, "  --check-required-fields  Check required CSV fields for blank values without importing.\n");
+    fwrite(STDOUT, "  --show-remediation-guidance  Show CSV-only remediation guidance for readiness findings without writing files.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -94,6 +95,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV db_itemId integrity check scope: CSV-only integrity counting/validation (no database existence checks, row matching, importer classification, inserts, updates, or backfill)\n");
     fwrite(STDOUT, "- CSV baseline check scope: existing CSV-only checks only (no database comparison, importer classification, inserts, updates, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- CSV required-field completeness check implemented: yes\n");
+    fwrite(STDOUT, "- CSV remediation guidance implemented: yes\n");
     fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
@@ -102,6 +104,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- protected fields remain excluded by governance\n");
     fwrite(STDOUT, "- deferred governance fields remain excluded\n");
     fwrite(STDOUT, "- write/execution flags remain unsupported\n");
+    fwrite(STDOUT, "- Remediation guidance output mode: console-only (no report file generation, no CSV/database modifications)\n");
+    fwrite(STDOUT, "- File writes implemented: no\n");
 };
 
 $printNoSideEffectSafetyHeaderCheck = static function (): void {
@@ -793,9 +797,33 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Likely new rows (blank db_itemId): {$likelyNewRows}\n");
     fwrite(STDOUT, "Expected likely new rows (blank db_itemId): {$expectedLikelyNewRows}\n");
     fwrite(STDOUT, "Likely new row count matches expected: " . ($likelyNewRowsMatchExpected ? 'yes' : 'no') . "\n");
-    fwrite(STDOUT, "Readiness terminology note: Readiness-blocking findings do not necessarily block copying/importing data into an admin-visible database. They indicate the item is not ready for a specific downstream workflow, such as frontend display or automated insert/update readiness.\n");
+    fwrite(STDOUT, "Readiness terminology note: Readiness-blocking findings do not necessarily block copying/importing data into an admin-visible database. They indicate the item is not ready for a specific downstream workflow, such as automated import/update readiness or frontend publication.\n");
+    fwrite(STDOUT, "Remediation guidance (CSV-only, console output):\n");
 
-    fwrite(STDOUT, "Policy-based diagnostics:\n");
+    $sectionTitles = [
+        'fatal' => 'Fatal structural issues',
+        'import-readiness-blocking' => 'Import-readiness-blocking items',
+        'frontend-readiness-blocking' => 'Frontend-readiness-blocking items',
+        'admin-remediation' => 'Admin-remediation items',
+        'advisory' => 'Advisory items',
+        'deferred-governance' => 'Deferred-governance items',
+    ];
+    $suggestedActions = [
+        'import-readiness-blocking' => 'Prepare/fix this field before automated import/update readiness is approved. This does not necessarily block admin-visible diagnostic import.',
+        'frontend-readiness-blocking' => 'Do not treat affected products as frontend-ready until this field is fixed or policy approves fallback behavior.',
+        'admin-remediation' => 'Allow admin/backend visibility, but flag the item for correction or content completion.',
+        'advisory' => 'Review as a quality/enrichment issue. Do not block import or frontend display solely on this finding unless policy changes.',
+        'deferred-governance' => 'Do not force remediation yet. Resolve the governance/policy decision first.',
+    ];
+    $findingsBySeverity = [
+        'fatal' => [],
+        'import-readiness-blocking' => [],
+        'frontend-readiness-blocking' => [],
+        'admin-remediation' => [],
+        'advisory' => [],
+        'deferred-governance' => [],
+    ];
+
     foreach ($policyRows as $policy) {
         $field = $policy['field'];
         if (!isset($requiredFieldSet[$field])) {
@@ -803,28 +831,50 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
         }
         foreach ($policy['reports'] as $report) {
             $groupKey = $report['group'];
-            $groupLabel = $report['label'];
             $blankCount = $blankCountsByGroupAndField[$groupKey][$field];
+            if ($blankCount === 0) {
+                continue;
+            }
+            $severity = $report['severity'];
             $missingRows = $missingRowNumbersByGroupAndField[$groupKey][$field];
             $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
-            $severity = $blankCount > 0 ? $report['severity'] : 'ok';
-            if ($blankCount > 0 && isset($diagnosticCountBySeverity[$severity])) {
-                $diagnosticCountBySeverity[$severity]++;
-            }
+            $diagnosticCountBySeverity[$severity]++;
+            $findingsBySeverity[$severity][] = [
+                'field' => $field,
+                'groupLabel' => $report['label'],
+                'blankCount' => $blankCount,
+                'severity' => $severity,
+                'owner' => $policy['owner'],
+                'pathway' => $policy['pathway'],
+                'sampleRows' => $missingRowsSample,
+                'additionalRows' => max(0, $blankCount - count($missingRowsSample)),
+                'governance' => $policy['governance'],
+            ];
+        }
+    }
 
-            fwrite(STDOUT, "- field category: {$policy['category']}\n");
-            fwrite(STDOUT, "  field: {$field}\n");
-            fwrite(STDOUT, "  row group: {$groupLabel}\n");
-            fwrite(STDOUT, "  blank count: {$blankCount}\n");
-            fwrite(STDOUT, "  severity/readiness category: {$severity}\n");
-            fwrite(STDOUT, "  remediation owner: {$policy['owner']}\n");
-            fwrite(STDOUT, "  remediation pathway: {$policy['pathway']}\n");
-            fwrite(STDOUT, "  sample row numbers (CSV row numbers): " . ($missingRowsSample === [] ? '(none)' : implode(', ', $missingRowsSample)) . "\n");
-            if ($blankCount > count($missingRowsSample)) {
-                fwrite(STDOUT, "  additional missing rows not shown: " . ($blankCount - count($missingRowsSample)) . "\n");
+    foreach ($sectionTitles as $severity => $title) {
+        fwrite(STDOUT, "\n{$title}:\n");
+        if ($findingsBySeverity[$severity] === []) {
+            fwrite(STDOUT, "  (none)\n");
+            continue;
+        }
+        foreach ($findingsBySeverity[$severity] as $finding) {
+            fwrite(STDOUT, "- field: {$finding['field']}\n");
+            fwrite(STDOUT, "  affected row group: {$finding['groupLabel']}\n");
+            fwrite(STDOUT, "  blank count: {$finding['blankCount']}\n");
+            fwrite(STDOUT, "  readiness/severity category: {$finding['severity']}\n");
+            fwrite(STDOUT, "  remediation owner: {$finding['owner']}\n");
+            fwrite(STDOUT, "  remediation pathway: {$finding['pathway']}\n");
+            fwrite(STDOUT, "  sample row numbers (CSV row numbers, max {$maxMissingRowsToPrintPerField}): " . implode(', ', $finding['sampleRows']) . "\n");
+            if ($finding['additionalRows'] > 0) {
+                fwrite(STDOUT, "  additional missing rows not shown: {$finding['additionalRows']}\n");
             }
-            if (is_string($policy['governance']) && $policy['governance'] !== '') {
-                fwrite(STDOUT, "  governance note: {$policy['governance']}\n");
+            if (is_string($finding['governance']) && $finding['governance'] !== '') {
+                fwrite(STDOUT, "  governance note: {$finding['governance']}\n");
+            }
+            if (isset($suggestedActions[$severity])) {
+                fwrite(STDOUT, "  suggested next action: {$suggestedActions[$severity]}\n");
             }
         }
     }
@@ -836,7 +886,7 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     $diagnosticCompleted = !$structuralFailure;
     $diagnosticCountBySeverity['fatal'] = $structuralFailure ? 1 : 0;
 
-    fwrite(STDOUT, "Fatal count: {$diagnosticCountBySeverity['fatal']}\n");
+    fwrite(STDOUT, "Fatal structural issue count: {$diagnosticCountBySeverity['fatal']}\n");
     fwrite(STDOUT, "Import-readiness-blocking count: {$diagnosticCountBySeverity['import-readiness-blocking']}\n");
     fwrite(STDOUT, "Frontend-readiness-blocking count: {$diagnosticCountBySeverity['frontend-readiness-blocking']}\n");
     fwrite(STDOUT, "Admin-remediation count: {$diagnosticCountBySeverity['admin-remediation']}\n");
@@ -844,21 +894,26 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Deferred-governance count: {$diagnosticCountBySeverity['deferred-governance']}\n");
 
     $adminVisibleReadiness = $structuralFailure
-        ? 'fail'
-        : (($diagnosticCountBySeverity['deferred-governance'] > 0) ? 'needs-review' : (($diagnosticCountBySeverity['import-readiness-blocking'] > 0 || $diagnosticCountBySeverity['frontend-readiness-blocking'] > 0 || $diagnosticCountBySeverity['admin-remediation'] > 0 || $diagnosticCountBySeverity['advisory'] > 0) ? 'warning' : 'pass'));
+        ? 'no'
+        : (($diagnosticCountBySeverity['deferred-governance'] > 0) ? 'needs-review' : 'yes');
     $automatedReadiness = ($diagnosticCountBySeverity['import-readiness-blocking'] > 0) ? 'needs-remediation' : 'pass';
     $frontendReadiness = ($diagnosticCountBySeverity['frontend-readiness-blocking'] > 0) ? 'needs-remediation' : 'pass';
 
     fwrite(STDOUT, "Diagnostic completed: " . ($diagnosticCompleted ? 'yes' : 'no') . "\n");
     fwrite(STDOUT, "Fatal structural failure: " . ($structuralFailure ? 'yes' : 'no') . "\n");
-    fwrite(STDOUT, "Admin-visible import/copy readiness: {$adminVisibleReadiness}\n");
+    fwrite(STDOUT, "Admin-visible import/copy can proceed for diagnostic/remediation purposes: {$adminVisibleReadiness}\n");
     fwrite(STDOUT, "Automated import/update readiness: {$automatedReadiness}\n");
     fwrite(STDOUT, "Frontend publication readiness: {$frontendReadiness}\n");
     fwrite(STDOUT, "Admin remediation required: " . ($diagnosticCountBySeverity['admin-remediation'] > 0 ? 'yes' : 'no') . "\n");
     fwrite(STDOUT, "Governance decisions required: " . ($diagnosticCountBySeverity['deferred-governance'] > 0 ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Console guidance only: no report file generated\n");
 
     $printNoSideEffectSafetyRequiredFieldCheck();
     return $structuralFailure ? 1 : 0;
+};
+
+$showRemediationGuidance = static function () use ($checkRequiredFields): int {
+    return $checkRequiredFields();
 };
 
 $printNoSideEffectSafety = static function (): void {
@@ -919,7 +974,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -966,6 +1021,10 @@ if (in_array('--check-csv-baseline', $args, true)) {
 
 if (in_array('--check-required-fields', $args, true)) {
     exit($checkRequiredFields());
+}
+
+if (in_array('--show-remediation-guidance', $args, true)) {
+    exit($showRemediationGuidance());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
