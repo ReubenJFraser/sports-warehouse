@@ -589,37 +589,52 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
         [
             'field' => 'brand',
             'category' => 'globally required identity fields',
-            'owner' => 'catalog-data',
-            'pathway' => 'source correction and CSV remediation before import',
+            'owner' => 'excel-csv-source-of-truth',
+            'pathway' => 'fix in Excel/CSV',
             'governance' => null,
-            'rule' => 'global_identity',
+            'reports' => [
+                ['group' => 'all', 'label' => 'all rows', 'severity' => 'import-readiness-blocking'],
+                ['group' => 'all', 'label' => 'all rows', 'severity' => 'frontend-readiness-blocking'],
+            ],
         ],
         [
             'field' => 'itemName',
             'category' => 'globally required identity fields',
-            'owner' => 'catalog-data',
-            'pathway' => 'source correction and CSV remediation before import',
+            'owner' => 'excel-csv-source-of-truth',
+            'pathway' => 'fix in Excel/CSV',
             'governance' => null,
-            'rule' => 'global_identity',
+            'reports' => [
+                ['group' => 'all', 'label' => 'all rows', 'severity' => 'import-readiness-blocking'],
+                ['group' => 'all', 'label' => 'all rows', 'severity' => 'frontend-readiness-blocking'],
+            ],
         ],
         [
             'field' => 'model_id',
             'category' => 'globally required identity fields',
-            'owner' => 'catalog-data',
-            'pathway' => 'source correction and CSV remediation before import',
+            'owner' => 'excel-csv-source-of-truth',
+            'pathway' => 'fix in Excel/CSV',
             'governance' => null,
-            'rule' => 'global_identity',
+            'reports' => [
+                ['group' => 'all', 'label' => 'all rows', 'severity' => 'import-readiness-blocking'],
+            ],
         ],
-        ['field' => 'gender', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'categoryName', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'subCategory', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'price', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'description', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'images', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-media', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
-        ['field' => 'external_item_id', 'category' => 'linked-row update diagnostic fields', 'owner' => 'catalog-integration', 'pathway' => 'linked-row diagnostic follow-up with source system owner', 'governance' => null, 'rule' => 'linked_warning'],
-        ['field' => 'parentCategory', 'category' => 'parentCategory policy clarification field', 'owner' => 'data-governance', 'pathway' => 'defer to governance clarification workflow; do not block importer stage', 'governance' => 'deferred field pending policy clarification; non-blocking for this stage', 'rule' => 'deferred'],
-        ['field' => 'altText', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'enrichment backlog remediation', 'governance' => null, 'rule' => 'advisory'],
-        ['field' => 'ariaText', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'enrichment backlog remediation', 'governance' => null, 'rule' => 'advisory'],
+        ['field' => 'gender', 'category' => 'globally required identity fields', 'owner' => 'excel-csv-source-of-truth', 'pathway' => 'fix in Excel/CSV', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'import-readiness-blocking'], ['group' => 'all', 'label' => 'all rows', 'severity' => 'frontend-readiness-blocking']]],
+        ['field' => 'subCategory', 'category' => 'globally required identity fields', 'owner' => 'excel-csv-source-of-truth', 'pathway' => 'fix in Excel/CSV', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'import-readiness-blocking'], ['group' => 'all', 'label' => 'all rows', 'severity' => 'frontend-readiness-blocking']]],
+        ['field' => 'categoryName', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert/update readiness sign-off', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'import-readiness-blocking'], ['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'frontend-readiness-blocking'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'price', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert/update readiness sign-off', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'import-readiness-blocking'], ['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'frontend-readiness-blocking'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'description', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-content', 'pathway' => 'admin remediation backlog; improve source content', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'admin-remediation'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'images', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-media', 'pathway' => 'likely-new row media remediation before insert/update readiness sign-off', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'import-readiness-blocking'], ['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'frontend-readiness-blocking'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'external_item_id', 'category' => 'linked-row update diagnostic fields', 'owner' => 'catalog-integration', 'pathway' => 'source linkage remediation in Excel/CSV and integration workflow', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'import-readiness-blocking'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'parentCategory', 'category' => 'parentCategory policy clarification field', 'owner' => 'data-governance', 'pathway' => 'defer to governance clarification workflow; keep admin-visible for diagnosis', 'governance' => 'parentCategory is blank across rows and may be derivable, optional, future taxonomy, or source-remediation target.', 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'deferred-governance']]],
+        ['field' => 'altText', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-content', 'pathway' => 'accessibility-content remediation in admin workflow', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'admin-remediation'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'ariaText', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-content', 'pathway' => 'accessibility-content remediation in admin workflow', 'governance' => null, 'reports' => [['group' => 'likely_new', 'label' => 'likely new rows', 'severity' => 'admin-remediation'], ['group' => 'linked', 'label' => 'linked rows', 'severity' => 'admin-remediation']]],
+        ['field' => 'salePrice', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'optional enrichment backlog', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'advisory']]],
+        ['field' => 'featured', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'optional enrichment backlog', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'advisory']]],
+        ['field' => 'videos', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'optional enrichment backlog', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'advisory']]],
+        ['field' => 'videoAltText', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'optional enrichment backlog', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'advisory']]],
+        ['field' => 'thumbnails_json', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'optional enrichment backlog', 'governance' => null, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'advisory']]],
+        ['field' => 'CropAllowed', 'category' => 'deferred governance fields', 'owner' => 'data-governance', 'pathway' => 'governance decision on camelCase/snake_case conventions and enforcement', 'governance' => 'deferred governance field; requiredness pending policy decision.', 'column_required' => false, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'deferred-governance']]],
+        ['field' => 'crop_allowed', 'category' => 'deferred governance fields', 'owner' => 'data-governance', 'pathway' => 'governance decision on camelCase/snake_case conventions and enforcement', 'governance' => 'deferred governance field; requiredness pending policy decision.', 'column_required' => false, 'reports' => [['group' => 'all', 'label' => 'all rows', 'severity' => 'deferred-governance']]],
     ];
     $requiredFields = array_values(array_map(static fn (array $policy): string => $policy['field'], $policyRows));
     $requiredFieldSet = array_fill_keys($requiredFields, true);
@@ -669,6 +684,7 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
 
     $fieldColumnIndexes = [];
     $missingRequiredColumns = [];
+    $missingNonFatalColumns = [];
     $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
     $dbItemIdColumnPresent = ($dbItemIdColumnIndex !== false);
 
@@ -687,13 +703,19 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     foreach ($requiredFields as $field) {
         $columnIndex = array_search($field, $header, true);
         if ($columnIndex === false) {
-            $missingRequiredColumns[] = $field;
+            $columnRequired = $policyRows[array_search($field, $requiredFields, true)]['column_required'] ?? true;
+            if ($columnRequired) {
+                $missingRequiredColumns[] = $field;
+            } else {
+                $missingNonFatalColumns[] = $field;
+            }
             continue;
         }
         $fieldColumnIndexes[$field] = $columnIndex;
     }
 
     fwrite(STDOUT, "Required columns present in header: " . ($missingRequiredColumns === [] ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Deferred-governance columns missing in header (non-fatal): " . ($missingNonFatalColumns === [] ? '(none)' : implode(', ', $missingNonFatalColumns)) . "\n");
     if ($missingRequiredColumns !== []) {
         fwrite(STDOUT, "Missing required columns: " . implode(', ', $missingRequiredColumns) . "\n");
         fclose($handle);
@@ -729,6 +751,9 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
         }
 
         foreach ($requiredFields as $field) {
+            if (!isset($fieldColumnIndexes[$field])) {
+                continue;
+            }
             $columnIndex = $fieldColumnIndexes[$field];
             $value = array_key_exists($columnIndex, $row) ? trim((string) $row[$columnIndex]) : '';
             if ($value === '') {
@@ -750,10 +775,14 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     $totalRequiredFieldBlankValuesLinked = array_sum($blankCountsByGroupAndField['linked']);
     $totalRequiredFieldBlankValuesLikelyNew = array_sum($blankCountsByGroupAndField['likely_new']);
 
-    $blockingFailureCount = 0;
-    $warningCount = 0;
-    $advisoryCount = 0;
-    $deferredCount = 0;
+    $diagnosticCountBySeverity = [
+        'fatal' => 0,
+        'import-readiness-blocking' => 0,
+        'frontend-readiness-blocking' => 0,
+        'admin-remediation' => 0,
+        'advisory' => 0,
+        'deferred-governance' => 0,
+    ];
 
     fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
     fwrite(STDOUT, "Expected total data rows: {$expectedTotalRows}\n");
@@ -764,6 +793,7 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Likely new rows (blank db_itemId): {$likelyNewRows}\n");
     fwrite(STDOUT, "Expected likely new rows (blank db_itemId): {$expectedLikelyNewRows}\n");
     fwrite(STDOUT, "Likely new row count matches expected: " . ($likelyNewRowsMatchExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Readiness terminology note: Readiness-blocking findings do not necessarily block copying/importing data into an admin-visible database. They indicate the item is not ready for a specific downstream workflow, such as frontend display or automated insert/update readiness.\n");
 
     fwrite(STDOUT, "Policy-based diagnostics:\n");
     foreach ($policyRows as $policy) {
@@ -771,37 +801,22 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
         if (!isset($requiredFieldSet[$field])) {
             continue;
         }
-        $rowGroupsToReport = ($policy['rule'] === 'likely_new_blocking')
-            ? ['likely_new' => 'likely new rows']
-            : (($policy['rule'] === 'linked_warning') ? ['linked' => 'linked rows'] : ['all' => 'all rows']);
-
-        foreach ($rowGroupsToReport as $groupKey => $groupLabel) {
+        foreach ($policy['reports'] as $report) {
+            $groupKey = $report['group'];
+            $groupLabel = $report['label'];
             $blankCount = $blankCountsByGroupAndField[$groupKey][$field];
             $missingRows = $missingRowNumbersByGroupAndField[$groupKey][$field];
             $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
-
-            $severity = 'ok';
-            if ($blankCount > 0) {
-                if ($policy['rule'] === 'global_identity' || $policy['rule'] === 'likely_new_blocking') {
-                    $severity = 'blocking';
-                    $blockingFailureCount++;
-                } elseif ($policy['rule'] === 'linked_warning') {
-                    $severity = 'warning';
-                    $warningCount++;
-                } elseif ($policy['rule'] === 'advisory') {
-                    $severity = 'advisory';
-                    $advisoryCount++;
-                } else {
-                    $severity = 'deferred';
-                    $deferredCount++;
-                }
+            $severity = $blankCount > 0 ? $report['severity'] : 'ok';
+            if ($blankCount > 0 && isset($diagnosticCountBySeverity[$severity])) {
+                $diagnosticCountBySeverity[$severity]++;
             }
 
             fwrite(STDOUT, "- field category: {$policy['category']}\n");
             fwrite(STDOUT, "  field: {$field}\n");
             fwrite(STDOUT, "  row group: {$groupLabel}\n");
             fwrite(STDOUT, "  blank count: {$blankCount}\n");
-            fwrite(STDOUT, "  severity: {$severity}\n");
+            fwrite(STDOUT, "  severity/readiness category: {$severity}\n");
             fwrite(STDOUT, "  remediation owner: {$policy['owner']}\n");
             fwrite(STDOUT, "  remediation pathway: {$policy['pathway']}\n");
             fwrite(STDOUT, "  sample row numbers (CSV row numbers): " . ($missingRowsSample === [] ? '(none)' : implode(', ', $missingRowsSample)) . "\n");
@@ -818,17 +833,32 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Total required-field blank value count (linked rows): {$totalRequiredFieldBlankValuesLinked}\n");
     fwrite(STDOUT, "Total required-field blank value count (likely new rows): {$totalRequiredFieldBlankValuesLikelyNew}\n");
     $structuralFailure = (!$totalRowsMatchExpected || !$linkedRowsMatchExpected || !$likelyNewRowsMatchExpected);
-    $checkPassed = (!$structuralFailure && $blockingFailureCount === 0);
+    $diagnosticCompleted = !$structuralFailure;
+    $diagnosticCountBySeverity['fatal'] = $structuralFailure ? 1 : 0;
 
-    fwrite(STDOUT, "Blocking diagnostic count: {$blockingFailureCount}\n");
-    fwrite(STDOUT, "Warning diagnostic count: {$warningCount}\n");
-    fwrite(STDOUT, "Advisory diagnostic count: {$advisoryCount}\n");
-    fwrite(STDOUT, "Deferred diagnostic count: {$deferredCount}\n");
-    fwrite(STDOUT, "Structural failure detected: " . ($structuralFailure ? 'yes' : 'no') . "\n");
-    fwrite(STDOUT, "Required-field policy check passed: " . ($checkPassed ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Fatal count: {$diagnosticCountBySeverity['fatal']}\n");
+    fwrite(STDOUT, "Import-readiness-blocking count: {$diagnosticCountBySeverity['import-readiness-blocking']}\n");
+    fwrite(STDOUT, "Frontend-readiness-blocking count: {$diagnosticCountBySeverity['frontend-readiness-blocking']}\n");
+    fwrite(STDOUT, "Admin-remediation count: {$diagnosticCountBySeverity['admin-remediation']}\n");
+    fwrite(STDOUT, "Advisory count: {$diagnosticCountBySeverity['advisory']}\n");
+    fwrite(STDOUT, "Deferred-governance count: {$diagnosticCountBySeverity['deferred-governance']}\n");
+
+    $adminVisibleReadiness = $structuralFailure
+        ? 'fail'
+        : (($diagnosticCountBySeverity['deferred-governance'] > 0) ? 'needs-review' : (($diagnosticCountBySeverity['import-readiness-blocking'] > 0 || $diagnosticCountBySeverity['frontend-readiness-blocking'] > 0 || $diagnosticCountBySeverity['admin-remediation'] > 0 || $diagnosticCountBySeverity['advisory'] > 0) ? 'warning' : 'pass'));
+    $automatedReadiness = ($diagnosticCountBySeverity['import-readiness-blocking'] > 0) ? 'needs-remediation' : 'pass';
+    $frontendReadiness = ($diagnosticCountBySeverity['frontend-readiness-blocking'] > 0) ? 'needs-remediation' : 'pass';
+
+    fwrite(STDOUT, "Diagnostic completed: " . ($diagnosticCompleted ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Fatal structural failure: " . ($structuralFailure ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Admin-visible import/copy readiness: {$adminVisibleReadiness}\n");
+    fwrite(STDOUT, "Automated import/update readiness: {$automatedReadiness}\n");
+    fwrite(STDOUT, "Frontend publication readiness: {$frontendReadiness}\n");
+    fwrite(STDOUT, "Admin remediation required: " . ($diagnosticCountBySeverity['admin-remediation'] > 0 ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Governance decisions required: " . ($diagnosticCountBySeverity['deferred-governance'] > 0 ? 'yes' : 'no') . "\n");
 
     $printNoSideEffectSafetyRequiredFieldCheck();
-    return $checkPassed ? 0 : 1;
+    return $structuralFailure ? 1 : 0;
 };
 
 $printNoSideEffectSafety = static function (): void {
