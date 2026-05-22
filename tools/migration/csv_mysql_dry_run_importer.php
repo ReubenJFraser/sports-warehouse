@@ -59,6 +59,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-csv-baseline  Run all safe CSV-only baseline checks without importing.\n");
     fwrite(STDOUT, "  --check-required-fields  Check required CSV fields for blank values without importing.\n");
     fwrite(STDOUT, "  --show-remediation-guidance  Show CSV-only remediation guidance for readiness findings without writing files.\n");
+    fwrite(STDOUT, "  --show-frontend-readiness-summary  Show CSV-only frontend readiness summary without writing files.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -96,6 +97,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV baseline check scope: existing CSV-only checks only (no database comparison, importer classification, inserts, updates, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- CSV required-field completeness check implemented: yes\n");
     fwrite(STDOUT, "- CSV remediation guidance implemented: yes\n");
+    fwrite(STDOUT, "- CSV frontend readiness summary implemented: yes\n");
     fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
@@ -105,6 +107,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- deferred governance fields remain excluded\n");
     fwrite(STDOUT, "- write/execution flags remain unsupported\n");
     fwrite(STDOUT, "- Remediation guidance output mode: console-only (no report file generation, no CSV/database modifications)\n");
+    fwrite(STDOUT, "- Frontend readiness summary mode: console-only (no report file generation, no CSV/database/frontend behavior modifications)\n");
     fwrite(STDOUT, "- File writes implemented: no\n");
 };
 
@@ -912,6 +915,152 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     return $structuralFailure ? 1 : 0;
 };
 
+
+$showFrontendReadinessSummary = static function () use ($printNoSideEffectSafetyRequiredFieldCheck): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $expectedTotalRows = 120;
+    $expectedLinkedRows = 54;
+    $expectedLikelyNewRows = 66;
+    $sampleCap = 30;
+    $frontendBlockingPolicies = [
+        ['field' => 'brand', 'group' => 'all'],
+        ['field' => 'itemName', 'group' => 'all'],
+        ['field' => 'gender', 'group' => 'all'],
+        ['field' => 'subCategory', 'group' => 'all'],
+        ['field' => 'categoryName', 'group' => 'likely_new'],
+        ['field' => 'price', 'group' => 'likely_new'],
+        ['field' => 'images', 'group' => 'likely_new'],
+    ];
+
+    fwrite(STDOUT, "CSV path: {$csvPath}\n");
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read-only frontend readiness summary.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+    $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
+    if ($dbItemIdColumnIndex === false) {
+        fclose($handle);
+        fwrite(STDERR, "Required db_itemId column is missing from CSV header.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
+    $fieldIndexes = [];
+    foreach ($frontendBlockingPolicies as $policy) {
+        if (!array_key_exists($policy['field'], $fieldIndexes)) {
+            $idx = array_search($policy['field'], $header, true);
+            if ($idx === false) {
+                fclose($handle);
+                fwrite(STDERR, "Missing required diagnostic columns needed by policy logic: {$policy['field']}\n");
+                $printNoSideEffectSafetyRequiredFieldCheck();
+                return 1;
+            }
+            $fieldIndexes[$policy['field']] = $idx;
+        }
+    }
+
+    $totalDataRows = 0;
+    $linkedRows = 0;
+    $likelyNewRows = 0;
+    $ready = 0;
+    $notReady = 0;
+    $readyLinked = 0;
+    $notReadyLinked = 0;
+    $readyLikelyNew = 0;
+    $notReadyLikelyNew = 0;
+    $blockingFields = [];
+    $sampleRows = [];
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $totalDataRows++;
+        $csvRowNumber = $totalDataRows + 1;
+        $dbItemIdValue = array_key_exists($dbItemIdColumnIndex, $row) ? trim((string) $row[$dbItemIdColumnIndex]) : '';
+        $rowGroup = ($dbItemIdValue === '') ? 'likely_new' : 'linked';
+        if ($rowGroup === 'linked') {
+            $linkedRows++;
+        } else {
+            $likelyNewRows++;
+        }
+        $reasons = [];
+        foreach ($frontendBlockingPolicies as $policy) {
+            if ($policy['group'] !== 'all' && $policy['group'] !== $rowGroup) {
+                continue;
+            }
+            $field = $policy['field'];
+            $value = array_key_exists($fieldIndexes[$field], $row) ? trim((string) $row[$fieldIndexes[$field]]) : '';
+            if ($value === '') {
+                $reasons[] = "missing {$field}";
+                $blockingFields[$field] = true;
+            }
+        }
+        $reasons = array_values(array_unique($reasons));
+        if ($reasons === []) {
+            $ready++;
+            if ($rowGroup === 'linked') { $readyLinked++; } else { $readyLikelyNew++; }
+        } else {
+            $notReady++;
+            if ($rowGroup === 'linked') { $notReadyLinked++; } else { $notReadyLikelyNew++; }
+            if (count($sampleRows) < $sampleCap) {
+                $sampleRows[] = ['row' => $csvRowNumber, 'group' => $rowGroup, 'reasons' => $reasons];
+            }
+        }
+    }
+    fclose($handle);
+
+    $structuralFailure = ($totalDataRows !== $expectedTotalRows || $linkedRows !== $expectedLinkedRows || $likelyNewRows !== $expectedLikelyNewRows);
+    $fieldsFound = array_keys($blockingFields);
+    sort($fieldsFound);
+    fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
+    fwrite(STDOUT, "Linked rows count: {$linkedRows}\n");
+    fwrite(STDOUT, "Likely new rows count: {$likelyNewRows}\n");
+    fwrite(STDOUT, "Frontend-readiness-blocking findings do not necessarily block admin-visible import/copy. They indicate that affected products should not be treated as ready for public frontend display until fixed or until fallback policy is approved.\n");
+    fwrite(STDOUT, "Frontend-readiness summary:\n");
+    fwrite(STDOUT, "Total product rows scanned: {$totalDataRows}\n");
+    fwrite(STDOUT, "Frontend-ready row count: {$ready}\n");
+    fwrite(STDOUT, "Not-frontend-ready row count: {$notReady}\n");
+    fwrite(STDOUT, "Frontend-ready linked row count: {$readyLinked}\n");
+    fwrite(STDOUT, "Not-frontend-ready linked row count: {$notReadyLinked}\n");
+    fwrite(STDOUT, "Frontend-ready likely-new row count: {$readyLikelyNew}\n");
+    fwrite(STDOUT, "Not-frontend-ready likely-new row count: {$notReadyLikelyNew}\n");
+    fwrite(STDOUT, "Frontend-readiness-blocking fields found: " . ($fieldsFound === [] ? '(none)' : implode(', ', $fieldsFound)) . "\n");
+    fwrite(STDOUT, "Sample not-frontend-ready rows (max {$sampleCap}):\n");
+    if ($sampleRows === []) {
+        fwrite(STDOUT, "  (none)\n");
+    } else {
+        foreach ($sampleRows as $sample) {
+            fwrite(STDOUT, "  - row {$sample['row']} ({$sample['group']}): " . implode(', ', $sample['reasons']) . "\n");
+        }
+    }
+    fwrite(STDOUT, "Console guidance only: no report file generated\n");
+    fwrite(STDOUT, "Explicit safety guarantees: no database connection, no SQL execution, no report generation, no file writes, no CSV edits, no importer implementation.\n");
+    fwrite(STDOUT, "Diagnostic completed: " . ($structuralFailure ? 'no' : 'yes') . "\n");
+    fwrite(STDOUT, "Fatal structural failure: " . ($structuralFailure ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Frontend publication readiness: " . ($notReady > 0 ? 'needs-remediation' : 'pass') . "\n");
+    fwrite(STDOUT, "Admin-visible import/copy can proceed for diagnostic/remediation purposes: " . ($structuralFailure ? 'no' : 'yes') . "\n");
+    fwrite(STDOUT, "Frontend-hidden/not-ready rows identified: " . ($notReady > 0 ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Console guidance only: no report file generated\n");
+    $printNoSideEffectSafetyRequiredFieldCheck();
+    return $structuralFailure ? 1 : 0;
+};
+
 $showRemediationGuidance = static function () use ($checkRequiredFields): int {
     return $checkRequiredFields();
 };
@@ -974,7 +1123,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -1025,6 +1174,10 @@ if (in_array('--check-required-fields', $args, true)) {
 
 if (in_array('--show-remediation-guidance', $args, true)) {
     exit($showRemediationGuidance());
+}
+
+if (in_array('--show-frontend-readiness-summary', $args, true)) {
+    exit($showFrontendReadinessSummary());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
