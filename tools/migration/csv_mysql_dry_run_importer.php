@@ -952,6 +952,13 @@ $showFrontendReadinessSummary = static function () use ($printNoSideEffectSafety
         return 1;
     }
     $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
     $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
     if ($dbItemIdColumnIndex === false) {
         fclose($handle);
