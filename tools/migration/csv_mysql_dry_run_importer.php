@@ -582,6 +582,8 @@ $printNoSideEffectSafetyRequiredFieldCheck = static function (): void {
 $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredFieldCheck): int {
     $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
     $expectedTotalRows = 120;
+    $expectedLinkedRows = 54;
+    $expectedLikelyNewRows = 66;
     $maxMissingRowsToPrintPerField = 20;
     $requiredFields = [
         'brand',
@@ -635,6 +637,20 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
 
     $fieldColumnIndexes = [];
     $missingRequiredColumns = [];
+    $dbItemIdColumnIndex = array_search('db_itemId', $header, true);
+    $dbItemIdColumnPresent = ($dbItemIdColumnIndex !== false);
+
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "Required fields checked: " . implode(', ', $requiredFields) . "\n");
+    fwrite(STDOUT, "db_itemId column present in header: " . ($dbItemIdColumnPresent ? 'yes' : 'no') . "\n");
+    if (!$dbItemIdColumnPresent) {
+        fclose($handle);
+        fwrite(STDERR, "Required db_itemId column is missing from CSV header.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
     foreach ($requiredFields as $field) {
         $columnIndex = array_search($field, $header, true);
         if ($columnIndex === false) {
@@ -644,9 +660,6 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
         $fieldColumnIndexes[$field] = $columnIndex;
     }
 
-    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
-    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
-    fwrite(STDOUT, "Required fields checked: " . implode(', ', $requiredFields) . "\n");
     fwrite(STDOUT, "Required columns present in header: " . ($missingRequiredColumns === [] ? 'yes' : 'no') . "\n");
     if ($missingRequiredColumns !== []) {
         fwrite(STDOUT, "Missing required columns: " . implode(', ', $missingRequiredColumns) . "\n");
@@ -656,8 +669,16 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     }
 
     $totalDataRows = 0;
-    $blankCountsByField = array_fill_keys($requiredFields, 0);
-    $missingRowNumbersByField = array_fill_keys($requiredFields, []);
+    $linkedRows = 0;
+    $likelyNewRows = 0;
+    $groups = ['all', 'linked', 'likely_new'];
+    $blankCountsByGroupAndField = [];
+    $missingRowNumbersByGroupAndField = [];
+
+    foreach ($groups as $group) {
+        $blankCountsByGroupAndField[$group] = array_fill_keys($requiredFields, 0);
+        $missingRowNumbersByGroupAndField[$group] = array_fill_keys($requiredFields, []);
+    }
 
     while (($row = fgetcsv($handle)) !== false) {
         if (!is_array($row)) {
@@ -666,13 +687,22 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
 
         $totalDataRows++;
         $csvRowNumber = $totalDataRows + 1; // Include header row in CSV row numbering.
+        $dbItemIdValue = array_key_exists($dbItemIdColumnIndex, $row) ? trim((string) $row[$dbItemIdColumnIndex]) : '';
+        $rowGroup = ($dbItemIdValue === '') ? 'likely_new' : 'linked';
+        if ($rowGroup === 'linked') {
+            $linkedRows++;
+        } else {
+            $likelyNewRows++;
+        }
 
         foreach ($requiredFields as $field) {
             $columnIndex = $fieldColumnIndexes[$field];
             $value = array_key_exists($columnIndex, $row) ? trim((string) $row[$columnIndex]) : '';
             if ($value === '') {
-                $blankCountsByField[$field]++;
-                $missingRowNumbersByField[$field][] = $csvRowNumber;
+                $blankCountsByGroupAndField['all'][$field]++;
+                $blankCountsByGroupAndField[$rowGroup][$field]++;
+                $missingRowNumbersByGroupAndField['all'][$field][] = $csvRowNumber;
+                $missingRowNumbersByGroupAndField[$rowGroup][$field][] = $csvRowNumber;
             }
         }
     }
@@ -680,31 +710,63 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fclose($handle);
 
     $totalRowsMatchExpected = ($totalDataRows === $expectedTotalRows);
-    $totalRequiredFieldBlankValues = array_sum($blankCountsByField);
-    $allRequiredFieldsComplete = ($totalRequiredFieldBlankValues === 0);
-    $checkPassed = ($totalRowsMatchExpected && $allRequiredFieldsComplete);
+    $linkedRowsMatchExpected = ($linkedRows === $expectedLinkedRows);
+    $likelyNewRowsMatchExpected = ($likelyNewRows === $expectedLikelyNewRows);
+
+    $totalRequiredFieldBlankValuesAll = array_sum($blankCountsByGroupAndField['all']);
+    $totalRequiredFieldBlankValuesLinked = array_sum($blankCountsByGroupAndField['linked']);
+    $totalRequiredFieldBlankValuesLikelyNew = array_sum($blankCountsByGroupAndField['likely_new']);
+
+    $allRequiredFieldsCompleteAll = ($totalRequiredFieldBlankValuesAll === 0);
+    $allRequiredFieldsCompleteLinked = ($totalRequiredFieldBlankValuesLinked === 0);
+    $allRequiredFieldsCompleteLikelyNew = ($totalRequiredFieldBlankValuesLikelyNew === 0);
+
+    $checkPassed = (
+        $totalRowsMatchExpected
+        && $linkedRowsMatchExpected
+        && $likelyNewRowsMatchExpected
+        && $allRequiredFieldsCompleteAll
+    );
 
     fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
     fwrite(STDOUT, "Expected total data rows: {$expectedTotalRows}\n");
     fwrite(STDOUT, "Total data row count matches expected: " . ($totalRowsMatchExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Linked rows (non-blank db_itemId): {$linkedRows}\n");
+    fwrite(STDOUT, "Expected linked rows (non-blank db_itemId): {$expectedLinkedRows}\n");
+    fwrite(STDOUT, "Linked row count matches expected: " . ($linkedRowsMatchExpected ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Likely new rows (blank db_itemId): {$likelyNewRows}\n");
+    fwrite(STDOUT, "Expected likely new rows (blank db_itemId): {$expectedLikelyNewRows}\n");
+    fwrite(STDOUT, "Likely new row count matches expected: " . ($likelyNewRowsMatchExpected ? 'yes' : 'no') . "\n");
 
     foreach ($requiredFields as $field) {
-        $blankCount = $blankCountsByField[$field];
-        $isComplete = ($blankCount === 0);
-        $missingRows = $missingRowNumbersByField[$field];
-        $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
+        $groupLabels = [
+            'all' => 'all rows',
+            'linked' => 'linked rows',
+            'likely_new' => 'likely new rows',
+        ];
+        foreach ($groupLabels as $groupKey => $groupLabel) {
+            $blankCount = $blankCountsByGroupAndField[$groupKey][$field];
+            $isComplete = ($blankCount === 0);
+            $missingRows = $missingRowNumbersByGroupAndField[$groupKey][$field];
+            $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
 
-        fwrite(STDOUT, "Required field '{$field}' blank count: {$blankCount}\n");
-        fwrite(STDOUT, "Required field '{$field}' complete: " . ($isComplete ? 'yes' : 'no') . "\n");
-        if ($blankCount > 0) {
-            fwrite(STDOUT, "Required field '{$field}' missing value row numbers (CSV row numbers): " . implode(', ', $missingRowsSample) . "\n");
-            if ($blankCount > count($missingRowsSample)) {
-                fwrite(STDOUT, "Required field '{$field}' has additional missing rows not shown: " . ($blankCount - count($missingRowsSample)) . "\n");
+            fwrite(STDOUT, "Required field '{$field}' blank count ({$groupLabel}): {$blankCount}\n");
+            fwrite(STDOUT, "Required field '{$field}' complete ({$groupLabel}): " . ($isComplete ? 'yes' : 'no') . "\n");
+            if ($blankCount > 0) {
+                fwrite(STDOUT, "Required field '{$field}' missing value row numbers ({$groupLabel}, CSV row numbers): " . implode(', ', $missingRowsSample) . "\n");
+                if ($blankCount > count($missingRowsSample)) {
+                    fwrite(STDOUT, "Required field '{$field}' has additional missing rows not shown ({$groupLabel}): " . ($blankCount - count($missingRowsSample)) . "\n");
+                }
             }
         }
     }
 
-    fwrite(STDOUT, "Total required-field blank value count: {$totalRequiredFieldBlankValues}\n");
+    fwrite(STDOUT, "Total required-field blank value count (all rows): {$totalRequiredFieldBlankValuesAll}\n");
+    fwrite(STDOUT, "Total required-field blank value count (linked rows): {$totalRequiredFieldBlankValuesLinked}\n");
+    fwrite(STDOUT, "Total required-field blank value count (likely new rows): {$totalRequiredFieldBlankValuesLikelyNew}\n");
+    fwrite(STDOUT, "Required-field completeness for all rows: " . ($allRequiredFieldsCompleteAll ? 'PASS' : 'FAIL') . "\n");
+    fwrite(STDOUT, "Required-field completeness for linked rows: " . ($allRequiredFieldsCompleteLinked ? 'PASS' : 'FAIL') . "\n");
+    fwrite(STDOUT, "Required-field completeness for likely new rows: " . ($allRequiredFieldsCompleteLikelyNew ? 'PASS' : 'FAIL') . "\n");
     fwrite(STDOUT, "Required-field completeness check passed: " . ($checkPassed ? 'yes' : 'no') . "\n");
 
     $printNoSideEffectSafetyRequiredFieldCheck();
