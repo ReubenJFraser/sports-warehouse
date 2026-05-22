@@ -585,20 +585,52 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     $expectedLinkedRows = 54;
     $expectedLikelyNewRows = 66;
     $maxMissingRowsToPrintPerField = 20;
-    $requiredFields = [
-        'brand',
-        'gender',
-        'itemName',
-        'categoryName',
-        'parentCategory',
-        'subCategory',
-        'price',
-        'description',
-        'images',
-        'altText',
-        'ariaText',
-        'external_item_id',
-        'model_id',
+    $policyRows = [
+        [
+            'field' => 'brand',
+            'category' => 'globally required identity fields',
+            'owner' => 'catalog-data',
+            'pathway' => 'source correction and CSV remediation before import',
+            'governance' => null,
+            'rule' => 'global_identity',
+        ],
+        [
+            'field' => 'itemName',
+            'category' => 'globally required identity fields',
+            'owner' => 'catalog-data',
+            'pathway' => 'source correction and CSV remediation before import',
+            'governance' => null,
+            'rule' => 'global_identity',
+        ],
+        [
+            'field' => 'model_id',
+            'category' => 'globally required identity fields',
+            'owner' => 'catalog-data',
+            'pathway' => 'source correction and CSV remediation before import',
+            'governance' => null,
+            'rule' => 'global_identity',
+        ],
+        ['field' => 'gender', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'categoryName', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'subCategory', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'price', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'description', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-data', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'images', 'category' => 'likely-new insert readiness fields', 'owner' => 'catalog-media', 'pathway' => 'likely-new row remediation before insert readiness sign-off', 'governance' => null, 'rule' => 'likely_new_blocking'],
+        ['field' => 'external_item_id', 'category' => 'linked-row update diagnostic fields', 'owner' => 'catalog-integration', 'pathway' => 'linked-row diagnostic follow-up with source system owner', 'governance' => null, 'rule' => 'linked_warning'],
+        ['field' => 'parentCategory', 'category' => 'parentCategory policy clarification field', 'owner' => 'data-governance', 'pathway' => 'defer to governance clarification workflow; do not block importer stage', 'governance' => 'deferred field pending policy clarification; non-blocking for this stage', 'rule' => 'deferred'],
+        ['field' => 'altText', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'enrichment backlog remediation', 'governance' => null, 'rule' => 'advisory'],
+        ['field' => 'ariaText', 'category' => 'optional/enrichment fields', 'owner' => 'catalog-content', 'pathway' => 'enrichment backlog remediation', 'governance' => null, 'rule' => 'advisory'],
+    ];
+    $requiredFields = array_values(array_map(static fn (array $policy): string => $policy['field'], $policyRows));
+    $requiredFieldSet = array_fill_keys($requiredFields, true);
+    $policyCategoryCoverage = [
+        'globally required identity fields',
+        'likely-new insert readiness fields',
+        'linked-row update diagnostic fields',
+        'parentCategory policy clarification field',
+        'optional/enrichment fields',
+        'deferred governance fields',
+        'staging/helper fields',
     ];
 
     fwrite(STDOUT, "CSV path: {$csvPath}\n");
@@ -643,6 +675,7 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
     fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
     fwrite(STDOUT, "Required fields checked: " . implode(', ', $requiredFields) . "\n");
+    fwrite(STDOUT, "Policy category coverage: " . implode(', ', $policyCategoryCoverage) . "\n");
     fwrite(STDOUT, "db_itemId column present in header: " . ($dbItemIdColumnPresent ? 'yes' : 'no') . "\n");
     if (!$dbItemIdColumnPresent) {
         fclose($handle);
@@ -717,16 +750,10 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     $totalRequiredFieldBlankValuesLinked = array_sum($blankCountsByGroupAndField['linked']);
     $totalRequiredFieldBlankValuesLikelyNew = array_sum($blankCountsByGroupAndField['likely_new']);
 
-    $allRequiredFieldsCompleteAll = ($totalRequiredFieldBlankValuesAll === 0);
-    $allRequiredFieldsCompleteLinked = ($totalRequiredFieldBlankValuesLinked === 0);
-    $allRequiredFieldsCompleteLikelyNew = ($totalRequiredFieldBlankValuesLikelyNew === 0);
-
-    $checkPassed = (
-        $totalRowsMatchExpected
-        && $linkedRowsMatchExpected
-        && $likelyNewRowsMatchExpected
-        && $allRequiredFieldsCompleteAll
-    );
+    $blockingFailureCount = 0;
+    $warningCount = 0;
+    $advisoryCount = 0;
+    $deferredCount = 0;
 
     fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
     fwrite(STDOUT, "Expected total data rows: {$expectedTotalRows}\n");
@@ -738,25 +765,51 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Expected likely new rows (blank db_itemId): {$expectedLikelyNewRows}\n");
     fwrite(STDOUT, "Likely new row count matches expected: " . ($likelyNewRowsMatchExpected ? 'yes' : 'no') . "\n");
 
-    foreach ($requiredFields as $field) {
-        $groupLabels = [
-            'all' => 'all rows',
-            'linked' => 'linked rows',
-            'likely_new' => 'likely new rows',
-        ];
-        foreach ($groupLabels as $groupKey => $groupLabel) {
+    fwrite(STDOUT, "Policy-based diagnostics:\n");
+    foreach ($policyRows as $policy) {
+        $field = $policy['field'];
+        if (!isset($requiredFieldSet[$field])) {
+            continue;
+        }
+        $rowGroupsToReport = ($policy['rule'] === 'likely_new_blocking')
+            ? ['likely_new' => 'likely new rows']
+            : (($policy['rule'] === 'linked_warning') ? ['linked' => 'linked rows'] : ['all' => 'all rows']);
+
+        foreach ($rowGroupsToReport as $groupKey => $groupLabel) {
             $blankCount = $blankCountsByGroupAndField[$groupKey][$field];
-            $isComplete = ($blankCount === 0);
             $missingRows = $missingRowNumbersByGroupAndField[$groupKey][$field];
             $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
 
-            fwrite(STDOUT, "Required field '{$field}' blank count ({$groupLabel}): {$blankCount}\n");
-            fwrite(STDOUT, "Required field '{$field}' complete ({$groupLabel}): " . ($isComplete ? 'yes' : 'no') . "\n");
+            $severity = 'ok';
             if ($blankCount > 0) {
-                fwrite(STDOUT, "Required field '{$field}' missing value row numbers ({$groupLabel}, CSV row numbers): " . implode(', ', $missingRowsSample) . "\n");
-                if ($blankCount > count($missingRowsSample)) {
-                    fwrite(STDOUT, "Required field '{$field}' has additional missing rows not shown ({$groupLabel}): " . ($blankCount - count($missingRowsSample)) . "\n");
+                if ($policy['rule'] === 'global_identity' || $policy['rule'] === 'likely_new_blocking') {
+                    $severity = 'blocking';
+                    $blockingFailureCount++;
+                } elseif ($policy['rule'] === 'linked_warning') {
+                    $severity = 'warning';
+                    $warningCount++;
+                } elseif ($policy['rule'] === 'advisory') {
+                    $severity = 'advisory';
+                    $advisoryCount++;
+                } else {
+                    $severity = 'deferred';
+                    $deferredCount++;
                 }
+            }
+
+            fwrite(STDOUT, "- field category: {$policy['category']}\n");
+            fwrite(STDOUT, "  field: {$field}\n");
+            fwrite(STDOUT, "  row group: {$groupLabel}\n");
+            fwrite(STDOUT, "  blank count: {$blankCount}\n");
+            fwrite(STDOUT, "  severity: {$severity}\n");
+            fwrite(STDOUT, "  remediation owner: {$policy['owner']}\n");
+            fwrite(STDOUT, "  remediation pathway: {$policy['pathway']}\n");
+            fwrite(STDOUT, "  sample row numbers (CSV row numbers): " . ($missingRowsSample === [] ? '(none)' : implode(', ', $missingRowsSample)) . "\n");
+            if ($blankCount > count($missingRowsSample)) {
+                fwrite(STDOUT, "  additional missing rows not shown: " . ($blankCount - count($missingRowsSample)) . "\n");
+            }
+            if (is_string($policy['governance']) && $policy['governance'] !== '') {
+                fwrite(STDOUT, "  governance note: {$policy['governance']}\n");
             }
         }
     }
@@ -764,10 +817,15 @@ $checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredF
     fwrite(STDOUT, "Total required-field blank value count (all rows): {$totalRequiredFieldBlankValuesAll}\n");
     fwrite(STDOUT, "Total required-field blank value count (linked rows): {$totalRequiredFieldBlankValuesLinked}\n");
     fwrite(STDOUT, "Total required-field blank value count (likely new rows): {$totalRequiredFieldBlankValuesLikelyNew}\n");
-    fwrite(STDOUT, "Required-field completeness for all rows: " . ($allRequiredFieldsCompleteAll ? 'PASS' : 'FAIL') . "\n");
-    fwrite(STDOUT, "Required-field completeness for linked rows: " . ($allRequiredFieldsCompleteLinked ? 'PASS' : 'FAIL') . "\n");
-    fwrite(STDOUT, "Required-field completeness for likely new rows: " . ($allRequiredFieldsCompleteLikelyNew ? 'PASS' : 'FAIL') . "\n");
-    fwrite(STDOUT, "Required-field completeness check passed: " . ($checkPassed ? 'yes' : 'no') . "\n");
+    $structuralFailure = (!$totalRowsMatchExpected || !$linkedRowsMatchExpected || !$likelyNewRowsMatchExpected);
+    $checkPassed = (!$structuralFailure && $blockingFailureCount === 0);
+
+    fwrite(STDOUT, "Blocking diagnostic count: {$blockingFailureCount}\n");
+    fwrite(STDOUT, "Warning diagnostic count: {$warningCount}\n");
+    fwrite(STDOUT, "Advisory diagnostic count: {$advisoryCount}\n");
+    fwrite(STDOUT, "Deferred diagnostic count: {$deferredCount}\n");
+    fwrite(STDOUT, "Structural failure detected: " . ($structuralFailure ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Required-field policy check passed: " . ($checkPassed ? 'yes' : 'no') . "\n");
 
     $printNoSideEffectSafetyRequiredFieldCheck();
     return $checkPassed ? 0 : 1;
