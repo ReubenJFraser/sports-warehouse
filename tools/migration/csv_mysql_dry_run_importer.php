@@ -57,6 +57,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-model-id-duplicates  Count duplicate model_id values in the CSV without importing.\n");
     fwrite(STDOUT, "  --check-db-item-id-integrity  Check CSV db_itemId blank/non-blank counts, uniqueness, and numeric format without importing.\n");
     fwrite(STDOUT, "  --check-csv-baseline  Run all safe CSV-only baseline checks without importing.\n");
+    fwrite(STDOUT, "  --check-required-fields  Check required CSV fields for blank values without importing.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -92,6 +93,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV db_itemId integrity check implemented: yes\n");
     fwrite(STDOUT, "- CSV db_itemId integrity check scope: CSV-only integrity counting/validation (no database existence checks, row matching, importer classification, inserts, updates, or backfill)\n");
     fwrite(STDOUT, "- CSV baseline check scope: existing CSV-only checks only (no database comparison, importer classification, inserts, updates, backfill, report generation, or writes)\n");
+    fwrite(STDOUT, "- CSV required-field completeness check implemented: yes\n");
+    fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
     fwrite(STDOUT, "- SQL execution implemented: no\n");
@@ -565,6 +568,149 @@ $checkDbItemIdIntegrity = static function () use ($printNoSideEffectSafetyDbItem
     return ($totalMatchesExpected && $nonBlankMatchesExpected && $blankMatchesExpected && $allNonBlankUnique && $allNonBlankValidNumeric) ? 0 : 1;
 };
 
+$printNoSideEffectSafetyRequiredFieldCheck = static function (): void {
+    fwrite(STDOUT, "Only CSV rows needed for safe required-field completeness scanning were read.\n");
+    fwrite(STDOUT, "No product field comparison against any database was performed.\n");
+    fwrite(STDOUT, "No row matching, insert preview, or importer classification was performed.\n");
+    fwrite(STDOUT, "No updates, inserts, or backfill were performed.\n");
+    fwrite(STDOUT, "No database connection was opened.\n");
+    fwrite(STDOUT, "No SQL was executed.\n");
+    fwrite(STDOUT, "No reports were generated.\n");
+    fwrite(STDOUT, "No files were written.\n");
+};
+
+$checkRequiredFields = static function () use ($printNoSideEffectSafetyRequiredFieldCheck): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $expectedTotalRows = 120;
+    $maxMissingRowsToPrintPerField = 20;
+    $requiredFields = [
+        'brand',
+        'gender',
+        'itemName',
+        'categoryName',
+        'parentCategory',
+        'subCategory',
+        'price',
+        'description',
+        'images',
+        'altText',
+        'ariaText',
+        'external_item_id',
+        'model_id',
+    ];
+
+    fwrite(STDOUT, "CSV path: {$csvPath}\n");
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read-only required-field completeness checks.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+
+    $bomDetectedInFirstHeaderField = false;
+    if ($header !== []) {
+        $utf8Bom = "\xEF\xBB\xBF";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $bomDetectedInFirstHeaderField = true;
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $fieldColumnIndexes = [];
+    $missingRequiredColumns = [];
+    foreach ($requiredFields as $field) {
+        $columnIndex = array_search($field, $header, true);
+        if ($columnIndex === false) {
+            $missingRequiredColumns[] = $field;
+            continue;
+        }
+        $fieldColumnIndexes[$field] = $columnIndex;
+    }
+
+    fwrite(STDOUT, "UTF-8 BOM detected in first header field: " . ($bomDetectedInFirstHeaderField ? 'yes' : 'no') . "\n");
+    fwrite(STDOUT, "Detected header count: " . count($header) . "\n");
+    fwrite(STDOUT, "Required fields checked: " . implode(', ', $requiredFields) . "\n");
+    fwrite(STDOUT, "Required columns present in header: " . ($missingRequiredColumns === [] ? 'yes' : 'no') . "\n");
+    if ($missingRequiredColumns !== []) {
+        fwrite(STDOUT, "Missing required columns: " . implode(', ', $missingRequiredColumns) . "\n");
+        fclose($handle);
+        $printNoSideEffectSafetyRequiredFieldCheck();
+        return 1;
+    }
+
+    $totalDataRows = 0;
+    $blankCountsByField = array_fill_keys($requiredFields, 0);
+    $missingRowNumbersByField = array_fill_keys($requiredFields, []);
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $totalDataRows++;
+        $csvRowNumber = $totalDataRows + 1; // Include header row in CSV row numbering.
+
+        foreach ($requiredFields as $field) {
+            $columnIndex = $fieldColumnIndexes[$field];
+            $value = array_key_exists($columnIndex, $row) ? trim((string) $row[$columnIndex]) : '';
+            if ($value === '') {
+                $blankCountsByField[$field]++;
+                $missingRowNumbersByField[$field][] = $csvRowNumber;
+            }
+        }
+    }
+
+    fclose($handle);
+
+    $totalRowsMatchExpected = ($totalDataRows === $expectedTotalRows);
+    $totalRequiredFieldBlankValues = array_sum($blankCountsByField);
+    $allRequiredFieldsComplete = ($totalRequiredFieldBlankValues === 0);
+    $checkPassed = ($totalRowsMatchExpected && $allRequiredFieldsComplete);
+
+    fwrite(STDOUT, "Total data rows scanned: {$totalDataRows}\n");
+    fwrite(STDOUT, "Expected total data rows: {$expectedTotalRows}\n");
+    fwrite(STDOUT, "Total data row count matches expected: " . ($totalRowsMatchExpected ? 'yes' : 'no') . "\n");
+
+    foreach ($requiredFields as $field) {
+        $blankCount = $blankCountsByField[$field];
+        $isComplete = ($blankCount === 0);
+        $missingRows = $missingRowNumbersByField[$field];
+        $missingRowsSample = array_slice($missingRows, 0, $maxMissingRowsToPrintPerField);
+
+        fwrite(STDOUT, "Required field '{$field}' blank count: {$blankCount}\n");
+        fwrite(STDOUT, "Required field '{$field}' complete: " . ($isComplete ? 'yes' : 'no') . "\n");
+        if ($blankCount > 0) {
+            fwrite(STDOUT, "Required field '{$field}' missing value row numbers (CSV row numbers): " . implode(', ', $missingRowsSample) . "\n");
+            if ($blankCount > count($missingRowsSample)) {
+                fwrite(STDOUT, "Required field '{$field}' has additional missing rows not shown: " . ($blankCount - count($missingRowsSample)) . "\n");
+            }
+        }
+    }
+
+    fwrite(STDOUT, "Total required-field blank value count: {$totalRequiredFieldBlankValues}\n");
+    fwrite(STDOUT, "Required-field completeness check passed: " . ($checkPassed ? 'yes' : 'no') . "\n");
+
+    $printNoSideEffectSafetyRequiredFieldCheck();
+    return $checkPassed ? 0 : 1;
+};
+
 $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No CSV was read.\n");
     fwrite(STDOUT, "No database connection was opened.\n");
@@ -623,7 +769,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -666,6 +812,10 @@ if (in_array('--check-db-item-id-integrity', $args, true)) {
 
 if (in_array('--check-csv-baseline', $args, true)) {
     exit($checkCsvBaseline());
+}
+
+if (in_array('--check-required-fields', $args, true)) {
+    exit($checkRequiredFields());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
