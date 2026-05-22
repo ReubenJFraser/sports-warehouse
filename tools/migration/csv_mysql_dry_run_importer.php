@@ -60,6 +60,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --check-required-fields  Check required CSV fields for blank values without importing.\n");
     fwrite(STDOUT, "  --show-remediation-guidance  Show CSV-only remediation guidance for readiness findings without writing files.\n");
     fwrite(STDOUT, "  --show-frontend-readiness-summary  Show CSV-only frontend readiness summary without writing files.\n");
+    fwrite(STDOUT, "  --show-excel-remediation-summary  Show CSV-only Excel/source remediation summary without writing files.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -98,6 +99,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV required-field completeness check implemented: yes\n");
     fwrite(STDOUT, "- CSV remediation guidance implemented: yes\n");
     fwrite(STDOUT, "- CSV frontend readiness summary implemented: yes\n");
+    fwrite(STDOUT, "- CSV Excel remediation summary implemented: yes\n");
     fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
@@ -108,6 +110,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- write/execution flags remain unsupported\n");
     fwrite(STDOUT, "- Remediation guidance output mode: console-only (no report file generation, no CSV/database modifications)\n");
     fwrite(STDOUT, "- Frontend readiness summary mode: console-only (no report file generation, no CSV/database/frontend behavior modifications)\n");
+    fwrite(STDOUT, "- Excel remediation summary mode: console-only (no report file generation, no CSV/database modifications)\n");
     fwrite(STDOUT, "- File writes implemented: no\n");
 };
 
@@ -1068,6 +1071,60 @@ $showFrontendReadinessSummary = static function () use ($printNoSideEffectSafety
     return $structuralFailure ? 1 : 0;
 };
 
+
+$showExcelRemediationSummary = static function () use ($checkRequiredFields, $checkModelIdDuplicates): int {
+    $exitCode = $checkRequiredFields();
+    fwrite(STDOUT, "
+Excel/CSV remediation summary:
+");
+    fwrite(STDOUT, "- Source identity/linkage fixes
+");
+    fwrite(STDOUT, "  - field: external_item_id
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Fill or confirm external_item_id in the Excel/CSV source if source linkage is required for likely-new rows.
+");
+    fwrite(STDOUT, "- Likely-new insert readiness source fixes
+");
+    fwrite(STDOUT, "  - field: categoryName
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Fill categoryName in the Excel/CSV source for likely-new rows before insert/frontend readiness.
+");
+    fwrite(STDOUT, "  - field: price
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Fill price in the Excel/CSV source for likely-new rows before insert/frontend readiness.
+");
+    fwrite(STDOUT, "- Frontend-readiness source fixes
+");
+    fwrite(STDOUT, "  - field: images
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Add or map image/source asset values in the Excel/CSV source for likely-new rows before frontend readiness.
+");
+    fwrite(STDOUT, "- Accessibility/content source fixes
+");
+    fwrite(STDOUT, "  - field: altText / ariaText
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Improve accessibility text in the Excel/CSV source if these fields remain source-managed; otherwise flag as possible future admin remediation.
+");
+    fwrite(STDOUT, "  - field: description
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Fill or improve descriptions in Excel/CSV if descriptions are source-managed; otherwise flag as possible future admin remediation.
+");
+    fwrite(STDOUT, "- Governance/source-policy decisions
+");
+    fwrite(STDOUT, "  - field: parentCategory
+");
+    fwrite(STDOUT, "  - suggested Excel/CSV action: Do not force an Excel edit yet. Decide whether parentCategory is derivable, optional, future taxonomy, or should be remediated in Excel/CSV.
+");
+    fwrite(STDOUT, "
+Known model_id duplicate governance reminder:
+");
+    fwrite(STDOUT, "  - Resolve or explicitly govern the duplicate model_id group nike_female_leggings x 2 before model_id uniqueness enforcement.
+");
+    fwrite(STDOUT, "Console guidance only: no report file generated
+");
+    return $exitCode;
+};
+
 $showRemediationGuidance = static function () use ($checkRequiredFields): int {
     return $checkRequiredFields();
 };
@@ -1130,7 +1187,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--show-excel-remediation-summary', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -1185,6 +1242,10 @@ if (in_array('--show-remediation-guidance', $args, true)) {
 
 if (in_array('--show-frontend-readiness-summary', $args, true)) {
     exit($showFrontendReadinessSummary());
+}
+
+if (in_array('--show-excel-remediation-summary', $args, true)) {
+    exit($showExcelRemediationSummary());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
