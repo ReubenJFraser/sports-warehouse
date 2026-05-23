@@ -8,7 +8,11 @@ Its purpose is to decide what was worthwhile, what was excessive, and how to avo
 
 ## 2. Original operational goal
 
-The original operational goal was simple: copy and import the newly structured Excel and CSV product database into the online MySQL database through DBeaver.
+Current phase: local DBeaver/Laragon MySQL staging import into `localhost:3306` / `sportswh`.
+
+Future phase: possible online/cloud-hosted deployment or migration after local staging/import is verified. Cloudways is currently discontinued due to cost and is not part of this immediate workflow.
+
+The original operational goal was simple: copy and import the newly structured Excel and CSV product database into the local DBeaver/Laragon MySQL database (`localhost:3306`, schema `sportswh`) through DBeaver.
 
 In a humble workflow, this might have been completed in a day through manual paste or a straightforward CSV import.
 
@@ -123,7 +127,7 @@ The project now has enough diagnostic evidence to move toward DBeaver staging an
 
 Before live update or insert, these items still require careful handling:
 
-- exact online schema confirmation
+- exact local schema confirmation (`localhost:3306` / `sportswh`)
 - staging table versus direct target table decision
 - backup and rollback plan
 - column mapping validation

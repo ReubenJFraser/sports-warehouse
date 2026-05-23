@@ -8,6 +8,10 @@ This is not another diagnostic expansion. It is a practical mapping aid for stag
 
 ## 2. Scope
 
+Current phase: local DBeaver/Laragon MySQL staging import into `localhost:3306` / `sportswh`.
+
+Future phase: possible online/cloud-hosted deployment or migration after local staging/import is verified.
+
 This document is documentation-only and defines planning and mapping guidance only.
 
 - documentation-only
@@ -50,7 +54,7 @@ Import the CSV as source data into staging only. Do not treat CSV presence as pe
 ## 6. Minimal DBeaver import checklist
 
 - [ ] open DBeaver
-- [ ] connect to online MySQL database
+- [ ] connect to local MySQL database (`localhost:3306`, schema `sportswh`)
 - [ ] confirm database/schema
 - [ ] confirm backup/restore point
 - [ ] select CSV import/data transfer workflow
@@ -164,7 +168,7 @@ Frontend publication requires a separate future gating/publish decision.
 Proceed to DBeaver staging import once all of the following are true:
 
 - staging table name is confirmed
-- online database/schema is confirmed
+- local database/schema (`sportswh`) is confirmed
 - backup/rollback exists
 - CSV header mapping is reviewed
 - import target is staging only
@@ -207,7 +211,7 @@ Proceed to DBeaver staging import once all of the following are true:
 
 After this checklist is reviewed, the immediate next step is a human-guided DBeaver staging import preparation step:
 
-- confirm online DB/schema
+- confirm local DB/schema (`localhost:3306` / `sportswh`)
 - confirm staging table name
 - decide whether DBeaver will create the staging table from CSV or import into a pre-created staging table
 - then perform the staging import carefully
