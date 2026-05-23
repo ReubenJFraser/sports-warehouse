@@ -1,0 +1,136 @@
+# CSV taxonomy fill review
+
+- categoryName filled: 66
+- parentCategory filled: 117
+- subCategory filled: 0
+- suspicious rows flagged: 3
+
+## Rows changed
+- line 2: subCategory=Tracksuit -> categoryName=Set, parentCategory=Set
+- line 6: subCategory=Sneakers -> categoryName=Shoes, parentCategory=Shoes
+- line 7: subCategory=Tracksuit -> categoryName=Set, parentCategory=Set
+- line 8: subCategory=Hoodie -> categoryName=Tops, parentCategory=Tops
+- line 9: subCategory=Track_Pants -> categoryName=Pants, parentCategory=Pants
+- line 10: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 11: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 12: subCategory=Bralette -> categoryName=Tops, parentCategory=Tops
+- line 13: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 14: subCategory=Set -> categoryName=Set, parentCategory=Set
+- line 15: subCategory=Crop_Top -> categoryName=Tops, parentCategory=Tops
+- line 16: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 17: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 18: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 19: subCategory=Ball -> categoryName=Equipment, parentCategory=Equipment
+- line 20: subCategory=Soccer_Boots -> categoryName=Shoes, parentCategory=Shoes
+- line 21: subCategory=Running_Shoes -> categoryName=Shoes, parentCategory=Shoes
+- line 22: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 23: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 24: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 25: subCategory=Bodysuit -> categoryName=Set, parentCategory=Set
+- line 26: subCategory=Set -> categoryName=Set, parentCategory=Set
+- line 27: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 28: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 29: subCategory=Tracksuit -> categoryName=Set, parentCategory=Set
+- line 30: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 31: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 32: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 33: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 34: subCategory=Water_Bottle -> categoryName=Equipment, parentCategory=Equipment
+- line 35: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 36: subCategory=Helmet -> categoryName=Equipment, parentCategory=Equipment
+- line 37: subCategory=Trainers -> categoryName=Shoes, parentCategory=Shoes
+- line 38: subCategory=Trainers -> categoryName=Shoes, parentCategory=Shoes
+- line 39: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 40: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 41: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 42: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 43: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 44: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 45: subCategory=Tank_Top -> categoryName=Tops, parentCategory=Tops
+- line 46: subCategory=Bodysuit -> categoryName=Set, parentCategory=Set
+- line 47: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 48: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 49: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 50: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 51: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 52: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 53: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 54: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 55: subCategory=Tank_Top -> categoryName=Tops, parentCategory=Tops
+- line 56: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 57: subCategory=Bodysuit -> categoryName=Set, parentCategory=Set
+- line 58: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 59: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 60: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 61: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 62: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 63: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 64: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 65: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 66: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 67: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 68: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 69: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 70: subCategory=Track_Pants -> categoryName=Pants, parentCategory=Pants
+- line 71: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 72: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 73: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 74: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 75: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 76: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 77: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 78: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 79: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 80: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 81: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 82: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 83: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 84: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 85: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 86: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 87: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 88: subCategory=Tank_Top -> categoryName=Tops, parentCategory=Tops
+- line 89: subCategory=Tank_Top -> categoryName=Tops, parentCategory=Tops
+- line 90: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 91: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 92: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 93: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 94: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 95: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 96: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 97: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 98: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 99: subCategory=Slouchy_Off_Shoulder_Top -> categoryName=Tops, parentCategory=Tops
+- line 100: subCategory=Gym_Bag -> categoryName=Equipment, parentCategory=Equipment
+- line 101: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 102: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 103: subCategory=One_Piece -> categoryName=Set, parentCategory=Set
+- line 104: subCategory=Leggings -> categoryName=Pants, parentCategory=Pants
+- line 105: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 106: subCategory=Tank_Top -> categoryName=Tops, parentCategory=Tops
+- line 107: subCategory=Skirt -> categoryName=Skirts and Dresses, parentCategory=Skirts and Dresses
+- line 108: subCategory=Crop_Top -> categoryName=Tops, parentCategory=Tops
+- line 109: subCategory=Crop_Top -> categoryName=Tops, parentCategory=Tops
+- line 110: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 111: subCategory=Crop_Top -> categoryName=Tops, parentCategory=Tops
+- line 112: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+- line 113: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 114: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 115: subCategory=Boxing_Gloves -> categoryName=Equipment, parentCategory=Equipment
+- line 116: subCategory=Set -> categoryName=Set, parentCategory=Set
+- line 117: subCategory=Track_Pants -> categoryName=Pants, parentCategory=Pants
+- line 118: subCategory=Sports_Bra -> categoryName=Tops, parentCategory=Tops
+- line 119: subCategory=Long_Sleeve -> categoryName=Tops, parentCategory=Tops
+- line 120: subCategory=T_Shirt -> categoryName=Tops, parentCategory=Tops
+- line 121: subCategory=Shorts -> categoryName=Pants, parentCategory=Pants
+
+## Rows left unresolved
+- none
+
+## categoryName/parentCategory disagreements
+- line 3: subCategory=T_Shirt, categoryName=Set, parentCategory= (categoryName disagrees with mapping Tops)
+- line 4: subCategory=Kid_Shoes, categoryName=Set, parentCategory= (categoryName disagrees with mapping Shoes)
+- line 5: subCategory=Backpack, categoryName=Set, parentCategory= (categoryName disagrees with mapping Equipment)
+
+## Skipped inference
+- none
