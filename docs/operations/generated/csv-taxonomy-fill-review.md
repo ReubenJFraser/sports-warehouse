@@ -3,7 +3,9 @@
 - categoryName filled: 66
 - subCategoryParent filled: 117
 - subCategory filled: 0
-- suspicious rows flagged: 3
+- suspicious rows flagged: 0
+- blank_subCategoryParent_known_set_component_exceptions: 3
+- blank_subCategoryParent_unexplained: 0
 
 ## Rows changed
 - line 2: subCategory=Tracksuit -> categoryName=Set, subCategoryParent=Set
@@ -127,10 +129,17 @@
 ## Rows left unresolved
 - none
 
-## categoryName/subCategoryParent disagreements
-- line 3: subCategory=T_Shirt, categoryName=Set, subCategoryParent= (categoryName disagrees with mapping Tops)
-- line 4: subCategory=Kid_Shoes, categoryName=Set, subCategoryParent= (categoryName disagrees with mapping Shoes)
-- line 5: subCategory=Backpack, categoryName=Set, subCategoryParent= (categoryName disagrees with mapping Equipment)
+## categoryName/subCategoryParent documented Set component exceptions
+- line 3: Adidas | Marvel Spider-Man: T-Shirt -> categoryName=Set, subCategory=T_Shirt, subCategoryParent blank (known Set component exception; intrinsic mapping parent would be Tops)
+- line 4: Adidas | Marvel Spider-Man: Light-Up Trainers -> categoryName=Set, subCategory=Kid_Shoes, subCategoryParent blank (known Set component exception; intrinsic mapping parent would be Shoes)
+- line 5: Adidas | Marvel Spider-Man: Backpack -> categoryName=Set, subCategory=Backpack, subCategoryParent blank (known Set component exception; intrinsic mapping parent would be Equipment)
 
 ## Skipped inference
 - none
+
+
+## Validation checklist wording
+- Track `blank_subCategoryParent_known_set_component_exceptions` separately from `blank_subCategoryParent_unexplained`.
+- `blank_subCategoryParent_known_set_component_exceptions` is acceptable only for explicitly documented Set component rows.
+- `blank_subCategoryParent_unexplained` must be treated as requiring review.
+- Rule: blank `subCategoryParent` values must always be explained; unexplained blanks are not auto-accepted.

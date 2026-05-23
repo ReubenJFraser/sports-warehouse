@@ -30,3 +30,22 @@ Purpose: validation/mapping helper that maps each `subCategory` (product type) t
 ## Scope note
 
 This documentation update renames the taxonomy helper field from `parentCategory` to `subCategoryParent` in CSV/import/staging documentation contexts only. It does not change live database tables or frontend publication behavior.
+
+## Intentional blank `subCategoryParent` exception rule
+
+Normally, `subCategoryParent` is expected to be populated from the Dropdowns `subCategory` -> `subCategoryParent` mapping for each product row.
+
+A narrow exception is allowed for **known Set component rows** where:
+
+- `categoryName = Set` is being used to describe the row's bundle/grouping context, and
+- `subCategory` still describes the component’s intrinsic product type (for example `T_Shirt`, `Kid_Shoes`, `Backpack`).
+
+In this exception case, `subCategoryParent` may be intentionally left blank **only when explicitly documented as a known Set component exception**.
+
+Current known intentional blank `subCategoryParent` exceptions:
+
+1. `Adidas | Marvel Spider-Man: T-Shirt` (`categoryName=Set`, `subCategory=T_Shirt`)
+2. `Adidas | Marvel Spider-Man: Light-Up Trainers` (`categoryName=Set`, `subCategory=Kid_Shoes`)
+3. `Adidas | Marvel Spider-Man: Backpack` (`categoryName=Set`, `subCategory=Backpack`)
+
+Concise rule: **Blank `subCategoryParent` values should be explained. They are acceptable only when documented as known Set component exceptions; otherwise they require review.**
