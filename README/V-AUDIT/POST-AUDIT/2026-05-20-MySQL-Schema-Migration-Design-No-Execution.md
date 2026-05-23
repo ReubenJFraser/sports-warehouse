@@ -51,7 +51,7 @@ Governance rule for next phases: migration/import SQL must **not** drop, rename,
 
 ### A. Already present runtime fields (keep)
 Representative CSV/runtime fields already expected in runtime workflows:
-`brand`, `gender`, `itemName`, `categoryName`, `parentCategory`, `price`, `salePrice`, `description`, `featured`, `images`, `thumbnails_json`, `altText`, `ariaText`, `videoAltText`, `videos`.
+`brand`, `gender`, `itemName`, `categoryName`, `subCategoryParent`, `price`, `salePrice`, `description`, `featured`, `images`, `thumbnails_json`, `altText`, `ariaText`, `videoAltText`, `videos`.
 
 ### B. Naming-drift fields requiring mapping
 CSV-to-runtime compatibility mapping (examples):
@@ -93,7 +93,7 @@ Fields that should remain out of production `item` as persistent runtime columns
 | itemName | itemName | keep existing | VARCHAR(255) | NOT NULL (runtime expectation) | Display/runtime product name. |
 | itemName_fully_derived | item_name_fully_derived (or mapped alias) | add new column or map alias | VARCHAR(255) or TEXT | nullable | Preserve derived-system source text separately from display name. |
 | categoryName | categoryName | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
-| parentCategory | parentCategory | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
+| subCategoryParent | subCategoryParent | keep existing | VARCHAR(120) | nullable | Same-name runtime field; keep as existing and map directly from CSV. |
 | subCategory | subcategory | map alias | VARCHAR(120) | nullable | Maintain compatibility in importer/query projection. |
 | ageGroup | ageGroup (preferred) / age_group (compat alias only) | map alias | VARCHAR(80) | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |
 | sizeType | sizeType (preferred) / size_type (compat alias only) | map alias | VARCHAR(80) | nullable | Live data supports preferring camelCase value source unless a later deliberate compatibility rollout maps elsewhere. |

@@ -34,7 +34,7 @@ Current observations:
 
 - The checker is useful diagnostically.
 - A single required-field list is too blunt for pass/fail.
-- `parentCategory` is blank across all rows.
+- `subCategoryParent` is blank across all rows.
 - Likely-new rows (blank `db_itemId`) have many missing values and are not insert-ready.
 - Linked rows (non-blank `db_itemId`) are generally more complete but still have selected gaps.
 - Further checker refinement should wait for a policy foundation.
@@ -81,7 +81,7 @@ These are diagnostic groupings from CSV state only. They do not prove live MySQL
 | gender | Globally required identity fields | Yes | Yes | Yes | Contextual | No | CSV source owner | Identity/facet field. |
 | itemName | Globally required identity fields | Yes | Yes | Yes | Yes | No | CSV source owner | Core display identity. |
 | categoryName | Frontend display readiness fields | No | Contextual | Yes | Yes | No | CSV source owner | Important for taxonomy/navigation. |
-| parentCategory | Fields needing policy clarification | No | Deferred | Deferred | Contextual | No | Governance + CSV source owner | Blank in all rows; policy unresolved. |
+| subCategoryParent | Fields needing policy clarification | No | Deferred | Deferred | Contextual | No | Governance + CSV source owner | Blank in all rows; policy unresolved. |
 | subCategory | Globally required identity fields | Yes | Yes | Yes | Yes | No | CSV source owner | Required for initial policy identity and navigation. |
 | price | Frontend display readiness fields | No | Contextual | Yes | Yes | No | CSV source owner (or pricing governance) | Insert/display critical for sellable item UX. |
 | salePrice | Optional/enrichment fields | No | No | No | Contextual | No | Pricing governance | Optional promotional enrichment. |
@@ -170,9 +170,9 @@ This is an initial conservative recommendation, not an executable rule set yet.
 - `crop_allowed`
 - Duplicate camelCase/snake_case governance pairs until approved.
 
-## 9. parentCategory policy question
+## 9. subCategoryParent policy question
 
-`parentCategory` is blank across all rows and needs explicit policy treatment.
+`subCategoryParent` is blank across all rows and needs explicit policy treatment.
 
 Possible interpretations:
 
@@ -182,7 +182,7 @@ Possible interpretations:
 - It may require Excel/CSV source remediation.
 - It may need removal from strict required checks until governance decides its role.
 
-Recommendation: Treat `parentCategory` as **needs policy clarification** and not as a hard failure at this stage.
+Recommendation: Treat `subCategoryParent` as **needs policy clarification** and not as a hard failure at this stage.
 
 ## 10. Remediation pathways
 
@@ -229,7 +229,7 @@ After this policy is accepted, evolve `--check-required-fields` into policy-base
 - Separate accessibility/content-quality checks.
 - Include remediation-owner labels.
 - Include severity levels: blocking, warning, advisory, deferred.
-- Keep `parentCategory` non-blocking until policy clarification is completed.
+- Keep `subCategoryParent` non-blocking until policy clarification is completed.
 
 ## 14. Suggested severity model
 

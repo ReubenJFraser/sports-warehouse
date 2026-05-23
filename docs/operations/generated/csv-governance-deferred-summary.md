@@ -13,19 +13,19 @@
 
 ## Governance-Deferred Findings Summary
 
-- parentCategory blank findings detected: 120 row(s).
+- subCategoryParent blank findings detected: 120 row(s).
 - CropAllowed/crop_allowed pair detected in header and remains governance-deferred.
 - camelCase/snake_case governance pairs detected and require canonical schema policy.
 - model_id duplicate under governance review: nike_female_leggings x 2.
 - db_itemId backfill policy remains deferred for likely-new rows.
 
-## parentCategory Policy Question
+## subCategoryParent Policy Question
 
-- Finding summary: parentCategory has blank values and currently remains governance-deferred.
+- Finding summary: subCategoryParent has blank values and currently remains governance-deferred.
 - Affected scope: taxonomy readiness and downstream mapping rules for CSV/admin/runtime usage.
-- Why deferred: parentCategory may be derivable, optional, future taxonomy metadata, or a source field requiring remediation only after policy decision.
+- Why deferred: subCategoryParent may be derivable, optional, future taxonomy metadata, or a source field requiring remediation only after policy decision.
 - Possible decisions: treat as optional; derive from categoryName/subCategory; make required in source workflow; define as future taxonomy-only field.
-- Recommended next decision: approve canonical parentCategory policy and whether blanks are acceptable, derivable, or source-remediated.
+- Recommended next decision: approve canonical subCategoryParent policy and whether blanks are acceptable, derivable, or source-remediated.
 
 ## CropAllowed / crop_allowed Governance Question
 
@@ -59,14 +59,14 @@
 ## Source-of-Truth Decision Points
 
 - Decide canonical source/runtime naming for camelCase/snake_case duplicates.
-- Decide whether parentCategory is optional, derivable, required, or taxonomy-only.
+- Decide whether subCategoryParent is optional, derivable, required, or taxonomy-only.
 - Decide interim and target policy for model_id uniqueness.
 - Decide whether db_itemId remains source-managed or becomes system-managed post-insert.
 
 ## Recommended Next Governance Decisions
 
 1. Approve canonical naming and mapping policy for duplicate field pairs before required-field enforcement.
-2. Approve parentCategory policy and remediation ownership path.
+2. Approve subCategoryParent policy and remediation ownership path.
 3. Approve model_id duplicate policy for nike_female_leggings and downstream uniqueness strategy.
 4. Approve db_itemId ownership/backfill policy and sequencing guardrails.
 

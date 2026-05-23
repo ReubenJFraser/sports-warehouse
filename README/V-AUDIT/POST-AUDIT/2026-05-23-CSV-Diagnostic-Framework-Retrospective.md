@@ -198,7 +198,7 @@ This retrospective task explicitly excludes:
 - Likely-new rows are not frontend-ready under current CSV-only policy
 - Frontend-readiness blocking fields include categoryName, images, and price
 - Known model_id duplicate group: nike_female_leggings x 2
-- parentCategory is governance-deferred
+- subCategoryParent is governance-deferred
 - CropAllowed and crop_allowed plus camelCase and snake_case duplicate fields are governance-deferred
 - Readiness-blocking does not mean blocking admin-visible copy or import
 - Imperfect rows can be admin-visible for diagnosis and remediation while public frontend display remains gated

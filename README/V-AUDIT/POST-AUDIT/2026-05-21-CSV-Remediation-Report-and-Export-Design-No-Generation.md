@@ -177,7 +177,7 @@ Future admin remediation queue output should include:
 
 Future governance-deferred output should track unresolved governance topics, including:
 
-- `parentCategory` treatment.
+- `subCategoryParent` treatment.
 - `CropAllowed` versus `crop_allowed` policy.
 - camelCase versus snake_case duplicate-field policy.
 - `model_id` duplicate governance.

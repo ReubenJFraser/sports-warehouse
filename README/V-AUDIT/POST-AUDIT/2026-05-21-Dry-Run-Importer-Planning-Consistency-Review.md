@@ -58,7 +58,7 @@ This review does not:
 | gender | update yes, insert yes | yes | Core included field across planning set. |
 | itemName | update yes, insert yes | yes | Core included field across planning set. |
 | categoryName | update yes, insert yes | yes | Core included field across planning set. |
-| parentCategory | update yes, insert yes | yes | Core included field across planning set. |
+| subCategoryParent | update yes, insert yes | yes | Core included field across planning set. |
 | subCategory -> subcategory | update yes, insert yes | yes | Explicit alias mapping consistently noted. |
 | price | update yes, insert yes | yes | Numeric validation expectation consistently noted. |
 | salePrice | update yes, insert yes | yes | Numeric validation expectation consistently noted. |

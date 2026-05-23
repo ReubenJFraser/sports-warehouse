@@ -85,7 +85,7 @@
 | `usage_category` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
 | `usage_subtype` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
 | `categoryName` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
-| `parentCategory` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
+| `subCategoryParent` | candidate runtime field from CSV source; missing in live item. | no | no | missing runtime candidate |
 | `ageGroup` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
 | `sizeType` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |
 | `fitStyle` | prefer CSV/camelCase; snake_case only compatibility alias pending approved rollout | no | no | missing runtime candidate |

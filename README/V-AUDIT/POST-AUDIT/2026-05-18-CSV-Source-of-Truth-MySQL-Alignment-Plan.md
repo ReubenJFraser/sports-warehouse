@@ -28,10 +28,10 @@ Known readiness facts to preserve:
 Note: this section compares CSV headers to the repository SQL snapshot (`db/sportswh_dump.sql`), not a guaranteed live-production schema snapshot.
 
 ### CSV columns (45)
-`brand, gender, itemName, itemName_fully_derived, model_id, product_domain, collection, model_family, subCategory, fabric, construction, seamless, scrunchFlag, invisibleFlag, neckline, strap_configuration, support_level, rise, length, variant, usage_category, usage_subtype, categoryName, parentCategory, ageGroup, sizeType, fitStyle, activityTags, price, salePrice, description, featured, images, thumbnails_json, external_item_id, campaign_or_series, altText, ariaText, videoAltText, videos, images2, CropAllowed, db_itemId, assignment_source, _images_helper_normalize`
+`brand, gender, itemName, itemName_fully_derived, model_id, product_domain, collection, model_family, subCategory, fabric, construction, seamless, scrunchFlag, invisibleFlag, neckline, strap_configuration, support_level, rise, length, variant, usage_category, usage_subtype, categoryName, subCategoryParent, ageGroup, sizeType, fitStyle, activityTags, price, salePrice, description, featured, images, thumbnails_json, external_item_id, campaign_or_series, altText, ariaText, videoAltText, videos, images2, CropAllowed, db_itemId, assignment_source, _images_helper_normalize`
 
 ### Repository snapshot `item` columns (23 in `db/sportswh_dump.sql`)
-`itemId, itemName, brand, gender, subcategory, price, salePrice, description, featured, categoryId, categoryName, parentCategory, activity_tags, age_group, size_type, fit_style, images, orientation, thumbnails_json, altText, ariaText, videoAltText, videos`
+`itemId, itemName, brand, gender, subcategory, price, salePrice, description, featured, categoryId, categoryName, subCategoryParent, activity_tags, age_group, size_type, fit_style, images, orientation, thumbnails_json, altText, ariaText, videoAltText, videos`
 
 ---
 
@@ -42,7 +42,7 @@ Note: this section compares CSV headers to the repository SQL snapshot (`db/spor
 - `gender`
 - `itemName`
 - `categoryName`
-- `parentCategory`
+- `subCategoryParent`
 - `price`
 - `salePrice`
 - `description`

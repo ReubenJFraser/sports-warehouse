@@ -124,7 +124,7 @@ Non-wearables:
 These columns provide secondary, human-readable categorization.
 
 categoryName
-parentCategory
+subCategoryParent
 
 ---
 

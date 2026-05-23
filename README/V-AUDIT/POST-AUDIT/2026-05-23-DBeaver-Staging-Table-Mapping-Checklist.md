@@ -78,7 +78,7 @@ Use the same name for the staging column as the CSV field unless a concrete, app
 | gender | gender | yes | identity field | Raw source gender value. |
 | itemName | itemName | yes | display field | Source display/title field. |
 | categoryName | categoryName | yes | taxonomy/category field | Frontend readiness may depend on this, but still import raw value. |
-| parentCategory | parentCategory | yes | governance-deferred field | Governance-deferred; preserve as-is in staging. |
+| subCategoryParent | subCategoryParent | yes | governance-deferred field | Governance-deferred; preserve as-is in staging. |
 | subCategory | subCategory | yes | taxonomy/category field | Preserve source classification value. |
 | price | price | yes | pricing field | Preserve source numeric/text representation. |
 | salePrice | salePrice | yes | pricing field | Preserve source sale value as imported. |
