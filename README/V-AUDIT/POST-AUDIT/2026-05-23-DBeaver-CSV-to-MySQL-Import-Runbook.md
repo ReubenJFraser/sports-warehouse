@@ -2,13 +2,17 @@
 
 ## 1. Purpose
 
-This runbook defines a practical DBeaver-based operational path for copying/importing Sports Warehouse CSV product data into the online MySQL database.
+This runbook defines a practical DBeaver-based operational path for copying/importing Sports Warehouse CSV product data into the local DBeaver/Laragon MySQL database (`localhost:3306`, schema `sportswh`).
 
 The immediate goal is no longer to default to additional diagnostics and reporting. The goal is to move toward controlled import/copy execution with explicit safety checks.
 
 This document is documentation-only guidance. It does not perform any import, copy, update, insert, or publish action.
 
 ## 2. Current verified state
+
+Current phase: local DBeaver/Laragon MySQL staging import into `localhost:3306` / `sportswh`.
+
+Future phase: possible online/cloud-hosted deployment or migration after local staging/import is verified.
 
 The current verified CSV and workflow state is:
 
@@ -72,7 +76,7 @@ Benefits:
 
 Before any DBeaver import/copy operation:
 
-- Confirm online database connection works in DBeaver.
+- Confirm local DBeaver connection works (`localhost:3306`, schema `sportswh`).
 - Confirm target database/schema name.
 - Confirm backup or restore point exists.
 - Confirm current live item/product table schema.
@@ -189,7 +193,7 @@ No frontend gating implementation is performed in this task.
 Practical DBeaver runbook outline (no executed operation here):
 
 1. Open DBeaver.
-2. Connect to the online MySQL database.
+2. Connect to the local MySQL database (`localhost:3306`, schema `sportswh`).
 3. Select the target database/schema.
 4. Start Data Import / Import Data from CSV.
 5. Choose source CSV file: `docs/data/SportWarehouse_ProductDB.csv`.
