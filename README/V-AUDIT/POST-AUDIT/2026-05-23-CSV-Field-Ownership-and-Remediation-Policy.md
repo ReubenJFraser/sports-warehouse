@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This policy defines field ownership for the Sports Warehouse CSV-to-local-DBeaver staging workflow.
+This policy defines field ownership and stage-specific readiness for the Sports Warehouse CSV-to-local-DBeaver staging workflow.
 
 The purpose is to avoid treating every blank or incomplete field the same way.
 
@@ -26,211 +26,164 @@ Current goal:
 ## 3. Core policy distinction
 
 This policy uses four field ownership categories:
-- Excel/CSV source-of-truth fields.
-- Admin-backend remediation fields.
+- Excel/CSV source-owned fields.
+- Admin-backend operational or remediation fields.
 - Governance-deferred fields.
 - Runtime/editor-protected fields.
 
-A field's ownership determines where it should be fixed, not merely whether it is blank.
+A field's ownership determines where it should be fixed and when it is required.
 
-## 4. Excel/CSV source-of-truth fields
+## 4. Stage-specific readiness gates
 
-Structured data should usually be maintained in Excel/CSV because it is easier to validate in bulk and directly affects mapping, import behavior, taxonomy, pricing, and source linkage.
+The workflow uses stage-specific gates instead of a universal completeness rule.
 
-Examples include:
-- `brand`
-- `gender`
-- `itemName`
-- `model_id`
-- `external_item_id`
-- `categoryName`
-- `subCategory`
-- `parentCategory` (if later governed as source-managed)
-- `price`
-- `salePrice`
-- `images` and source asset mapping
-- `product_domain`
-- `collection`
-- `model_family`
-- `ageGroup` / `age_group` (if governed)
-- `sizeType` / `size_type` (if governed)
-- `fitStyle` / `fit_style` (if governed)
-- `activityTags` / `activity_tags` (if governed)
+1) Staging import readiness:
+- Staging import is allowed when the CSV is structurally safe and mapping is correct.
+- Staging import does not require every product-content or operational field to be complete.
+- Meaningful blanks are preserved for later readiness decisions.
 
-These fields should usually be fixed before live insert/update or frontend publication.
+2) Live insert/update readiness:
+- This gate is stricter than staging and is where source-owned critical structured fields are enforced.
+- Live insert/update requires either an initial `price` value or an approved admin price-entry workflow.
+- Rows with blank `db_itemId` can still stage, but are not linked/update-ready until controlled insert and identity policy are settled.
 
-## 5. Admin-backend remediation fields
+3) Frontend publication readiness:
+- This is the strictest gate for user-visible completeness.
+- Frontend publication requires product identity, display safety, accessibility policy compliance where applicable, and required commercial fields.
+- Missing required display fields can block publication even when staging and live existence are allowed.
 
-Long-form content and accessibility text may be better completed in the admin backend because admin UI surfaces can provide textareas, image preview, product preview, validation messaging, and review context.
+4) Optional/enrichment readiness:
+- Enrichment fields can remain blank without blocking staging.
+- They are completed only when relevant to product quality goals or campaign needs.
 
-Examples include:
-- `description`
-- `altText`
-- `ariaText`
-- `videoAltText`
-- Image captions or content notes, if added later
+5) Feature/toggle-dependent readiness:
+- Some fields become required only when a feature is enabled.
+- Example: sale pricing, video, featured merchandising toggles.
 
-These fields may be imported into staging as blanks or partial values, then completed in admin if a future admin remediation workflow is approved.
+6) Governance-deferred readiness:
+- Fields with unresolved policy remain non-blocking for staging.
+- They must not be auto-resolved by importer logic until governance decisions are made.
 
-## 6. Governance-deferred fields
+## 5. Staged evidence now available
 
-Some fields require policy or schema decisions before they can be treated as required or automatically remediated.
+Current local staging evidence:
+- `product_import_staging` contains 120 rows.
+- 54 rows are linked (non-blank `db_itemId`).
+- 66 rows are likely-new (blank `db_itemId`).
+- Those 66 likely-new rows currently lack `categoryName`, `price`, `images`, and `external_item_id`.
 
-Examples include:
-- `parentCategory`
-- `CropAllowed` / `crop_allowed`
-- `ageGroup` / `age_group`
-- `sizeType` / `size_type`
-- `fitStyle` / `fit_style`
-- `activityTags` / `activity_tags`
-- `model_id` duplicate group `nike_female_leggings x 2`
-- `db_itemId` backfill policy
+This identifies readiness work for later gates, not a staging-import failure.
 
-Governance-deferred fields should not block admin-visible staging import by themselves.
+## 6. Protected and governance baseline policies
 
-## 7. Runtime/editor-protected fields
+The following baseline policies remain unchanged:
+- Staging-first strategy remains correct.
+- Current phase remains local DBeaver/Laragon MySQL on `localhost:3306`, schema `sportswh`.
+- Future cloud or online deployment is later only.
+- Governance-deferred fields must not be auto-resolved.
+- Protected runtime/editor fields must not be overwritten.
+- No frontend publication of incomplete products.
 
-The following fields must not be overwritten by CSV-driven import:
+Runtime/editor-protected fields that must not be overwritten by CSV-driven flow:
 - `item.hero_image`
 - `item.chosen_image`
 - `hero_override.chosen_image`
 
-CSV image/source fields may be imported into staging as raw values, but those values do not authorize overwriting runtime/editor-selected images.
+CSV image fields can be staged as source values but must never overwrite those protected hero image fields.
 
-## 8. Field ownership table
+## 7. Field-specific policy clarifications
 
-| field | ownership category | preferred remediation location | required before staging import? | required before live insert/update? | required before frontend publication? | notes |
-|---|---|---|---|---|---|---|
-| db_itemId | Governance-deferred | Governance policy plus controlled data operation | No | Yes (for update path policy) | Yes (for row identity confidence) | Distinguish linked vs likely-new rows; do not auto-backfill in staging-only phase. |
-| brand | Excel/CSV source-of-truth | Excel/CSV | No | Yes | Yes | Structured product attribute for merchandising and filters. |
-| gender | Excel/CSV source-of-truth | Excel/CSV | No | Usually yes | Usually yes | Treated as structured taxonomy/segmentation field. |
-| itemName | Excel/CSV source-of-truth | Excel/CSV | No | Yes | Yes | Core product identity field. |
-| itemName_fully_derived | Governance-deferred | Governance policy first, then source/admin by decision | No | Policy-dependent | Policy-dependent | Clarify derivation rule before making required. |
-| model_id | Excel/CSV source-of-truth plus governance check | Excel/CSV with governance review on duplicates | No | Yes | Yes | Duplicate policy needed for `nike_female_leggings x 2`. |
-| product_domain | Excel/CSV source-of-truth | Excel/CSV | No | Usually yes | Usually yes | Useful for structured grouping. |
-| collection | Excel/CSV source-of-truth | Excel/CSV | No | Usually yes | Usually yes | Supports merchandising and internal grouping. |
-| model_family | Excel/CSV source-of-truth | Excel/CSV | No | Usually yes | Usually yes | Structured source-managed family signal. |
-| categoryName | Excel/CSV source-of-truth | Excel/CSV | No | Yes (insert-ready rows) | Yes (or approved fallback) | Primary taxonomy routing input. |
-| parentCategory | Governance-deferred | Governance first, then Excel/CSV if source-managed | No | Policy-dependent | Policy-dependent | Not auto-required until governance decision. |
-| subCategory | Excel/CSV source-of-truth | Excel/CSV | No | Usually yes | Usually yes | Taxonomy granularity field. |
-| price | Excel/CSV source-of-truth | Excel/CSV | No | Yes (insert-ready rows) | Yes | Commercial requirement for live display/sale. |
-| salePrice | Excel/CSV source-of-truth | Excel/CSV | No | Policy-dependent | Policy-dependent | Required only when sale logic applies. |
-| description | Admin-backend remediation | Admin backend (or source if future policy says so) | No | Policy-dependent | Usually yes if copy is required | Long-form content; may remain blank in staging. |
-| featured | Governance-deferred | Governance policy and admin control | No | Policy-dependent | Policy-dependent | Feature flag behavior should be explicitly governed. |
-| images | Excel/CSV source-of-truth | Excel/CSV | No | Yes (insert-ready rows) | Yes | Source asset mapping field; does not override protected runtime fields. |
-| thumbnails_json | Governance-deferred | Governance plus technical mapping decision | No | Policy-dependent | Policy-dependent | Decide whether generated, imported, or ignored. |
-| altText | Admin-backend remediation | Admin backend | No | Policy-dependent | Yes if accessibility policy requires | Better authored with media context. |
-| ariaText | Admin-backend remediation | Admin backend | No | Policy-dependent | Yes if accessibility policy requires | Accessibility copy often needs UI context. |
-| videoAltText | Admin-backend remediation | Admin backend | No | Policy-dependent | Policy-dependent | Applies when video assets exist. |
-| videos | Governance-deferred | Governance plus admin/source workflow decision | No | Policy-dependent | Policy-dependent | Determine media governance before strict requirement. |
-| images2 | Governance-deferred | Governance decision, then source/admin as chosen | No | Policy-dependent | Policy-dependent | Clarify semantic role vs `images`. |
-| external_item_id | Excel/CSV source-of-truth | Excel/CSV | No | Yes if linkage policy requires | Usually yes for traceability | Key external linkage signal. |
-| campaign_or_series | Governance-deferred | Governance policy then source/admin decision | No | Policy-dependent | Policy-dependent | Marketing classification policy pending. |
-| CropAllowed | Governance-deferred | Governance policy | No | Policy-dependent | Policy-dependent | Duplicate/variant governance with `crop_allowed`. |
-| crop_allowed | Governance-deferred | Governance policy | No | Policy-dependent | Policy-dependent | Canonicalization decision required. |
-| ageGroup | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| age_group | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| sizeType | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| size_type | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| fitStyle | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| fit_style | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| activityTags | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| activity_tags | Governance-deferred | Governance policy then likely Excel/CSV | No | Policy-dependent | Policy-dependent | Resolve dual-column governance. |
-| assignment_source | Governance-deferred | Governance plus process ownership decision | No | Policy-dependent | Policy-dependent | Define provenance semantics before requiring. |
-| _images_helper_normalize | Runtime/editor-protected support field | Import tooling/internal mapping only | No | No | No | Helper/internal field; must not be used to overwrite editor-chosen images. |
+### 7.1 price and salePrice
 
-## 9. Staging import policy
+- `price` is a hybrid source/operational field.
+- `price` may need an initial value before frontend publication.
+- `price` does not need to be completed before staging import.
+- Ongoing `price` maintenance may belong in the admin backend because prices can change over time.
+- Live insert/update requires either an initial `price` value or an approved admin price-entry workflow.
+- `salePrice` is conditional and should only be required if the product is on sale or sale display is enabled.
 
-Staging import may proceed even if admin-remediation fields are incomplete, provided structural and source conditions are safe.
+### 7.2 featured
 
-Staging import should preserve:
-- Raw CSV values.
-- Blanks where meaningful.
-- `db_itemId` distinction between linked and likely-new rows.
-- Source fields needed for later review.
+- `featured` is an admin/backend editorial or operational toggle.
+- `featured` is not required for staging import.
+- `featured` should not block live product existence.
+- `featured` affects merchandising/editorial presentation only.
+- `featured` should be managed in admin/backend rather than permanently fixed in Excel.
 
-Staging import should not:
-- Publish products.
-- Update live `item` or `product` rows.
-- Overwrite protected runtime/editor fields.
-- Backfill `db_itemId`.
-- Resolve governance-deferred fields automatically.
+### 7.3 videos and videoAltText
 
-## 10. What should be fixed before staging import
+- `videos` are optional/enrichment unless a video module or campaign feature is enabled.
+- `videoAltText` is required only when a video exists and accessibility policy requires it.
+- Missing video fields should not block staging import.
+- Missing video fields should not block frontend publication unless the product is intended to display video.
 
-Minimal fixes needed before staging import:
-- CSV is structurally readable.
-- Header mapping is correct.
-- Staging table exists or is created correctly.
-- Row count expectation is understood.
-- Source file is the intended CSV (`docs/data/SportWarehouse_ProductDB.csv`).
-- Staging import will not touch live frontend/public tables.
+### 7.4 description, altText, and ariaText
 
-Long-form content completion is not required before staging import.
+- `description`, `altText`, and `ariaText` do not block staging import.
+- They may be better completed in admin backend UI workflows.
+- They may be required before frontend publication depending on content and accessibility policy.
+- They are not necessarily Excel/CSV source-of-truth fields.
+- If Excel remains authoritative for any of them, admin/backend remediation must include source-of-truth drift safeguards.
 
-## 11. What should be fixed before live insert/update
+### 7.5 images and hero controls
 
-Live insert/update requires stricter readiness controls.
+- Source image mapping in `images`/`images2` may remain Excel/CSV-owned.
+- Display or hero-image choice remains protected and admin-managed.
+- Missing `images` does not block staging import.
+- Missing `images` blocks frontend publication unless an approved fallback policy exists.
+- CSV image fields must not overwrite `item.hero_image`, `item.chosen_image`, or `hero_override.chosen_image`.
 
-Likely required before live insert/update:
-- `model_id` policy.
-- `external_item_id` and source linkage, if required.
-- `categoryName` for insert-ready rows.
-- `price` for insert-ready rows.
-- `images` and source asset mapping for insert-ready rows.
-- `db_itemId` backfill/update policy.
-- Explicit update/insert allowlist.
-- Protected-field non-overwrite rules.
+### 7.6 db_itemId
 
-## 12. What should be fixed before frontend publication
+- Blank `db_itemId` for likely-new rows is expected and meaningful.
+- `db_itemId` should not be manually completed in Excel before staging.
+- `db_itemId` backfill is a future import/database policy issue after controlled insert.
+- Blank `db_itemId` blocks linked/update-ready treatment, but not staging import.
 
-Frontend publication requires products to be safe and complete for users.
+## 8. Field ownership and gate table
 
-Likely required before frontend publication:
-- `categoryName` or approved fallback.
-- `price`.
-- `images` or equivalent display asset.
-- Sufficient product identity.
-- `description`, if policy requires user-facing copy.
-- `altText`/`ariaText`, if accessibility policy requires them before publication.
-- No unresolved governance issue that affects display or routing.
+| field | ownership category | required before staging import? | required before live insert/update? | required before frontend publication? | optional or toggle-dependent? | preferred remediation location | notes |
+|---|---|---|---|---|---|---|---|
+| db_itemId | Governance-deferred identity field | No | Yes for linked update path; No for initial staging of likely-new rows | Yes for confident linked updates; insert path policy applies | Governance-dependent | Governance policy plus controlled DB operation | Blank is meaningful for likely-new rows and should not be prefilled in Excel before staging. |
+| brand | Excel/CSV source-owned | No | Yes (normally) | Yes (normally) | No | Excel/CSV | Structured merchandising/filter field. |
+| gender | Excel/CSV source-owned | No | Usually yes | Usually yes | Sometimes taxonomy-dependent | Excel/CSV | Structured segmentation field. |
+| itemName | Excel/CSV source-owned | No | Yes | Yes | No | Excel/CSV | Core product identity label. |
+| model_id | Excel/CSV source-owned plus governance check | No | Yes with duplicate policy | Yes with duplicate policy | Governance-dependent for duplicates | Excel/CSV plus governance review | Duplicate governance remains required. |
+| categoryName | Excel/CSV source-owned | No | Yes for insert-ready rows | Yes unless approved fallback | No | Excel/CSV | Missing in likely-new rows marks readiness work for later gates. |
+| subCategory | Excel/CSV source-owned | No | Usually yes | Usually yes | Taxonomy-policy dependent | Excel/CSV | Taxonomy granularity field. |
+| external_item_id | Excel/CSV source-owned | No | Yes where linkage policy requires | Usually yes for traceability | Policy-dependent | Excel/CSV | Missing in likely-new rows is a live readiness concern, not staging failure. |
+| price | Hybrid source/operational | No | Yes, or approved admin price-entry workflow | Yes for normal purchasable display | Sometimes workflow-dependent | Initial source value in Excel/CSV or approved admin workflow | Ongoing maintenance may belong in admin backend. |
+| salePrice | Hybrid conditional commercial field | No | Required only when on-sale logic is enabled | Required only when sale display is enabled | Yes | Admin/backend or Excel/CSV per sale workflow | Conditional field; do not enforce universally. |
+| featured | Admin/backend editorial toggle | No | No | Only if merchandising policy requires explicit state | Yes | Admin/backend | Should not block live product existence. |
+| description | Admin-backend remediation content field | No | Not universally required | Policy-dependent, often yes before publication | Yes | Admin/backend (or governed source workflow) | Long-form content often better maintained in admin UI. |
+| altText | Admin-backend accessibility content field | No | Not universally required | Required when accessibility policy requires before publication | Yes | Admin/backend (with drift safeguards if source-authoritative) | Not a staging blocker. |
+| ariaText | Admin-backend accessibility content field | No | Not universally required | Required when accessibility policy requires before publication | Yes | Admin/backend (with drift safeguards if source-authoritative) | Not a staging blocker. |
+| videos | Optional enrichment or feature module field | No | No unless module-enabled workflow requires | No unless product is intended to display video | Yes | Admin/backend or governed source workflow | Optional unless video feature/campaign is enabled. |
+| videoAltText | Conditional accessibility enrichment | No | No unless video workflow requires | Required only when video exists and policy requires | Yes | Admin/backend | Depends on actual video presence and policy. |
+| images | Excel/CSV source-owned mapping field with protected runtime display controls | No | Yes for insert-ready media completeness | Yes unless approved fallback | Sometimes fallback-dependent | Excel/CSV for source mapping; admin/backend for hero/display choice | Must not overwrite `item.hero_image`, `item.chosen_image`, `hero_override.chosen_image`. |
+| images2 | Governance-deferred or secondary source mapping | No | Policy-dependent | Policy-dependent | Yes | Governance decision then source/admin as chosen | Clarify semantics relative to `images`. |
+| campaign_or_series | Governance-deferred marketing classification | No | Policy-dependent | Policy-dependent | Yes | Governance then source/admin | May drive campaign-specific publication logic. |
+| activityTags / activity_tags | Governance-deferred structured taxonomy variant | No | Policy-dependent | Policy-dependent | Yes | Governance then likely Excel/CSV | Dual-column canonicalization policy still required. |
 
-## 13. Admin remediation implications
-
-Admin backend remediation may be valuable because it can provide:
-- Product image preview.
-- Frontend-like preview.
-- Larger text editing fields.
-- Validation messages.
-- Review queues.
-- Publication status signals.
-- Accessibility checks.
-
-However, admin remediation requires source-of-truth rules to avoid drift.
-
-## 14. Source-of-truth drift policy
-
-Risk:
-If Excel remains source-of-truth while admin edits `description`, `altText`, or `ariaText`, database content and Excel content can diverge.
-
-Possible future solutions:
-- Export approved admin edits back to Excel/CSV.
-- Make database/admin authoritative for selected content fields.
-- Maintain a sync/reconciliation report.
-- Decide authority field-by-field.
-
-This document does not implement a sync policy; it identifies the need for one.
-
-## 15. Practical recommendation
+## 9. Practical recommendation
 
 Recommended direction:
-- Keep structured/source fields in Excel/CSV.
-- Allow staging import with incomplete content fields.
-- Use admin backend later for long-form content remediation, if approved.
-- Do not block staging import merely because `description`/`altText`/`ariaText` are incomplete.
-- Do not publish incomplete products to frontend until readiness criteria are met.
+- Do not require all long-form content or operational fields to be completed in Excel before staging.
+- Use staging to preserve and inspect source data.
+- Fix obvious source-owned structured gaps before live insert/update where needed.
+- Use admin/backend workflows for operational/editorial completion where appropriate.
+- Use frontend publication gates to prevent incomplete products from being public.
+- Use toggles for optional modules such as videos, featured merchandising, and sale pricing.
 
-## 16. Relationship to generated artifacts
+## 10. Immediate next operational direction
+
+Immediate practical direction:
+- Staging import has succeeded and should be treated as a raw local MySQL staging snapshot.
+- The next decision is not whether staging can happen; it has happened.
+- The next decision is which fields must be remediated before live insert/update or frontend publication.
+- Do not proceed to live insert/update until source-owned critical fields and gating policy are settled.
+
+## 11. Relationship to generated artifacts
 
 Current artifacts supporting this policy include:
 - `csv-excel-remediation-checklist.csv` identifies source fixes.
@@ -238,15 +191,7 @@ Current artifacts supporting this policy include:
 - `csv-frontend-readiness-summary.md` identifies publication readiness.
 - `csv-governance-deferred-summary.md` identifies policy decisions.
 
-## 17. Immediate next operational direction
-
-Immediate practical next step:
-- Continue preparing local `product_import_staging` import.
-- Do not require all long-form content to be completed in Excel before staging import.
-- Use staging table to hold source data.
-- Use generated artifacts to decide what must be fixed in Excel before live insert/update and what can be handled later in admin.
-
-## 18. Non-goals
+## 12. Non-goals
 
 This task does not perform any of the following:
 - No CSV edits.
@@ -261,9 +206,9 @@ This task does not perform any of the following:
 - No public route changes.
 - No admin UI changes.
 - No image edits.
-- No Hero Manager or Hero Editor changes.
+- No Hero Manager/Hero Editor changes.
 - No schema cleanup.
-- No duplicate-column canonicalization.
+- No duplicate-column canonicalization execution.
 - No `db_itemId` backfill execution.
-- No `model_id` uniqueness enforcement.
-- No changes to `tools/migration/csv_mysql_dry_run_importer.php` in this task.
+- No `model_id` uniqueness enforcement execution.
+- No changes to `tools/migration/csv_mysql_dry_run_importer.php`.
