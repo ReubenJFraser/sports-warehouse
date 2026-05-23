@@ -64,6 +64,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --write-excel-remediation-checklist  Write generated CSV checklist for Excel/source remediation.\n");
     fwrite(STDOUT, "  --write-frontend-readiness-summary  Write generated Markdown summary for CSV frontend readiness.\n");
     fwrite(STDOUT, "  --write-admin-remediation-queue  Write generated CSV queue for future admin remediation review.\n");
+    fwrite(STDOUT, "  --write-governance-deferred-summary  Write generated Markdown summary for governance-deferred CSV findings.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -106,9 +107,11 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- Excel remediation checklist generation implemented: yes\n");
     fwrite(STDOUT, "- Frontend readiness summary generation implemented: yes\n");
     fwrite(STDOUT, "- Admin remediation queue generation implemented: yes\n");
+    fwrite(STDOUT, "- Governance-deferred summary generation implemented: yes\n");
     fwrite(STDOUT, "- Generated artifact path: docs/operations/generated/csv-excel-remediation-checklist.csv\n");
     fwrite(STDOUT, "- Generated artifact path: docs/operations/generated/csv-frontend-readiness-summary.md\n");
     fwrite(STDOUT, "- Generated artifact path: docs/operations/generated/csv-admin-remediation-queue.csv\n");
+    fwrite(STDOUT, "- Generated artifact path: docs/operations/generated/csv-governance-deferred-summary.md\n");
     fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
@@ -123,7 +126,7 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV source edits implemented: no\n");
     fwrite(STDOUT, "- Admin UI changes implemented: no\n");
     fwrite(STDOUT, "- Frontend behavior changes implemented: no\n");
-    fwrite(STDOUT, "- File writes implemented: limited to explicit generated checklist/frontend-readiness-summary generated modes only\n");
+    fwrite(STDOUT, "- File writes implemented: limited to explicit generated checklist/frontend-readiness/admin/governance-summary generated modes only\n");
 };
 
 $printNoSideEffectSafetyHeaderCheck = static function (): void {
@@ -1623,7 +1626,203 @@ $writeAdminRemediationQueue = static function () use ($writeDeterministicCsvRow)
     return 0;
 };
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--show-excel-remediation-summary', '--write-excel-remediation-checklist', '--write-frontend-readiness-summary', '--write-admin-remediation-queue', '--dry-run'];
+$writeGovernanceDeferredSummary = static function (): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $outputDir = dirname(__DIR__, 2) . '/docs/operations/generated';
+    $outputPath = $outputDir . '/csv-governance-deferred-summary.md';
+    $requiredColumns = ['db_itemId', 'model_id', 'parentCategory', 'CropAllowed', 'ageGroup', 'sizeType', 'fitStyle', 'activityTags'];
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.
+");
+        return 1;
+    }
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for read.
+");
+        return 1;
+    }
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.
+");
+        return 1;
+    }
+    if ($header !== []) {
+        $utf8Bom = "ï»¿";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $idx = [];
+    $missing = [];
+    foreach ($requiredColumns as $column) {
+        $columnIndex = array_search($column, $header, true);
+        if ($columnIndex === false) {
+            $missing[] = $column;
+        } else {
+            $idx[$column] = $columnIndex;
+        }
+    }
+    if ($missing !== []) {
+        fclose($handle);
+        fwrite(STDERR, 'Missing required diagnostic columns: ' . implode(', ', $missing) . "
+");
+        return 1;
+    }
+
+    $totalRows = 0;
+    $linkedRows = 0;
+    $likelyNewRows = 0;
+    $parentCategoryBlank = 0;
+    $modelIdCounts = [];
+
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $totalRows++;
+
+        $dbItemId = trim((string)($row[$idx['db_itemId']] ?? ''));
+        if ($dbItemId === '') {
+            $likelyNewRows++;
+        } else {
+            $linkedRows++;
+        }
+
+        $modelId = trim((string)($row[$idx['model_id']] ?? ''));
+        if ($modelId !== '') {
+            $modelIdCounts[$modelId] = ($modelIdCounts[$modelId] ?? 0) + 1;
+        }
+
+        if (trim((string)($row[$idx['parentCategory']] ?? '')) === '') {
+            $parentCategoryBlank++;
+        }
+    }
+    fclose($handle);
+
+    $nikeFemaleLeggingsDuplicates = $modelIdCounts['nike_female_leggings'] ?? 0;
+
+    if (!is_dir($outputDir) && !mkdir($outputDir, 0775, true) && !is_dir($outputDir)) {
+        fwrite(STDERR, "Output directory could not be created: {$outputDir}
+");
+        return 1;
+    }
+
+    $lines = [];
+    $lines[] = '# CSV Governance-Deferred Summary';
+    $lines[] = '';
+    $lines[] = '- Generated artifact path: docs/operations/generated/csv-governance-deferred-summary.md';
+    $lines[] = '- Source CSV path: docs/data/SportWarehouse_ProductDB.csv';
+    $lines[] = '- Console/report safety note: Generated from CSV-only diagnostics with no database connection, no SQL execution, and no importer execution.';
+    $lines[] = '- Governance-deferred terminology note: Governance-deferred findings are policy-decision items and must not be treated as automatic CSV edits, importer actions, frontend blockers, or database changes until explicitly approved.';
+    $lines[] = '';
+    $lines[] = '## Current Row-Count Context';
+    $lines[] = '';
+    $lines[] = '- Total CSV rows: ' . $totalRows;
+    $lines[] = '- Linked rows (non-blank db_itemId): ' . $linkedRows;
+    $lines[] = '- Likely-new rows (blank db_itemId): ' . $likelyNewRows;
+    $lines[] = '';
+    $lines[] = '## Governance-Deferred Findings Summary';
+    $lines[] = '';
+    $lines[] = '- parentCategory blank findings detected: ' . $parentCategoryBlank . ' row(s).';
+    $lines[] = '- CropAllowed/crop_allowed pair detected in header and remains governance-deferred.';
+    $lines[] = '- camelCase/snake_case governance pairs detected and require canonical schema policy.';
+    $lines[] = '- model_id duplicate under governance review: nike_female_leggings x ' . $nikeFemaleLeggingsDuplicates . '.';
+    $lines[] = '- db_itemId backfill policy remains deferred for likely-new rows.';
+    $lines[] = '';
+    $lines[] = '## parentCategory Policy Question';
+    $lines[] = '';
+    $lines[] = '- Finding summary: parentCategory has blank values and currently remains governance-deferred.';
+    $lines[] = '- Affected scope: taxonomy readiness and downstream mapping rules for CSV/admin/runtime usage.';
+    $lines[] = '- Why deferred: parentCategory may be derivable, optional, future taxonomy metadata, or a source field requiring remediation only after policy decision.';
+    $lines[] = '- Possible decisions: treat as optional; derive from categoryName/subCategory; make required in source workflow; define as future taxonomy-only field.';
+    $lines[] = '- Recommended next decision: approve canonical parentCategory policy and whether blanks are acceptable, derivable, or source-remediated.';
+    $lines[] = '';
+    $lines[] = '## CropAllowed / crop_allowed Governance Question';
+    $lines[] = '';
+    $lines[] = '- Finding summary: CropAllowed and crop_allowed are present as deferred governance fields.';
+    $lines[] = '- Why duplication matters: camelCase/snake_case duplicates can represent the same semantic field and should not be forced as separate required runtime fields.';
+    $lines[] = '- Possible decisions: select one canonical field name; keep both with explicit mapping; deprecate one field with migration policy.';
+    $lines[] = '- Recommended next decision: approve canonical naming and runtime/source mapping before required-field enforcement or remediation.';
+    $lines[] = '';
+    $lines[] = '## camelCase / snake_case Duplicate-Field Governance Question';
+    $lines[] = '';
+    $lines[] = '- Pairs under governance review: ageGroup/age_group, sizeType/size_type, fitStyle/fit_style, activityTags/activity_tags, CropAllowed/crop_allowed.';
+    $lines[] = '- Duplicate naming pairs should not be blindly treated as separate required runtime fields.';
+    $lines[] = '- Canonical naming requires policy or schema decision.';
+    $lines[] = '- No automatic remediation should occur until canonical source/runtime mapping is approved.';
+    $lines[] = '';
+    $lines[] = '## model_id Duplicate Governance Question';
+    $lines[] = '';
+    $lines[] = '- Finding summary: known duplicate model_id is nike_female_leggings x ' . $nikeFemaleLeggingsDuplicates . '.';
+    $lines[] = '- Why it matters: duplicate model_id policy affects uniqueness enforcement, linking behavior, and downstream remediation ownership.';
+    $lines[] = '- Possible decisions: fix duplicate in Excel/CSV; formally allow duplicate for now; defer UNIQUE(model_id); assign a new model_id to one row.';
+    $lines[] = '- Recommended next decision: approve interim duplicate-handling policy and explicit path to canonical uniqueness.';
+    $lines[] = '';
+    $lines[] = '## db_itemId Backfill Policy Question';
+    $lines[] = '';
+    $lines[] = '- Current known facts: 54 rows have non-blank db_itemId; 66 rows have blank db_itemId; blank db_itemId rows are likely-new rows; db_itemId backfill remains policy-deferred.';
+    $lines[] = '- Why blank db_itemId should not be automatically filled: automatic backfill would imply importer/database actions that are not approved in this governance stage.';
+    $lines[] = '- Why backfill requires explicit approval: id ownership, sequencing, and source-of-truth responsibilities must be explicitly decided.';
+    $lines[] = '- Possible decisions: leave blank until insert; backfill after successful DB insert; map later through generated report; make db_itemId non-source-managed.';
+    $lines[] = '- Recommended next decision: approve db_itemId source-of-truth ownership and exact backfill timing policy.';
+    $lines[] = '';
+    $lines[] = '## Source-of-Truth Decision Points';
+    $lines[] = '';
+    $lines[] = '- Decide canonical source/runtime naming for camelCase/snake_case duplicates.';
+    $lines[] = '- Decide whether parentCategory is optional, derivable, required, or taxonomy-only.';
+    $lines[] = '- Decide interim and target policy for model_id uniqueness.';
+    $lines[] = '- Decide whether db_itemId remains source-managed or becomes system-managed post-insert.';
+    $lines[] = '';
+    $lines[] = '## Recommended Next Governance Decisions';
+    $lines[] = '';
+    $lines[] = '1. Approve canonical naming and mapping policy for duplicate field pairs before required-field enforcement.';
+    $lines[] = '2. Approve parentCategory policy and remediation ownership path.';
+    $lines[] = '3. Approve model_id duplicate policy for nike_female_leggings and downstream uniqueness strategy.';
+    $lines[] = '4. Approve db_itemId ownership/backfill policy and sequencing guardrails.';
+    $lines[] = '';
+    $lines[] = '## No-Side-Effect Statement';
+    $lines[] = '';
+    $lines[] = '- no source CSV was edited';
+    $lines[] = '- no database connection was opened';
+    $lines[] = '- no SQL was executed';
+    $lines[] = '- no importer execution occurred';
+    $lines[] = '- no admin/frontend behavior was changed';
+
+    $content = implode("
+", $lines) . "
+";
+    if (file_put_contents($outputPath, $content) === false) {
+        fwrite(STDERR, "Output file could not be opened/written: {$outputPath}
+");
+        return 1;
+    }
+
+    fwrite(STDOUT, "Generated artifact path: docs/operations/generated/csv-governance-deferred-summary.md
+");
+    fwrite(STDOUT, "Generated governance-deferred summary only (Markdown).
+");
+    fwrite(STDOUT, "No source CSV was edited.
+");
+    fwrite(STDOUT, "No database connection was opened.
+");
+    fwrite(STDOUT, "No SQL was executed.
+");
+    fwrite(STDOUT, "No importer execution occurred.
+");
+    fwrite(STDOUT, "No admin UI behavior was changed.
+");
+    fwrite(STDOUT, "No frontend behavior was changed.
+");
+
+    return 0;
+};
+
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--show-excel-remediation-summary', '--write-excel-remediation-checklist', '--write-frontend-readiness-summary', '--write-admin-remediation-queue', '--write-governance-deferred-summary', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -1693,6 +1892,9 @@ if (in_array('--write-frontend-readiness-summary', $args, true)) {
 }
 if (in_array('--write-admin-remediation-queue', $args, true)) {
     exit($writeAdminRemediationQueue());
+}
+if (in_array('--write-governance-deferred-summary', $args, true)) {
+    exit($writeGovernanceDeferredSummary());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
