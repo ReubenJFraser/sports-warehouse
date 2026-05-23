@@ -61,6 +61,7 @@ $printHelp = static function (): void {
     fwrite(STDOUT, "  --show-remediation-guidance  Show CSV-only remediation guidance for readiness findings without writing files.\n");
     fwrite(STDOUT, "  --show-frontend-readiness-summary  Show CSV-only frontend readiness summary without writing files.\n");
     fwrite(STDOUT, "  --show-excel-remediation-summary  Show CSV-only Excel/source remediation summary without writing files.\n");
+    fwrite(STDOUT, "  --write-excel-remediation-checklist  Write generated CSV checklist for Excel/source remediation.\n");
     fwrite(STDOUT, "  --dry-run  Planned option; not implemented (exits non-zero).\n\n");
 
     fwrite(STDOUT, "Explicitly disallowed options (unsupported):\n");
@@ -100,6 +101,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- CSV remediation guidance implemented: yes\n");
     fwrite(STDOUT, "- CSV frontend readiness summary implemented: yes\n");
     fwrite(STDOUT, "- CSV Excel remediation summary implemented: yes\n");
+    fwrite(STDOUT, "- Excel remediation checklist generation implemented: yes\n");
+    fwrite(STDOUT, "- Generated artifact path: docs/operations/generated/csv-excel-remediation-checklist.csv\n");
     fwrite(STDOUT, "- CSV required-field completeness check scope: CSV-only required-field blank/present scanning (no database comparison, row matching, insert preview, importer classification, updates, inserts, backfill, report generation, or writes)\n");
     fwrite(STDOUT, "- Full importer row classification implemented: no\n");
     fwrite(STDOUT, "- Database connection implemented: no\n");
@@ -111,7 +114,8 @@ $printStatus = static function (): void {
     fwrite(STDOUT, "- Remediation guidance output mode: console-only (no report file generation, no CSV/database modifications)\n");
     fwrite(STDOUT, "- Frontend readiness summary mode: console-only (no report file generation, no CSV/database/frontend behavior modifications)\n");
     fwrite(STDOUT, "- Excel remediation summary mode: console-only (no report file generation, no CSV/database modifications)\n");
-    fwrite(STDOUT, "- File writes implemented: no\n");
+    fwrite(STDOUT, "- CSV source edits implemented: no\n");
+    fwrite(STDOUT, "- File writes implemented: limited to explicit generated checklist mode only\n");
 };
 
 $printNoSideEffectSafetyHeaderCheck = static function (): void {
@@ -1129,6 +1133,150 @@ $showRemediationGuidance = static function () use ($checkRequiredFields): int {
     return $checkRequiredFields();
 };
 
+$writeExcelRemediationChecklist = static function (): int {
+    $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
+    $outputDir = dirname(__DIR__, 2) . '/docs/operations/generated';
+    $outputPath = $outputDir . '/csv-excel-remediation-checklist.csv';
+
+    $requiredColumns = ['db_itemId', 'model_id', 'itemName', 'categoryName', 'price', 'images', 'external_item_id', 'description', 'altText', 'ariaText', 'parentCategory'];
+
+    if (!is_file($csvPath)) {
+        fwrite(STDERR, "CSV file is missing.\n");
+        return 1;
+    }
+
+    $handle = fopen($csvPath, 'rb');
+    if ($handle === false) {
+        fwrite(STDERR, "CSV file could not be opened safely for remediation checklist generation.\n");
+        return 1;
+    }
+
+    $header = fgetcsv($handle);
+    if (!is_array($header) || $header === []) {
+        fclose($handle);
+        fwrite(STDERR, "CSV header row could not be read.\n");
+        return 1;
+    }
+
+    $header = array_values(array_map(static fn (string $value): string => trim($value), $header));
+    if ($header !== []) {
+        $utf8Bom = "ï»¿";
+        if (strncmp($header[0], $utf8Bom, strlen($utf8Bom)) === 0) {
+            $header[0] = substr($header[0], strlen($utf8Bom));
+        }
+    }
+
+    $idx = [];
+    $missing = [];
+    foreach ($requiredColumns as $column) {
+        $columnIndex = array_search($column, $header, true);
+        if ($columnIndex === false) {
+            $missing[] = $column;
+        } else {
+            $idx[$column] = $columnIndex;
+        }
+    }
+    if ($missing !== []) {
+        fclose($handle);
+        fwrite(STDERR, 'Missing required diagnostic columns: ' . implode(', ', $missing) . "\n");
+        return 1;
+    }
+
+    $rows = [];
+    $modelRows = [];
+    $parentBlank = 0;
+    $dataRowCount = 0;
+    while (($row = fgetcsv($handle)) !== false) {
+        if (!is_array($row)) { continue; }
+        $dataRowCount++;
+        $csvRowNumber = $dataRowCount + 1;
+        $dbItemId = trim((string)($row[$idx['db_itemId']] ?? ''));
+        $modelId = trim((string)($row[$idx['model_id']] ?? ''));
+        $itemName = trim((string)($row[$idx['itemName']] ?? ''));
+        $isLikelyNew = ($dbItemId === '');
+
+        if ($modelId !== '') {
+            $modelRows[$modelId][] = $csvRowNumber;
+        }
+
+        if (trim((string)($row[$idx['parentCategory']] ?? '')) === '') {
+            $parentBlank++;
+        }
+
+        if (!$isLikelyNew) { continue; }
+
+        foreach (['categoryName','price','images','external_item_id','description','altText','ariaText'] as $field) {
+            $value = trim((string)($row[$idx[$field]] ?? ''));
+            if ($value !== '') { continue; }
+            $readiness = in_array($field, ['categoryName','price','images','external_item_id'], true) ? 'import-readiness-blocking' : 'admin-remediation';
+            $rows[] = [
+                'row_number' => (string)$csvRowNumber,
+                'db_itemId' => $dbItemId,
+                'model_id' => $modelId,
+                'itemName' => $itemName,
+                'row_group' => 'likely_new',
+                'field' => $field,
+                'finding_category' => 'blank_required_or_policy_field',
+                'readiness_category' => $readiness,
+                'issue_type' => 'blank',
+                'blank_or_issue_count' => '1',
+                'remediation_owner' => 'excel-csv-source-of-truth',
+                'remediation_pathway' => 'fix in Excel/CSV',
+                'suggested_action' => 'Populate source field in Excel/CSV for likely-new row.',
+                'governance_note' => '',
+                'frontend_ready' => in_array($field, ['categoryName','price','images'], true) ? 'no' : 'review',
+                'import_ready' => in_array($field, ['categoryName','price','images','external_item_id'], true) ? 'no' : 'review',
+                'admin_visible_ok' => 'yes',
+            ];
+        }
+    }
+    fclose($handle);
+
+    foreach ($modelRows as $modelId => $numbers) {
+        if (count($numbers) <= 1) { continue; }
+        $rows[] = [
+            'row_number' => implode('|', $numbers), 'db_itemId' => '', 'model_id' => $modelId, 'itemName' => '', 'row_group' => 'multiple',
+            'field' => 'model_id', 'finding_category' => 'source-governance', 'readiness_category' => 'governance', 'issue_type' => 'duplicate',
+            'blank_or_issue_count' => (string)count($numbers), 'remediation_owner' => 'data-governance', 'remediation_pathway' => 'source/governance decision',
+            'suggested_action' => 'Resolve duplicate model_id values in source before uniqueness enforcement.',
+            'governance_note' => 'Known duplicate group requires explicit resolution/governance.', 'frontend_ready' => 'review', 'import_ready' => 'no', 'admin_visible_ok' => 'yes'
+        ];
+    }
+
+    if ($parentBlank > 0) {
+        $rows[] = [
+            'row_number' => 'all', 'db_itemId' => '', 'model_id' => '', 'itemName' => '', 'row_group' => 'governance', 'field' => 'parentCategory',
+            'finding_category' => 'source-governance', 'readiness_category' => 'deferred-governance', 'issue_type' => 'policy-decision',
+            'blank_or_issue_count' => (string)$parentBlank, 'remediation_owner' => 'data-governance', 'remediation_pathway' => 'governance clarification workflow',
+            'suggested_action' => 'Decide if parentCategory is derivable, optional, taxonomy backlog, or source-remediation target.',
+            'governance_note' => 'Do not force automatic Excel fix without governance decision.', 'frontend_ready' => 'review', 'import_ready' => 'review', 'admin_visible_ok' => 'yes'
+        ];
+    }
+
+    if (!is_dir($outputDir) && !mkdir($outputDir, 0775, true) && !is_dir($outputDir)) {
+        fwrite(STDERR, "Output directory could not be created.\n");
+        return 1;
+    }
+    $out = fopen($outputPath, 'wb');
+    if ($out === false) { fwrite(STDERR, "Output file could not be opened for write.\n"); return 1; }
+    $headerOut = ['row_number','db_itemId','model_id','itemName','row_group','field','finding_category','readiness_category','issue_type','blank_or_issue_count','remediation_owner','remediation_pathway','suggested_action','governance_note','frontend_ready','import_ready','admin_visible_ok'];
+    fputcsv($out, $headerOut);
+    foreach ($rows as $r) { fputcsv($out, $r); }
+    fclose($out);
+
+    fwrite(STDOUT, "Generated artifact path: docs/operations/generated/csv-excel-remediation-checklist.csv\n");
+    fwrite(STDOUT, 'Row count written: ' . count($rows) . "\n");
+    fwrite(STDOUT, "Source CSV path: docs/data/SportWarehouse_ProductDB.csv\n");
+    fwrite(STDOUT, "Note: this is a generated remediation checklist only.\n");
+    fwrite(STDOUT, "Note: no source CSV was edited.\n");
+    fwrite(STDOUT, "Note: no database connection was opened.\n");
+    fwrite(STDOUT, "Note: no SQL was executed.\n");
+    fwrite(STDOUT, "Note: no importer execution occurred.\n");
+    fwrite(STDOUT, "Note: no frontend/admin behavior was changed.\n");
+
+    return 0;
+};
+
 $printNoSideEffectSafety = static function (): void {
     fwrite(STDOUT, "No CSV was read.\n");
     fwrite(STDOUT, "No database connection was opened.\n");
@@ -1187,7 +1335,7 @@ if ($args === []) {
     exit(1);
 }
 
-$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--show-excel-remediation-summary', '--dry-run'];
+$recognizedArgs = ['--help', '--status', '--check-csv-header', '--check-csv-row-count', '--check-model-id-duplicates', '--check-db-item-id-integrity', '--check-csv-baseline', '--check-required-fields', '--show-remediation-guidance', '--show-frontend-readiness-summary', '--show-excel-remediation-summary', '--write-excel-remediation-checklist', '--dry-run'];
 $unknownArgs = array_values(array_diff($args, $recognizedArgs));
 
 if ($unknownArgs !== []) {
@@ -1246,6 +1394,10 @@ if (in_array('--show-frontend-readiness-summary', $args, true)) {
 
 if (in_array('--show-excel-remediation-summary', $args, true)) {
     exit($showExcelRemediationSummary());
+}
+
+if (in_array('--write-excel-remediation-checklist', $args, true)) {
+    exit($writeExcelRemediationChecklist());
 }
 
 fwrite(STDERR, "Unsupported invocation. Use --help.\n");
