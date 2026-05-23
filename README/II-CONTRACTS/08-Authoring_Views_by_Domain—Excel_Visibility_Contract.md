@@ -122,7 +122,7 @@ CropAllowed
 ### 5.7 System & Governance (Non-human)
 
 categoryName
-parentCategory
+subCategoryParent
 categoryID
 external_item_id
 campaign_or_series
@@ -175,7 +175,7 @@ model_family
 usage_category
 usage_subtype
 categoryName
-parentCategory
+subCategoryParent
 categoryID
 external_item_id
 campaign_or_series
@@ -220,7 +220,7 @@ variant
 usage_category
 usage_subtype
 categoryName
-parentCategory
+subCategoryParent
 categoryID
 external_item_id
 campaign_or_series
@@ -265,7 +265,7 @@ colour
 sizeType
 fitStyle
 categoryName
-parentCategory
+subCategoryParent
 categoryID
 external_item_id
 campaign_or_series

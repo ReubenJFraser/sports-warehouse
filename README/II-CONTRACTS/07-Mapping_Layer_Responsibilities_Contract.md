@@ -57,7 +57,7 @@ The existing `Mappings` worksheet containing columns such as:
 - `categoryName`
 - `categoryID`
 - `subCategory`
-- `parentCategory`
+- `subCategoryParent`
 - `default_seasonal_context`
 
 ### Characteristics

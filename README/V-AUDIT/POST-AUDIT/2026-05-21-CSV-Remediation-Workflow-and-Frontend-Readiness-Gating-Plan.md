@@ -95,7 +95,7 @@ The categories below are workflow-specific readiness signals. A blocking categor
 ### deferred-governance
 
 - Meaning: Field or rule cannot be enforced consistently until governance decisions are finalized.
-- Examples: `parentCategory` enforcement ambiguity, duplicated policy fields needing canonical decision.
+- Examples: `subCategoryParent` enforcement ambiguity, duplicated policy fields needing canonical decision.
 - Blocks admin-visible copy or import: No by default.
 - Blocks automated import or update readiness: Potentially, where enforcement is undecided.
 - Blocks frontend publication readiness: Potentially, if field affects navigation or policy compliance.
@@ -208,7 +208,7 @@ Generated report files remain out of scope until a later explicit implementation
 | altText | Missing accessibility text | admin-remediation | affected rows | Admin accessibility remediation, optionally source update | content and accessibility owner | Conditional | No | Quality and compliance concern. |
 | ariaText | Missing accessibility metadata | admin-remediation | affected rows | Admin accessibility remediation, optionally source update | content and accessibility owner | Conditional | No | Quality and accessibility concern. |
 | external_item_id | Missing linkage for likely-new rows when required | import-readiness-blocking | likely-new rows | Excel or CSV source linkage remediation | source data owner and integration owner | No | Yes | Required only where linkage policy applies. |
-| parentCategory | Ambiguous enforcement rule | deferred-governance | mixed | Governance decision before strict enforcement | taxonomy governance | Conditional | Conditional | Decision needed on derive, optional, required, or remove. |
+| subCategoryParent | Ambiguous enforcement rule | deferred-governance | mixed | Governance decision before strict enforcement | taxonomy governance | Conditional | Conditional | Decision needed on derive, optional, required, or remove. |
 | CropAllowed | Duplicated policy field ambiguity | deferred-governance | mixed | Governance and schema policy decision | governance and engineering | No | Conditional | Coordinate with `crop_allowed` canonical policy. |
 | crop_allowed | Duplicated policy field ambiguity | deferred-governance | mixed | Governance and schema policy decision | governance and engineering | No | Conditional | Coordinate with `CropAllowed` policy. |
 | salePrice | Missing or inconsistent optional sale value | advisory | mixed | Source cleanup as needed | merchandising | No | No | Non-blocking unless sale workflow demands strictness. |
@@ -226,7 +226,7 @@ Based on verified diagnostics, current remediation priorities should be treated 
 - Likely-new rows need `external_item_id` remediation where source linkage is required.
 - `description` needs admin or content remediation for affected rows.
 - `altText` and `ariaText` need accessibility and content-quality remediation.
-- `parentCategory` requires governance and taxonomy decision before enforcement.
+- `subCategoryParent` requires governance and taxonomy decision before enforcement.
 - `model_id` duplicate `nike_female_leggings` x 2 remains a known governance and data issue.
 
 ## 14. Product publication and readiness states
@@ -274,7 +274,7 @@ Unresolved decisions to settle before implementation:
 - Should admin-visible import allow incomplete rows by default?
 - Should report or export generation be approved?
 - How should source-of-truth drift be reconciled?
-- Should `parentCategory` be derived, optional, remediated, or removed from readiness checks?
+- Should `subCategoryParent` be derived, optional, remediated, or removed from readiness checks?
 - Which fields can be remediated directly in admin UI?
 
 ## 18. Recommended next step

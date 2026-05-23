@@ -40,7 +40,7 @@ This plan is based on the following governance and planning references:
 | gender | gender | yes | Core catalog attribute | Requires normal validation only. |
 | itemName | itemName | yes | Primary product display name | Keep runtime naming conventions unchanged. |
 | categoryName | categoryName | yes | Catalog taxonomy attribute | Subject to existing taxonomy checks. |
-| parentCategory | parentCategory | yes | Catalog taxonomy attribute | Subject to existing taxonomy checks. |
+| subCategoryParent | subCategoryParent | yes | Catalog taxonomy attribute | Subject to existing taxonomy checks. |
 | subCategory | subcategory | yes | CSV-to-runtime mapped taxonomy field | Explicit mapping required (`subCategory` -> `subcategory`). |
 | price | price | yes | Core sell price data | Numeric validation required. |
 | salePrice | salePrice | yes | Promotional price data | Numeric validation and bounds checks required. |
@@ -63,7 +63,7 @@ This plan is based on the following governance and planning references:
 | gender | gender | yes | Required core catalog field | Include in insert payload. |
 | itemName | itemName | yes | Required product identity field | Include in insert payload. |
 | categoryName | categoryName | yes | Required catalog taxonomy field | Include in insert payload. |
-| parentCategory | parentCategory | yes | Required catalog taxonomy field | Include in insert payload. |
+| subCategoryParent | subCategoryParent | yes | Required catalog taxonomy field | Include in insert payload. |
 | subCategory | subcategory | yes | Required mapped taxonomy field | Use explicit CSV-to-runtime mapping. |
 | price | price | yes | Required commerce field | Numeric validation required. |
 | salePrice | salePrice | yes | Optional commerce field used by runtime | Include when present and valid. |
