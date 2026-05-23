@@ -1,0 +1,4 @@
+classification,total_rows,brand,rows,notes
+new_products_pending_database_reconciliation,66,Ryderwear,62,"Newer products added after previous local MySQL website import; pending controlled DB insertion/reconciliation before db_itemId/image linkage."
+new_products_pending_database_reconciliation,66,Adidas,4,"Newer products added after previous local MySQL website import; pending controlled DB insertion/reconciliation before db_itemId/image linkage."
+legacy_database_coverage,54,ALL,54,"Items present in prior active MySQL baseline used for reconciliation comparisons."
