@@ -1133,7 +1133,35 @@ $showRemediationGuidance = static function () use ($checkRequiredFields): int {
     return $checkRequiredFields();
 };
 
-$writeExcelRemediationChecklist = static function (): int {
+$writeDeterministicCsvRow = static function ($handle, array $row, string $eol): bool {
+    if (PHP_VERSION_ID >= 80100) {
+        return fputcsv($handle, $row, ',', '"', '\\', $eol) !== false;
+    }
+
+    $tmp = fopen('php://temp', 'w+b');
+    if ($tmp === false) {
+        return false;
+    }
+
+    $written = fputcsv($tmp, $row);
+    if ($written === false) {
+        fclose($tmp);
+        return false;
+    }
+
+    rewind($tmp);
+    $line = stream_get_contents($tmp);
+    fclose($tmp);
+
+    if (!is_string($line)) {
+        return false;
+    }
+
+    $line = rtrim($line, "\r\n") . $eol;
+    return fwrite($handle, $line) !== false;
+};
+
+$writeExcelRemediationChecklist = static function () use ($writeDeterministicCsvRow): int {
     $csvPath = dirname(__DIR__, 2) . '/docs/data/SportWarehouse_ProductDB.csv';
     $outputDir = dirname(__DIR__, 2) . '/docs/operations/generated';
     $outputPath = $outputDir . '/csv-excel-remediation-checklist.csv';
@@ -1259,9 +1287,22 @@ $writeExcelRemediationChecklist = static function (): int {
     }
     $out = fopen($outputPath, 'wb');
     if ($out === false) { fwrite(STDERR, "Output file could not be opened for write.\n"); return 1; }
+
+    $lineEnding = PHP_EOL;
     $headerOut = ['row_number','db_itemId','model_id','itemName','row_group','field','finding_category','readiness_category','issue_type','blank_or_issue_count','remediation_owner','remediation_pathway','suggested_action','governance_note','frontend_ready','import_ready','admin_visible_ok'];
-    fputcsv($out, $headerOut);
-    foreach ($rows as $r) { fputcsv($out, $r); }
+    if (!$writeDeterministicCsvRow($out, $headerOut, $lineEnding)) {
+        fclose($out);
+        fwrite(STDERR, "Header row could not be written to output CSV.\n");
+        return 1;
+    }
+
+    foreach ($rows as $r) {
+        if (!$writeDeterministicCsvRow($out, $r, $lineEnding)) {
+            fclose($out);
+            fwrite(STDERR, "One or more remediation checklist rows could not be written.\n");
+            return 1;
+        }
+    }
     fclose($out);
 
     fwrite(STDOUT, "Generated artifact path: docs/operations/generated/csv-excel-remediation-checklist.csv\n");
