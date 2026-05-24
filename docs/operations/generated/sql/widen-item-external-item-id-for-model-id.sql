@@ -70,7 +70,7 @@ HAVING COUNT(*) > 1;
 -- 1g) Confirm no pending model_id collides with existing item.external_item_id.
 SELECT
   pis.model_id,
-  i.id AS existing_item_id
+  i.itemId AS existing_itemId
 FROM product_import_staging pis
 INNER JOIN item i
   ON i.external_item_id = pis.model_id
