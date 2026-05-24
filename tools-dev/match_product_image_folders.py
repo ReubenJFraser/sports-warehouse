@@ -28,6 +28,10 @@ BROAD_ONLY_FIELDS = {"brand", "gender", "categoryName", "subCategory", "subCateg
 PRODUCT_SPECIFIC_FIELDS = {"collection", "itemName", "model_family", "construction", "fabric", "rise", "length", "neckline", "strap_configuration", "variant", "support_level", "scrunchFlag", "invisibleFlag", "model_id", "activityTags"}
 
 
+def brand_gate_passed(value: str) -> bool:
+    return norm(value) in {"pass", "normalized_brand_gate_pass", "passed_generic_brand_by_identity"}
+
+
 @dataclass
 class FolderRec:
     rel: str
@@ -421,7 +425,7 @@ def main() -> None:
         for idx, (sc, fr, signals, notes, status, brand_gate, pcount, reason, mismatch) in enumerate(top_candidates, start=1):
             matched_folder_paths.add(fr.rel)
             if idx == 1 and status == STATUS["high"]:
-                if brand_gate.startswith("passed"):
+                if brand_gate_passed(brand_gate):
                     high_conf_brand_pass += 1
                 if mismatch:
                     high_conf_brand_mismatch += 1
