@@ -46,6 +46,20 @@ def norm(s: str) -> str:
     return s
 
 
+def canonicalize_path(path: str) -> str:
+    p = (path or "").strip().replace("\\", "/")
+    p = re.sub(r"/+", "/", p)
+    return p.strip("/")
+
+
+def normalized_path_segments(path: str) -> list[str]:
+    return [seg for seg in canonicalize_path(path).split("/") if seg]
+
+
+def comparable_segment(value: str) -> str:
+    return norm(value)
+
+
 def token_variants(value: str) -> set[str]:
     nv = norm(value)
     if not nv or nv in {"null", "none", "na", "n_a"}:
@@ -74,8 +88,8 @@ def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
                 if t and t != "FILE":
                     continue
 
-            rel_val = (r.get(rel_key) or "").strip().replace('\\', '/') if rel_key else ""
-            abs_val = (r.get(abs_key) or "").strip().replace('\\', '/') if abs_key else ""
+            rel_val = canonicalize_path((r.get(rel_key) or "").strip()) if rel_key else ""
+            abs_val = canonicalize_path((r.get(abs_key) or "").strip()) if abs_key else ""
             chosen = rel_val or abs_val
             if not chosen:
                 continue
@@ -93,15 +107,15 @@ def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
     by_folder: dict[str, list[str]] = defaultdict(list)
     abs_by_folder: dict[str, str] = {}
     for rel_path, abs_path in rows:
-        rel_norm = rel_path.lstrip("/")
-        folder = str(Path(rel_norm).parent).rstrip("/")
+        rel_norm = canonicalize_path(rel_path)
+        folder = canonicalize_path(str(Path(rel_norm).parent))
         by_folder[folder].append(Path(rel_norm).name)
         if abs_path:
-            abs_by_folder.setdefault(folder, str(Path(abs_path).parent))
+            abs_by_folder.setdefault(folder, canonicalize_path(str(Path(abs_path).parent)))
 
     recs = []
     for folder, imgs in sorted(by_folder.items()):
-        seg = [s for s in folder.split('/') if s]
+        seg = normalized_path_segments(folder)
         variant = seg[-1] if seg else ""
         model_root_segments = seg[:-1] if len(seg) > 1 else seg
         model_root = '/'.join(model_root_segments)
@@ -144,13 +158,18 @@ def product_signal_specs(prod: dict[str, str]) -> list[tuple[str, int, set[str]]
     return [(n, w, t) for n, w, t in specs if t]
 
 
-def extract_existing_image_paths(prod: dict[str, str]) -> set[str]:
-    paths: set[str] = set()
+def extract_existing_image_paths(prod: dict[str, str]) -> list[list[str]]:
+    paths: set[tuple[str, ...]] = set()
+
+    def add_path(raw: str) -> None:
+        segs = [comparable_segment(s) for s in normalized_path_segments(raw)]
+        segs = [s for s in segs if s]
+        if segs:
+            paths.add(tuple(segs))
+
     for key in ("images", "image", "image_path"):
         for piece in re.split(r"[;,|]", prod.get(key, "") or ""):
-            n = norm(piece.replace('\\', '/').strip())
-            if n:
-                paths.add(n)
+            add_path(piece)
 
     tj = prod.get("thumbnails_json", "") or ""
     if tj.strip():
@@ -159,37 +178,56 @@ def extract_existing_image_paths(prod: dict[str, str]) -> set[str]:
             candidates = parsed if isinstance(parsed, list) else [parsed]
             for c in candidates:
                 if isinstance(c, str):
-                    n = norm(c)
-                    if n:
-                        paths.add(n)
+                    add_path(c)
                 elif isinstance(c, dict):
                     for v in c.values():
                         if isinstance(v, str):
-                            n = norm(v)
-                            if n:
-                                paths.add(n)
+                            add_path(v)
         except json.JSONDecodeError:
             for piece in re.split(r"[;,|]", tj):
-                n = norm(piece)
-                if n:
-                    paths.add(n)
-    return paths
+                add_path(piece)
+    return [list(p) for p in paths]
 
 
-def path_overlap(existing_paths: set[str], folder: FolderRec) -> bool:
+def longest_common_contiguous_suffix(a: list[str], b: list[str]) -> int:
+    count = 0
+    for x, y in zip(reversed(a), reversed(b)):
+        if x != y:
+            break
+        count += 1
+    return count
+
+
+def path_overlap(existing_paths: list[list[str]], folder: FolderRec, product_brand: str) -> tuple[bool, str]:
     if not existing_paths:
-        return False
-    folder_norm = norm(folder.rel)
-    root_norm = norm(folder.likely_model_root)
-    seg_norm = {norm(s) for s in folder.segments}
+        return False, "existing_image_path_overlap_absent"
+
+    cand_segments = [comparable_segment(s) for s in folder.segments]
+    if not cand_segments:
+        return False, "existing_image_path_overlap_absent"
+
+    meaningful_cand = [s for s in cand_segments if s not in {"images", "brands"}]
+    if product_brand:
+        meaningful_cand = [s for s in meaningful_cand if s != product_brand]
+    meaningful_cand_set = set(meaningful_cand)
+
+    best_suffix = 0
+    best_intersection = 0
     for ep in existing_paths:
-        if folder_norm and (folder_norm in ep or ep in folder_norm):
-            return True
-        if root_norm and (root_norm in ep or ep in root_norm):
-            return True
-        if seg_norm and len(seg_norm & set(ep.split("_"))) >= 3:
-            return True
-    return False
+        e = [s for s in ep if s not in {"images", "brands"}]
+        if product_brand:
+            e = [s for s in e if s != product_brand]
+        if not e:
+            continue
+        best_suffix = max(best_suffix, longest_common_contiguous_suffix(meaningful_cand, e))
+        best_intersection = max(best_intersection, len(meaningful_cand_set & set(e)))
+
+    # Require specificity: brand-only overlap does not count.
+    if best_suffix >= 2 or best_intersection >= 3:
+        return True, "existing_image_path_overlap_specific"
+    if best_suffix == 1 or best_intersection == 2:
+        return False, "existing_image_path_overlap_too_broad"
+    return False, "existing_image_path_overlap_absent"
 
 
 def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]:
@@ -232,16 +270,16 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]
 
     existing_paths = extract_existing_image_paths(prod)
     has_existing_path = bool(existing_paths)
-    existing_overlap = path_overlap(existing_paths, folder)
+    product_brand = norm(prod.get("brand", ""))
+    existing_overlap, overlap_note = path_overlap(existing_paths, folder, product_brand)
     if existing_overlap:
         score += 30
-        hit.append("existing_image_path_overlap")
+        hit.append("existing_image_path_overlap_specific")
     elif has_existing_path:
         score -= 10
-        miss.append("existing_image_path_overlap_absent")
+        miss.append(overlap_note)
 
-    product_brand = norm(prod.get("brand", ""))
-    folder_top = norm(folder.segments[0] if folder.segments else "")
+    folder_top = comparable_segment(folder.segments[0] if folder.segments else "")
     brand_match = bool(product_brand and folder_top and product_brand == folder_top)
 
     signals = {
@@ -255,6 +293,7 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]
         "model_id_partial": model_id_partial,
         "existing_image_path_overlap": existing_overlap,
         "has_existing_image_path": has_existing_path,
+        "existing_overlap_note": overlap_note,
         "folder_segments": folder.segments,
     }
     notes = "Contract 23 aligned: terminal folder treated as likely colour/variant; identity compared primarily against parent model-root path."
@@ -280,9 +319,9 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
         sc -= 38
 
     if brand_mismatch_known:
-        brand_gate = "failed_known_brand_mismatch"
+        brand_gate = "normalized_brand_gate_fail"
     elif product_brand and signals["brand_match"]:
-        brand_gate = "passed_exact_brand"
+        brand_gate = "normalized_brand_gate_pass"
     elif brand_is_generic and (signals["model_id_exact"] or signals["existing_image_path_overlap"]):
         brand_gate = "passed_generic_brand_by_identity"
     elif product_brand and known_folder_brand:
@@ -291,20 +330,20 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
         brand_gate = "unknown_brand_path"
 
     product_specific_gate = strong_identity or product_specific_count >= 2
-    allow_high = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and product_specific_gate and not broad_folder
+    allow_high = brand_gate in {"normalized_brand_gate_pass", "passed_generic_brand_by_identity"} and product_specific_gate and not broad_folder
     if signals["has_existing_image_path"] and not signals["existing_image_path_overlap"] and not (strong_identity or product_specific_count >= 3):
         allow_high = False
 
-    allow_possible = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and (product_specific_count >= 1 or strong_identity)
+    allow_possible = brand_gate in {"normalized_brand_gate_pass", "passed_generic_brand_by_identity"} and (product_specific_count >= 1 or strong_identity)
 
     if allow_high and base_conf == "high" and sc >= 62:
         status = STATUS["high"]
-        reason = "Brand gate passed and passed_product_specific_gate."
+        reason = "normalized_brand_gate_pass and passed_product_specific_gate."
         if signals["existing_image_path_overlap"]:
-            reason = "Brand gate passed, image_path_overlap_pass, and passed_product_specific_gate."
+            reason = "normalized_brand_gate_pass, existing_image_path_overlap_specific, and passed_product_specific_gate."
     elif allow_possible and (base_conf in {"high", "possible"} or sc >= 30):
         status = STATUS["possible"]
-        reason = "Brand gate passed with at least one product-specific identity signal."
+        reason = "normalized_brand_gate_pass with at least one product-specific identity signal."
         if broad_folder:
             reason = "Brand gate passed, but failed_broad_folder_gate; kept below high confidence."
     elif sc >= MIN_MEANINGFUL_SCORE:
