@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -14,6 +15,7 @@ STATUS = {
     "high": "matched_high_confidence",
     "possible": "matched_possible",
     "low_candidate": "matched_possible_low_confidence",
+    "structure_unclear": "structure_rule_unclear",
     "unmatched_product_candidates": "unmatched_product_with_candidates",
     "unmatched_product": "unmatched_product",
     "unmatched_folder": "unmatched_folder",
@@ -21,6 +23,8 @@ STATUS = {
 
 TOP_CANDIDATES_PER_PRODUCT = 5
 MIN_MEANINGFUL_SCORE = 8
+GENERIC_BRANDS = {"", "na", "n_a", "none", "null", "unknown", "generic", "unbranded"}
+BROAD_ONLY_FIELDS = {"brand", "gender", "categoryName", "subCategory", "subCategoryParent", "ageGroup", "sizeType", "fitStyle"}
 
 
 @dataclass
@@ -100,17 +104,7 @@ def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
         variant = seg[-1] if seg else ""
         model_root_segments = seg[:-1] if len(seg) > 1 else seg
         model_root = '/'.join(model_root_segments)
-        recs.append(
-            FolderRec(
-                rel=folder,
-                abs=abs_by_folder.get(folder, str((repo_root / folder).resolve())),
-                segments=seg,
-                model_root_segments=model_root_segments,
-                images=sorted(imgs),
-                likely_variant_segment=variant,
-                likely_model_root=model_root,
-            )
-        )
+        recs.append(FolderRec(folder, abs_by_folder.get(folder, str((repo_root / folder).resolve())), seg, model_root_segments, sorted(imgs), variant, model_root))
     return recs
 
 
@@ -149,7 +143,55 @@ def product_signal_specs(prod: dict[str, str]) -> list[tuple[str, int, set[str]]
     return [(n, w, t) for n, w, t in specs if t]
 
 
-def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, list[str], list[str], str]:
+def extract_existing_image_paths(prod: dict[str, str]) -> set[str]:
+    paths: set[str] = set()
+    for key in ("images", "image", "image_path"):
+        for piece in re.split(r"[;,|]", prod.get(key, "") or ""):
+            n = norm(piece.replace('\\', '/').strip())
+            if n:
+                paths.add(n)
+
+    tj = prod.get("thumbnails_json", "") or ""
+    if tj.strip():
+        try:
+            parsed = json.loads(tj)
+            candidates = parsed if isinstance(parsed, list) else [parsed]
+            for c in candidates:
+                if isinstance(c, str):
+                    n = norm(c)
+                    if n:
+                        paths.add(n)
+                elif isinstance(c, dict):
+                    for v in c.values():
+                        if isinstance(v, str):
+                            n = norm(v)
+                            if n:
+                                paths.add(n)
+        except json.JSONDecodeError:
+            for piece in re.split(r"[;,|]", tj):
+                n = norm(piece)
+                if n:
+                    paths.add(n)
+    return paths
+
+
+def path_overlap(existing_paths: set[str], folder: FolderRec) -> bool:
+    if not existing_paths:
+        return False
+    folder_norm = norm(folder.rel)
+    root_norm = norm(folder.likely_model_root)
+    seg_norm = {norm(s) for s in folder.segments}
+    for ep in existing_paths:
+        if folder_norm and (folder_norm in ep or ep in folder_norm):
+            return True
+        if root_norm and (root_norm in ep or ep in root_norm):
+            return True
+        if seg_norm and len(seg_norm & set(ep.split("_"))) >= 3:
+            return True
+    return False
+
+
+def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]:
     score = 0
     hit: list[str] = []
     miss: list[str] = []
@@ -159,9 +201,11 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, list[str],
     variant_tokens = token_variants(folder.likely_variant_segment)
     all_tokens = root_tokens | variant_tokens
 
+    matched_fields: set[str] = set()
     for field, weight, tokens in product_signal_specs(prod):
         inter = tokens & all_tokens
         if inter:
+            matched_fields.add(field)
             root_inter = tokens & root_tokens
             gain = weight if root_inter else max(2, int(weight * 0.6))
             score += gain
@@ -172,17 +216,94 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, list[str],
 
     model_id_norm = norm(prod.get("model_id", ""))
     model_root_joined = norm("_".join(folder.model_root_segments))
+    model_id_exact = False
+    model_id_partial = False
     if model_id_norm and model_id_norm in model_root_joined:
         score += 18
+        model_id_exact = True
         hit.append("model_id_exact_in_model_root")
     elif model_id_norm and model_id_norm in norm("_".join(folder.segments)):
         score += 10
+        model_id_partial = True
         hit.append("model_id_exact_in_full_path")
     elif model_id_norm:
         miss.append("model_id_exact_path_absent")
 
+    existing_paths = extract_existing_image_paths(prod)
+    has_existing_path = bool(existing_paths)
+    existing_overlap = path_overlap(existing_paths, folder)
+    if existing_overlap:
+        score += 30
+        hit.append("existing_image_path_overlap")
+    elif has_existing_path:
+        score -= 10
+        miss.append("existing_image_path_overlap_absent")
+
+    product_brand = norm(prod.get("brand", ""))
+    folder_top = norm(folder.segments[0] if folder.segments else "")
+    brand_match = bool(product_brand and folder_top and product_brand == folder_top)
+
+    signals = {
+        "hit": hit,
+        "miss": sorted(set(miss)),
+        "matched_fields": matched_fields,
+        "brand_match": brand_match,
+        "product_brand_norm": product_brand,
+        "folder_top_norm": folder_top,
+        "model_id_exact": model_id_exact,
+        "model_id_partial": model_id_partial,
+        "existing_image_path_overlap": existing_overlap,
+        "has_existing_image_path": has_existing_path,
+    }
     notes = "Contract 23 aligned: terminal folder treated as likely colour/variant; identity compared primarily against parent model-root path."
-    return score, hit, sorted(set(miss)), notes
+    return score, signals, notes
+
+
+def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set[str]) -> tuple[str, str, int, str, bool]:
+    product_brand = signals["product_brand_norm"]
+    folder_top = signals["folder_top_norm"]
+    brand_is_generic = product_brand in GENERIC_BRANDS
+    known_folder_brand = folder_top in known_brands
+    brand_mismatch_known = bool(product_brand and not brand_is_generic and known_folder_brand and folder_top != product_brand)
+
+    product_specific_fields = signals["matched_fields"] - BROAD_ONLY_FIELDS
+    product_specific_count = len(product_specific_fields)
+    strong_identity = signals["model_id_exact"] or signals["existing_image_path_overlap"]
+
+    if brand_mismatch_known:
+        sc -= 38
+
+    if brand_mismatch_known:
+        brand_gate = "failed_known_brand_mismatch"
+    elif product_brand and signals["brand_match"]:
+        brand_gate = "passed_exact_brand"
+    elif brand_is_generic and (signals["model_id_exact"] or signals["existing_image_path_overlap"]):
+        brand_gate = "passed_generic_brand_by_identity"
+    elif product_brand and known_folder_brand:
+        brand_gate = "failed_brand_gate"
+    else:
+        brand_gate = "unknown_brand_path"
+
+    allow_high = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and (strong_identity or product_specific_count >= 2)
+    if signals["has_existing_image_path"] and not signals["existing_image_path_overlap"] and not (strong_identity or product_specific_count >= 3):
+        allow_high = False
+
+    allow_possible = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and (product_specific_count >= 1 or strong_identity)
+
+    if allow_high and base_conf == "high" and sc >= 62:
+        status = STATUS["high"]
+        reason = "Brand gate passed and strong product-specific identity matched."
+    elif allow_possible and (base_conf in {"high", "possible"} or sc >= 30):
+        status = STATUS["possible"]
+        reason = "Brand gate passed with at least one product-specific identity signal."
+    elif sc >= MIN_MEANINGFUL_SCORE:
+        status = STATUS["low_candidate"] if brand_gate.startswith("passed") else STATUS["structure_unclear"]
+        reason = "Candidate kept for diagnostics only; identity gates insufficient for possible/high."
+    else:
+        status = STATUS["unmatched_product_candidates"]
+        reason = "Insufficient score and identity evidence."
+
+    return status, brand_gate, product_specific_count, reason, brand_mismatch_known
 
 
 def confidence(score: int) -> str:
@@ -206,42 +327,45 @@ def main() -> None:
     with Path(args.product_db).open(newline="", encoding="utf-8-sig") as f:
         products = list(csv.DictReader(f))
 
+    known_brands = {norm(p.get("brand", "")) for p in products if norm(p.get("brand", "")) not in GENERIC_BRANDS}
+    known_brands |= {norm(fr.segments[0]) for fr in folders if fr.segments and norm(fr.segments[0])}
+
     out_rows = []
     matched_folder_paths = set()
     statuses = Counter()
     products_with_candidates = 0
+    high_conf_brand_pass = 0
+    high_conf_brand_mismatch = 0
 
     for p in products:
         scored = []
         for fr in folders:
-            sc, hit, miss, notes = score_product_folder(p, fr)
-            if sc >= MIN_MEANINGFUL_SCORE:
-                scored.append((sc, fr, hit, miss, notes))
+            raw_score, signals, notes = score_product_folder(p, fr)
+            base_conf = confidence(raw_score)
+            status, brand_gate, pcount, reason, mismatch = classify_candidate(base_conf, raw_score, signals, known_brands)
+            adjusted_score = raw_score - (38 if mismatch else 0)
+            if adjusted_score >= MIN_MEANINGFUL_SCORE:
+                scored.append((adjusted_score, fr, signals, notes, status, brand_gate, pcount, reason, mismatch))
 
         scored.sort(key=lambda x: x[0], reverse=True)
         top_candidates = scored[:TOP_CANDIDATES_PER_PRODUCT]
 
         if not top_candidates:
             statuses[STATUS["unmatched_product"]] += 1
-            out_rows.append({
-                "product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""),
-                "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""),
-                "product_categoryName": p.get("categoryName", ""), "product_variant": p.get("variant", ""),
-                "candidate_rank": "", "match_status": STATUS["unmatched_product"], "warning": "No meaningful candidates found.",
-            })
+            out_rows.append({"product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""), "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""), "product_categoryName": p.get("categoryName", ""), "product_variant": p.get("variant", ""), "candidate_rank": "", "match_status": STATUS["unmatched_product"], "warning": "No meaningful candidates found."})
             continue
 
         products_with_candidates += 1
-        top_score = top_candidates[0][0]
-        top_conf = confidence(top_score)
-        status = STATUS["high"] if top_conf == "high" else STATUS["possible"] if top_conf == "possible" else STATUS["unmatched_product_candidates"]
-        if top_conf == "low":
-            status = STATUS["low_candidate"]
-        statuses[status] += 1
+        top_status = top_candidates[0][4]
+        statuses[top_status] += 1
 
-        for idx, (sc, fr, hit, miss, notes) in enumerate(top_candidates, start=1):
+        for idx, (sc, fr, signals, notes, status, brand_gate, pcount, reason, mismatch) in enumerate(top_candidates, start=1):
             matched_folder_paths.add(fr.rel)
-            c_conf = confidence(sc)
+            if idx == 1 and status == STATUS["high"]:
+                if brand_gate.startswith("passed"):
+                    high_conf_brand_pass += 1
+                if mismatch:
+                    high_conf_brand_mismatch += 1
             out_rows.append({
                 "product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""),
                 "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""),
@@ -249,20 +373,25 @@ def main() -> None:
                 "candidate_rank": str(idx), "candidate_folder_relative_path": fr.rel, "candidate_folder_absolute_path": fr.abs,
                 "candidate_path_segments_semicolon_list": ";".join(fr.segments), "likely_model_root_relative_path": fr.likely_model_root,
                 "likely_colour_or_variant_segment": fr.likely_variant_segment, "image_count": str(len(fr.images)),
-                "image_files_semicolon_list": ";".join(fr.images), "match_status": status, "match_confidence": c_conf,
-                "match_score": str(sc), "matched_signals": ";".join(hit), "missing_expected_signals": ";".join(miss),
-                "contract_or_structure_notes": notes, "warning": "Low-confidence candidate set; intentionally reported for review." if top_conf == "low" else "",
+                "image_files_semicolon_list": ";".join(fr.images), "match_status": status, "match_confidence": confidence(sc),
+                "match_score": str(sc), "matched_signals": ";".join(signals["hit"]), "missing_expected_signals": ";".join(signals["miss"]),
+                "brand_gate_result": brand_gate,
+                "product_specific_signal_count": str(pcount),
+                "existing_image_path_overlap": "yes" if signals["existing_image_path_overlap"] else "no",
+                "confidence_reason": reason,
+                "contract_or_structure_notes": notes,
+                "warning": "Low-confidence candidate set; diagnostic only and not safe for automated image-path updates." if status in {STATUS["low_candidate"], STATUS["structure_unclear"]} else "",
             })
 
     for fr in folders:
         if fr.rel in matched_folder_paths:
             continue
         statuses[STATUS["unmatched_folder"]] += 1
-        out_rows.append({"product_db_itemId": "", "product_brand": "", "product_itemName": "", "product_model_id": "", "product_collection": "", "product_subCategory": "", "product_categoryName": "", "product_variant": "", "candidate_rank": "", "candidate_folder_relative_path": fr.rel, "candidate_folder_absolute_path": fr.abs, "candidate_path_segments_semicolon_list": ";".join(fr.segments), "likely_model_root_relative_path": fr.likely_model_root, "likely_colour_or_variant_segment": fr.likely_variant_segment, "image_count": str(len(fr.images)), "image_files_semicolon_list": ";".join(fr.images), "match_status": STATUS["unmatched_folder"], "match_confidence": "low", "match_score": "0", "matched_signals": "", "missing_expected_signals": "", "contract_or_structure_notes": "Unreferenced by product candidate set.", "warning": ""})
+        out_rows.append({"product_db_itemId": "", "product_brand": "", "product_itemName": "", "product_model_id": "", "product_collection": "", "product_subCategory": "", "product_categoryName": "", "product_variant": "", "candidate_rank": "", "candidate_folder_relative_path": fr.rel, "candidate_folder_absolute_path": fr.abs, "candidate_path_segments_semicolon_list": ";".join(fr.segments), "likely_model_root_relative_path": fr.likely_model_root, "likely_colour_or_variant_segment": fr.likely_variant_segment, "image_count": str(len(fr.images)), "image_files_semicolon_list": ";".join(fr.images), "match_status": STATUS["unmatched_folder"], "match_confidence": "low", "match_score": "0", "matched_signals": "", "missing_expected_signals": "", "brand_gate_result": "", "product_specific_signal_count": "0", "existing_image_path_overlap": "no", "confidence_reason": "", "contract_or_structure_notes": "Unreferenced by product candidate set.", "warning": ""})
 
     out_csv = Path(args.output_csv)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
-    fields = ["product_db_itemId", "product_brand", "product_itemName", "product_model_id", "product_collection", "product_subCategory", "product_categoryName", "product_variant", "candidate_rank", "candidate_folder_relative_path", "candidate_folder_absolute_path", "candidate_path_segments_semicolon_list", "likely_model_root_relative_path", "likely_colour_or_variant_segment", "image_count", "image_files_semicolon_list", "match_status", "match_confidence", "match_score", "matched_signals", "missing_expected_signals", "contract_or_structure_notes", "warning"]
+    fields = ["product_db_itemId", "product_brand", "product_itemName", "product_model_id", "product_collection", "product_subCategory", "product_categoryName", "product_variant", "candidate_rank", "candidate_folder_relative_path", "candidate_folder_absolute_path", "candidate_path_segments_semicolon_list", "likely_model_root_relative_path", "likely_colour_or_variant_segment", "image_count", "image_files_semicolon_list", "match_status", "match_confidence", "match_score", "matched_signals", "missing_expected_signals", "brand_gate_result", "product_specific_signal_count", "existing_image_path_overlap", "confidence_reason", "contract_or_structure_notes", "warning"]
     with out_csv.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
@@ -276,7 +405,7 @@ def main() -> None:
     with summary.open("w", encoding="utf-8") as f:
         f.write("# Stage 2 Image Folder ↔ Product Matching Summary\n\n")
         f.write("- Matching is Contract 22/23 aligned and structure-aware.\n")
-        f.write("- Low-confidence candidates are deliberately emitted for review diagnostics.\n")
+        f.write("- Low-confidence candidates are diagnostics only and NOT safe for automated image-path updates.\n")
         f.write(f"- Source files used: `{args.inventory}`, `{args.product_db}`\n\n")
         f.write("## Totals\n")
         f.write(f"- total product rows: {len(products)}\n")
@@ -285,7 +414,17 @@ def main() -> None:
         f.write(f"- total image-containing folders: {len(folders)}\n")
         f.write(f"- count of products with at least one candidate: {products_with_candidates}\n")
         f.write(f"- count of products with no candidates: {len(products) - products_with_candidates}\n\n")
-        f.write("## Counts by match_status\n")
+        f.write("## Confidence diagnostics\n")
+        f.write(f"- high-confidence rows: {statuses.get(STATUS['high'], 0)}\n")
+        f.write(f"- high-confidence rows passing brand gate: {high_conf_brand_pass}\n")
+        f.write(f"- possible + low-confidence rows: {statuses.get(STATUS['possible'], 0) + statuses.get(STATUS['low_candidate'], 0)}\n")
+        f.write(f"- structure_rule_unclear rows: {statuses.get(STATUS['structure_unclear'], 0)}\n")
+        if high_conf_brand_mismatch:
+            f.write(f"- WARNING: {high_conf_brand_mismatch} high-confidence row(s) still have known-brand mismatch.\n")
+        else:
+            f.write("- No high-confidence rows with known-brand mismatch were detected.\n")
+
+        f.write("\n## Counts by match_status\n")
         for k, v in sorted(statuses.items()):
             f.write(f"- {k}: {v}\n")
         f.write("\n## Top observed folder patterns\n")
