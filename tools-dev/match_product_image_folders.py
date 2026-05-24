@@ -26,6 +26,7 @@ MIN_MEANINGFUL_SCORE = 8
 GENERIC_BRANDS = {"", "na", "n_a", "none", "null", "unknown", "generic", "unbranded"}
 BROAD_ONLY_FIELDS = {"brand", "gender", "categoryName", "subCategory", "subCategoryParent", "ageGroup", "sizeType", "fitStyle"}
 PRODUCT_SPECIFIC_FIELDS = {"collection", "itemName", "model_family", "construction", "fabric", "rise", "length", "neckline", "strap_configuration", "variant", "support_level", "scrunchFlag", "invisibleFlag", "model_id", "activityTags"}
+RYDERWEAR_BRANCH_MARKERS = {"nkd", "non_nkd", "legacy"}
 
 
 def brand_gate_passed(value: str) -> bool:
@@ -304,7 +305,60 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]
     return score, signals, notes
 
 
-def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set[str]) -> tuple[str, str, int, str, bool]:
+def detect_collection_signals(folder: FolderRec, known_collections: set[str]) -> dict:
+    seg_norm = [comparable_segment(s) for s in folder.segments]
+    seg_set = set(seg_norm)
+    explicit: set[str] = set()
+    branch_markers: set[str] = set()
+
+    for idx, seg in enumerate(seg_norm):
+        if seg == "__collection" and idx + 1 < len(seg_norm):
+            explicit.add(seg_norm[idx + 1])
+        if seg in RYDERWEAR_BRANCH_MARKERS:
+            branch_markers.add(seg)
+        if seg in known_collections:
+            explicit.add(seg)
+
+    return {"segments_norm": seg_norm, "explicit_collections": explicit, "branch_markers": branch_markers, "has_signal": bool(explicit or branch_markers)}
+
+
+def evaluate_collection_gate(prod: dict[str, str], folder: FolderRec, known_collections: set[str]) -> tuple[bool, str, bool]:
+    product_collection = norm(prod.get("collection", ""))
+    if not product_collection:
+        return True, "collection_gate_not_applicable", False
+
+    detected = detect_collection_signals(folder, known_collections)
+    explicit_collections = detected["explicit_collections"]
+    branch_markers = detected["branch_markers"]
+    has_signal = detected["has_signal"]
+    product_brand = norm(prod.get("brand", ""))
+
+    if product_brand == "ryderwear":
+        if product_collection == "nkd":
+            if "non_nkd" in branch_markers:
+                return False, "collection_branch_conflict", True
+            if "contour" in explicit_collections:
+                return False, "collection_branch_conflict", True
+            if "nkd" in explicit_collections or "nkd" in branch_markers:
+                return True, "collection_gate_pass", True
+            return True, "collection_gate_unknown", False
+        if product_collection == "contour":
+            if "contour" in explicit_collections:
+                return True, "collection_gate_pass", True
+            if "nkd" in explicit_collections or "nkd" in branch_markers:
+                return False, "collection_branch_conflict", True
+            return True, "collection_gate_unknown", False
+
+    if explicit_collections:
+        if product_collection in explicit_collections:
+            return True, "collection_gate_pass", True
+        return False, "failed_collection_gate", True
+    if has_signal:
+        return True, "collection_gate_unknown", False
+    return True, "collection_gate_unknown", False
+
+
+def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set[str], collection_gate_pass: bool, collection_reason: str, collection_explicit: bool) -> tuple[str, str, int, str, bool]:
     product_brand = signals["product_brand_norm"]
     folder_top = signals["folder_top_norm"]
     brand_is_generic = product_brand in GENERIC_BRANDS
@@ -335,6 +389,10 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
 
     product_specific_gate = strong_identity or product_specific_count >= 2
     allow_high = brand_gate in {"normalized_brand_gate_pass", "passed_generic_brand_by_identity"} and product_specific_gate and not broad_folder
+    if collection_explicit and not collection_gate_pass:
+        allow_high = False
+    if not collection_explicit and collection_reason == "collection_gate_unknown" and not signals["existing_image_path_overlap"]:
+        allow_high = False
     if signals["has_existing_image_path"] and not signals["existing_image_path_overlap"] and not (strong_identity or product_specific_count >= 3):
         allow_high = False
 
@@ -345,11 +403,19 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
         reason = "normalized_brand_gate_pass and passed_product_specific_gate."
         if signals["existing_image_path_overlap"]:
             reason = "normalized_brand_gate_pass, existing_image_path_overlap_specific, and passed_product_specific_gate."
+        if collection_reason == "collection_gate_pass":
+            reason = f"{reason} collection_gate_pass."
     elif allow_possible and (base_conf in {"high", "possible"} or sc >= 30):
         status = STATUS["possible"]
         reason = "normalized_brand_gate_pass with at least one product-specific identity signal."
         if broad_folder:
             reason = "Brand gate passed, but failed_broad_folder_gate; kept below high confidence."
+        if collection_reason in {"failed_collection_gate", "collection_branch_conflict"}:
+            reason = collection_reason
+            if brand_gate.startswith("passed"):
+                status = STATUS["low_candidate"]
+            else:
+                status = STATUS["structure_unclear"]
     elif sc >= MIN_MEANINGFUL_SCORE:
         status = STATUS["low_candidate"] if brand_gate.startswith("passed") else STATUS["structure_unclear"]
         reason_parts = []
@@ -357,6 +423,8 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
             reason_parts.append("failed_broad_folder_gate")
         if not product_specific_gate:
             reason_parts.append("failed_product_specific_gate")
+        if collection_reason in {"failed_collection_gate", "collection_branch_conflict"}:
+            reason_parts.append(collection_reason)
         reason = f"Candidate kept for diagnostics only; {', '.join(reason_parts) if reason_parts else 'identity gates insufficient'}."
     else:
         status = STATUS["unmatched_product_candidates"]
@@ -399,16 +467,21 @@ def main() -> None:
     high_conf_with_product_specific_evidence = 0
     high_conf_with_path_overlap = 0
     high_conf_brand_root_warning = 0
+    collection_gate_fail_downgraded = 0
+    high_conf_collection_gate_pass = 0
+    high_conf_collection_conflicts = 0
+    known_collections = {norm(p.get("collection", "")) for p in products if norm(p.get("collection", ""))}
 
     for p in products:
         scored = []
         for fr in folders:
             raw_score, signals, notes = score_product_folder(p, fr)
             base_conf = confidence(raw_score)
-            status, brand_gate, pcount, reason, mismatch = classify_candidate(base_conf, raw_score, signals, known_brands)
+            collection_pass, collection_reason, collection_explicit = evaluate_collection_gate(p, fr, known_collections)
+            status, brand_gate, pcount, reason, mismatch = classify_candidate(base_conf, raw_score, signals, known_brands, collection_pass, collection_reason, collection_explicit)
             adjusted_score = raw_score - (38 if mismatch else 0)
             if adjusted_score >= MIN_MEANINGFUL_SCORE:
-                scored.append((adjusted_score, fr, signals, notes, status, brand_gate, pcount, reason, mismatch))
+                scored.append((adjusted_score, fr, signals, notes, status, brand_gate, pcount, reason, mismatch, collection_reason))
 
         scored.sort(key=lambda x: x[0], reverse=True)
         top_candidates = scored[:TOP_CANDIDATES_PER_PRODUCT]
@@ -422,7 +495,7 @@ def main() -> None:
         top_status = top_candidates[0][4]
         statuses[top_status] += 1
 
-        for idx, (sc, fr, signals, notes, status, brand_gate, pcount, reason, mismatch) in enumerate(top_candidates, start=1):
+        for idx, (sc, fr, signals, notes, status, brand_gate, pcount, reason, mismatch, collection_reason) in enumerate(top_candidates, start=1):
             matched_folder_paths.add(fr.rel)
             if idx == 1 and status == STATUS["high"]:
                 if brand_gate_passed(brand_gate):
@@ -435,8 +508,14 @@ def main() -> None:
                     high_conf_with_product_specific_evidence += 1
                 if len(fr.segments) == 1 and norm(fr.segments[0]) == norm(p.get("brand", "")):
                     high_conf_brand_root_warning += 1
+                if collection_reason == "collection_gate_pass":
+                    high_conf_collection_gate_pass += 1
+                if collection_reason == "collection_branch_conflict":
+                    high_conf_collection_conflicts += 1
             if idx == 1 and status in {STATUS["possible"], STATUS["low_candidate"], STATUS["structure_unclear"]} and "failed_broad_folder_gate" in reason:
                 broad_folders_downgraded += 1
+            if idx == 1 and collection_reason in {"failed_collection_gate", "collection_branch_conflict"} and status != STATUS["high"]:
+                collection_gate_fail_downgraded += 1
             out_rows.append({
                 "product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""),
                 "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""),
@@ -449,7 +528,7 @@ def main() -> None:
                 "brand_gate_result": brand_gate,
                 "product_specific_signal_count": str(pcount),
                 "existing_image_path_overlap": "yes" if signals["existing_image_path_overlap"] else "no",
-                "confidence_reason": reason,
+                "confidence_reason": reason if reason else collection_reason,
                 "contract_or_structure_notes": notes,
                 "warning": "Low-confidence candidate set; diagnostic only and not safe for automated image-path updates." if status in {STATUS["low_candidate"], STATUS["structure_unclear"]} else "",
             })
@@ -491,6 +570,8 @@ def main() -> None:
         f.write(f"- broad folders downgraded from high-confidence eligibility: {broad_folders_downgraded}\n")
         f.write(f"- high-confidence rows with product-specific evidence: {high_conf_with_product_specific_evidence}\n")
         f.write(f"- high-confidence rows with existing image-path overlap: {high_conf_with_path_overlap}\n")
+        f.write(f"- collection-gate failures downgraded: {collection_gate_fail_downgraded}\n")
+        f.write(f"- high-confidence rows passing collection gate: {high_conf_collection_gate_pass}\n")
         f.write(f"- possible + low-confidence rows: {statuses.get(STATUS['possible'], 0) + statuses.get(STATUS['low_candidate'], 0)}\n")
         f.write(f"- structure_rule_unclear rows: {statuses.get(STATUS['structure_unclear'], 0)}\n")
         if high_conf_brand_mismatch:
@@ -501,6 +582,10 @@ def main() -> None:
             f.write(f"- WARNING: {high_conf_brand_root_warning} high-confidence row(s) still point to brand-root folders.\n")
         else:
             f.write("- No high-confidence rows point to brand-root-only folders.\n")
+        if high_conf_collection_conflicts:
+            f.write(f"- WARNING: {high_conf_collection_conflicts} high-confidence row(s) have collection_branch_conflict.\n")
+        else:
+            f.write("- No high-confidence rows have collection_branch_conflict.\n")
 
         f.write("\n## Counts by match_status\n")
         for k, v in sorted(statuses.items()):
