@@ -49,7 +49,7 @@ Authoritative formula source:
 
 - Contract 19, Section 2 (`Authoritative Formula (Structured References Required)`).
 
-Current observed Excel formula (captured for bridge clarity; governance authority remains Contract 19):
+Current observed Excel formula (captured in full for implementation clarity; this is observational only, and Contract 19 remains the authoritative governance source):
 
 ```excel
 =LOWER(
@@ -75,12 +75,12 @@ IF([@invisibleFlag]="Yes","invisible","")
 ))
 ```
 
-Note on ordering discrepancy:
+Formula/discrepancy clarification:
 
-- Contract 19 formula places `support_level` before `variant`.
-- The current observed formula above places `variant` before `support_level`.
-
-Until reconciled, teams must treat this as a documented discrepancy and resolve explicitly under Contract 19 governance (not by inventing a third ordering).
+- The formula above is the full currently observed Excel operational formula (from `LOWER(TEXTJOIN(...))` through all included fields and conditionals), not a Sports_Bra-only clause.
+- Contract 19 is still authoritative for governance and expected method.
+- Any ordering discrepancy (for example, `variant` vs `support_level` position) must be evaluated against the full observed formula and Contract 19 together.
+- If Contract 19 and observed Excel behavior differ, record this as a governance reconciliation question; do not silently resolve by introducing a new undocumented ordering.
 
 ---
 
