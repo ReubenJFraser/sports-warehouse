@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stage 2 contract-aware, structure-aware product/image folder matching report."""
 from __future__ import annotations
-import argparse, csv, os, re
+import argparse, csv, re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,6 +14,8 @@ STATUS = {
     "unmatched_product": "unmatched_product",
     "unmatched_folder": "unmatched_folder",
     "variant_review": "variant_level_folder_needs_model_parent_review",
+    "identity_review": "identity_review_required",
+    "structure_unclear": "structure_rule_unclear",
 }
 
 @dataclass
@@ -45,14 +47,34 @@ def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
     with path.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         headers = {h.lower(): h for h in (reader.fieldnames or [])}
-        path_key = headers.get("path") or headers.get("file_path") or headers.get("filepath") or headers.get("relative_path")
+        path_key = (
+            headers.get("relativepath")
+            or headers.get("relative_path")
+            or headers.get("path")
+            or headers.get("file_path")
+            or headers.get("filepath")
+            or headers.get("fullname")
+            or headers.get("full_name")
+        )
+        type_key = headers.get("type")
+        ext_key = headers.get("extension")
         if not path_key:
-            raise ValueError("Inventory CSV needs a path/file_path column.")
+            raise ValueError("Inventory CSV needs path-like column (e.g. RelativePath, FullName, path, or file_path).")
         for r in reader:
+            row_type = (r.get(type_key) or "").strip().upper() if type_key else ""
+            if row_type and row_type != "FILE":
+                continue
             p = (r.get(path_key) or "").strip().replace('\\', '/')
             if not p:
                 continue
-            ext = Path(p).suffix.lower()
+            if path_key.lower() in {"fullname", "full_name"}:
+                try:
+                    p = str(Path(p).resolve().relative_to(repo_root.resolve())).replace("\\", "/")
+                except Exception:
+                    p = str(Path(p).resolve())
+            ext = (r.get(ext_key) or "").strip().lower() if ext_key else ""
+            ext = f".{ext}" if ext and not ext.startswith(".") else ext
+            ext = ext or Path(p).suffix.lower()
             if ext not in IMAGE_EXTS:
                 continue
             rows.append(p)
@@ -71,9 +93,17 @@ def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
 def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, list[str], list[str]]:
     score = 0; hit=[]; miss=[]
     folder_tokens = tokset(*folder.segments)
+    folder_norm_path = norm(folder.rel).replace(" ", "_")
+    model_id = (prod.get("model_id", "") or "").strip().lower()
+    if model_id:
+        if model_id in folder.rel.lower():
+            score += 24
+            hit.append("model_id:full_identity_path_match")
+        else:
+            miss.append("model_id_full_identity")
     checks = [
         ("brand", 20), ("gender", 8), ("collection", 12), ("subCategory", 14),
-        ("categoryName", 8), ("construction", 8), ("rise", 6), ("length", 5), ("variant", 8), ("model_id", 14)
+        ("categoryName", 8), ("construction", 8), ("rise", 6), ("length", 5), ("variant", 8)
     ]
     for col, pts in checks:
         pt = tokset(prod.get(col, ""))
@@ -91,6 +121,9 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, list[str],
         score += 4
     if re.fullmatch(r"\d{1,3}", folder.likely_variant_segment):
         miss.append("terminal_numeric_folder")
+    if model_id and model_id.replace("_", " ") in folder_norm_path:
+        score += 6
+        hit.append("model_id:compound_value_respected")
     return score, hit, miss
 
 def confidence(score: int) -> str:
@@ -114,7 +147,24 @@ def main() -> None:
         products = list(csv.DictReader(f))
 
     out_rows=[]; matched_folder_paths=set(); brand_counts=Counter(); statuses=Counter(); variant_level=0
+    total_rows = len(products)
+    model_ids = [((p.get("model_id") or "").strip().lower()) for p in products]
+    non_blank_model_ids = [m for m in model_ids if m]
+    model_id_counts = Counter(non_blank_model_ids)
+    duplicate_model_ids = {k: v for k, v in model_id_counts.items() if v > 1}
+    duplicate_set = set(duplicate_model_ids.keys())
     for p in products:
+        product_model_id = (p.get("model_id") or "").strip().lower()
+        if product_model_id and product_model_id in duplicate_set:
+            statuses[STATUS["identity_review"]] += 1
+            out_rows.append({
+                "product_db_itemId":p.get("db_itemId",""),"product_brand":p.get("brand",""),"product_itemName":p.get("itemName",""),"product_model_id":p.get("model_id",""),"product_collection":p.get("collection",""),"product_subCategory":p.get("subCategory",""),"product_categoryName":p.get("categoryName",""),"product_variant":p.get("variant",""),
+                "candidate_folder_relative_path":"","candidate_folder_absolute_path":"","candidate_path_segments_semicolon_list":"","likely_model_root_relative_path":"","likely_colour_or_variant_segment":"","image_count":"","image_files_semicolon_list":"",
+                "match_status":STATUS["identity_review"],"match_confidence":"low","match_score":"0","matched_signals":"","missing_expected_signals":"model_id_uniqueness",
+                "contract_or_structure_notes":"Product model_id is duplicated in ProductDB; identity review required before deterministic mapping.",
+                "warning":f"Duplicate model_id appears {duplicate_model_ids[product_model_id]} times."
+            })
+            continue
         candidates=[]
         for fr in folders:
             sc, hit, miss = score_product_folder(p, fr)
@@ -135,6 +185,9 @@ def main() -> None:
             else: st=STATUS["high"] if cf=="high" else STATUS["possible"]
             if fr.likely_variant_segment and len(fr.segments)>=2:
                 variant_level +=1
+            notes = "Contract 22/23 aligned: full model_id used as canonical identity signal; structured fields mapped to path segments without blindly splitting model_id on underscores."
+            if fr.likely_variant_segment:
+                notes += " Final image folder treated as likely colour/variant terminal folder."
             statuses[st]+=1; brand_counts[p.get("brand","Unknown")]+=1
             out_rows.append({
                 "product_db_itemId":p.get("db_itemId",""),"product_brand":p.get("brand",""),"product_itemName":p.get("itemName",""),"product_model_id":p.get("model_id",""),"product_collection":p.get("collection",""),"product_subCategory":p.get("subCategory",""),"product_categoryName":p.get("categoryName",""),"product_variant":p.get("variant",""),
@@ -142,7 +195,7 @@ def main() -> None:
                 "candidate_path_segments_semicolon_list":";".join(fr.segments),"likely_model_root_relative_path":fr.likely_model_root,
                 "likely_colour_or_variant_segment":fr.likely_variant_segment,"image_count":str(len(fr.images)),"image_files_semicolon_list":";".join(fr.images),
                 "match_status":st,"match_confidence":cf,"match_score":str(sc),"matched_signals":";".join(hit),"missing_expected_signals":";".join(miss),
-                "contract_or_structure_notes":"Structure treated as practical authority; contracts used as interpretation context (model-vs-variant and color-terminal assumptions).",
+                "contract_or_structure_notes":notes,
                 "warning":"Multiple near-equal candidates" if is_amb else ""
             })
 
@@ -160,22 +213,28 @@ def main() -> None:
 
     summary = Path(args.output_summary)
     contracts=[f"README/II-CONTRACTS/{i}" for i in [
-      "13-Ryderwear_Women—Folder_Structure-Product_First.md","14-Non-NKD_Aggregation_Folder_Structure—Governance.md","15-Ryderwear-Women_Folder_System—Harmonization_Contract.md","16-Ryderwear-Women_Folder_System—Harmonization_Execution_Plan.md","17-Product_Model_&_Variant_Separation_Contract.md","18-ProductVariants_Sheet_Schema_Contract.md","19-Model_ID_Generation_&_Identity_Governance_Contract.md","20-Sports_Bra_Identity_&_Support_Classification_Contract.md","21-Collections_Metadata_Schema_Contract.md"]]
+      "22-Model_ID_Image_Filesystem_Identity_Contract.md","23-Model_ID_To_Image_Folder_Translation_Contract.md"]]
     patterns=Counter('/'.join(f.segments[:min(4,len(f.segments))]) for f in folders if f.segments)
     with summary.open('w',encoding='utf-8') as f:
         f.write("# Stage 2 Image Folder ↔ Product Matching Summary\n\n")
         f.write("- Practical authority note: actual folder structure is treated as the operational authority; contracts are interpreted context.\n")
         f.write(f"- Source files used: `{args.inventory}`, `{args.product_db}`\n")
+        f.write("- Matching logic alignment: Contract 22/23 model_id identity + structured folder translation semantics.\n")
         f.write("- README contracts read:\n")
         for c in contracts: f.write(f"  - `{c}`\n")
-        f.write(f"\n## Totals\n- total product rows: {len(products)}\n- total image-containing folders: {len(folders)}\n")
+        f.write(f"\n## Totals\n- total product rows: {total_rows}\n- distinct non-blank model_id values: {len(set(non_blank_model_ids))}\n- duplicated model_id values: {len(duplicate_model_ids)}\n- total image-containing folders: {len(folders)}\n")
         for k in ["matched_high_confidence","matched_possible","ambiguous_multiple_candidates","unmatched_product","unmatched_folder"]:
             f.write(f"- {k}: {statuses[k]}\n")
+        f.write(f"- identity_review_required: {statuses[STATUS['identity_review']]}\n")
         f.write(f"- variant-level folders detected: {variant_level}\n\n## Brand-level counts\n")
+        if duplicate_model_ids:
+            f.write("\n## Duplicate model_id values\n")
+            for mid, cnt in sorted(duplicate_model_ids.items(), key=lambda x: (-x[1], x[0])):
+                f.write(f"- `{mid}`: {cnt}\n")
         for b,c in brand_counts.most_common(): f.write(f"- {b}: {c}\n")
         f.write("\n## Observed folder-structure patterns\n")
         for p,c in patterns.most_common(12): f.write(f"- `{p}`: {c}\n")
-        f.write("\n## Contract clarity notes\n- Model/variant separation and color-terminal guidance from contracts 17 and 18 aligned with most terminal image folders.\n- Non-NKD `__Origin` provenance rule from contract 14 used as contextual signal, not hard requirement.\n")
+        f.write("\n## Contract clarity notes\n- Contract 22: model_id treated as strongest canonical product identity signal.\n- Contract 23: folder translation uses structured ProductDB signals and does not infer boundaries by blindly splitting model_id underscores.\n- Colour/variant is interpreted as the terminal folder when parent hierarchy appears to represent product model identity.\n")
         f.write("\n## Review-needed notes\n- Ambiguous rows and unmatched folders should be manually reviewed where path tokens do not clearly align with ProductDB taxonomy.\n")
 
 if __name__ == '__main__':
