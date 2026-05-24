@@ -404,10 +404,9 @@ GROUP BY pis.brand;
 -- -- TRUNCATE TABLE item;
 -- -- INSERT INTO item SELECT * FROM item_backup_before_remaining_pending_inactive_insert;
 
--- -- ROLLBACK STEP 3: Clear staging db_itemId values only for this inserted range if needed.
--- UPDATE product_import_staging pis
--- JOIN item_backup_before_remaining_pending_inactive_insert b
---     ON b.external_item_id = pis.model_id
--- SET pis.db_itemId = NULL
--- WHERE pis.db_itemId BETWEEN 59 AND 120
---   AND pis.brand IN ('Adidas', 'Ryderwear');
+-- -- ROLLBACK STEP 3: Only run if rolling back this inserted inactive batch (db_itemId 59-120).
+-- UPDATE product_import_staging
+-- SET db_itemId = NULL
+-- WHERE db_itemId BETWEEN 59 AND 120
+--   AND brand IN ('Adidas', 'Ryderwear')
+--   AND (images IS NULL OR TRIM(images) = '');
