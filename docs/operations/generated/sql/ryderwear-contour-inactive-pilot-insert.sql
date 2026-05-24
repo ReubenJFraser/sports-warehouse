@@ -113,27 +113,38 @@ ORDER BY c.categoryId;
 -- 2) BACKUP TABLE (GUARDED)
 -- =========================================================
 
--- Guard: fail-safe check to ensure backup table does not already exist
+-- Guard variable: tracks whether backup table existed before this script run
+SET @ryderwear_contour_backup_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.tables t
+    WHERE t.table_schema = DATABASE()
+      AND t.table_name = 'item_backup_before_ryderwear_contour_pilot'
+);
+
 SELECT
     CASE
-        WHEN EXISTS (
-            SELECT 1
-            FROM information_schema.tables t
-            WHERE t.table_schema = DATABASE()
-              AND t.table_name = 'item_backup_before_ryderwear_contour_pilot'
-        ) THEN 'ERROR_BACKUP_TABLE_ALREADY_EXISTS'
-        ELSE 'OK_TO_CREATE_BACKUP'
+        WHEN @ryderwear_contour_backup_exists = 0 THEN 'OK_TO_RUN'
+        ELSE 'STOP_BACKUP_TABLE_ALREADY_EXISTS'
     END AS backup_table_guard_status;
 
--- Create one-time backup snapshot (run only when guard status = OK_TO_CREATE_BACKUP)
+-- Create one-time backup snapshot only when table did not already exist
 CREATE TABLE IF NOT EXISTS item_backup_before_ryderwear_contour_pilot AS
 SELECT *
-FROM item;
+FROM item
+WHERE @ryderwear_contour_backup_exists = 0;
 
 
 -- =========================================================
 -- 3) CONTROLLED INSERT (4 ROWS ONLY, INACTIVE)
 -- =========================================================
+
+-- DO NOT run this insert section unless guard status is OK_TO_RUN.
+-- If guard status is STOP_BACKUP_TABLE_ALREADY_EXISTS, investigate and stop.
+SELECT
+    CASE
+        WHEN @ryderwear_contour_backup_exists = 0 THEN 'OK_TO_RUN'
+        ELSE 'STOP_BACKUP_TABLE_ALREADY_EXISTS'
+    END AS insert_guard_status;
 
 -- Stable deterministic ordering for db_itemId assignment:
 --   55 -> Contour Halter Sports Bra
@@ -201,6 +212,7 @@ WHERE pis.brand = 'Ryderwear'
   AND (pis.images IS NULL OR TRIM(pis.images) = '')
   AND pis.model_id IS NOT NULL
   AND TRIM(pis.model_id) <> ''
+  AND @ryderwear_contour_backup_exists = 0
 ORDER BY FIELD(
     pis.itemName,
     'Contour Halter Sports Bra',
