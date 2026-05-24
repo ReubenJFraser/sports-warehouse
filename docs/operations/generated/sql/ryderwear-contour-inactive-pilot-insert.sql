@@ -135,6 +135,8 @@ FROM item;
 -- 3) CONTROLLED INSERT (4 ROWS ONLY, INACTIVE)
 -- =========================================================
 
+-- Prerequisite: item.external_item_id must already be widened to VARCHAR(255)
+-- using docs/operations/generated/sql/widen-item-external-item-id-for-model-id.sql.
 -- Stable deterministic ordering for db_itemId assignment:
 --   55 -> Contour Halter Sports Bra
 --   56 -> Contour Seamless High-Waisted Leggings
@@ -167,7 +169,7 @@ SELECT
         WHEN pis.categoryName = 'Pants' THEN 2
         WHEN pis.categoryName = 'Set' THEN 4
         WHEN pis.categoryName = 'Equipment' THEN 8
-        ELSE NULL
+        ELSE 0
     END AS categoryId,
     pis.categoryName,
     pis.subCategoryParent AS parentCategory,
