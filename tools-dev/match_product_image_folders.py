@@ -18,6 +18,7 @@ STATUS = {
     "structure_unclear": "structure_rule_unclear",
     "unmatched_product_candidates": "unmatched_product_with_candidates",
     "unmatched_product": "unmatched_product",
+    "unmatched_product_designer_group_mapping": "unmatched_product_designer_group_mapping",
     "unmatched_folder": "unmatched_folder",
 }
 
@@ -100,6 +101,20 @@ def infer_ryderwear_collections(prod: dict[str, str]) -> set[str]:
         if tokens & aliases:
             inferred.add(canonical)
     return inferred
+
+
+def infer_designer_label(prod: dict[str, str]) -> str:
+    if norm(prod.get("brand", "")) != "designer":
+        return ""
+    collection = (prod.get("collection", "") or "").strip()
+    if collection:
+        return norm(collection)
+    item_name = (prod.get("itemName", "") or "").strip()
+    if ":" in item_name:
+        prefix = item_name.split(":", 1)[0].strip()
+        if prefix:
+            return norm(prefix)
+    return ""
 
 
 def extract_candidate_collection_signals(folder: FolderRec) -> tuple[set[str], bool, bool]:
@@ -222,6 +237,9 @@ def product_signal_specs(prod: dict[str, str]) -> list[tuple[str, int, set[str]]
         ("fitStyle", 5, tv("fitStyle")),
         ("activityTags", 5, tv("activityTags")),
     ]
+    designer_label = infer_designer_label(prod)
+    if designer_label:
+        specs.append(("designer_label", 12, token_variants(designer_label)))
     if subcat_norm == "sports_bra":
         specs.append(("support_level", 9, tv("support_level")))
     if norm(prod.get("scrunchFlag", "")) in {"1", "true", "yes", "y", "scrunch"}:
@@ -479,6 +497,7 @@ def main() -> None:
     high_conf_collection_conflict = 0
 
     for p in products:
+        designer_label = infer_designer_label(p)
         inferred_product_collections = infer_ryderwear_collections(p)
         scored = []
         for fr in folders:
@@ -494,8 +513,18 @@ def main() -> None:
         top_candidates = scored[:TOP_CANDIDATES_PER_PRODUCT]
 
         if not top_candidates:
-            statuses[STATUS["unmatched_product"]] += 1
-            out_rows.append({"product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""), "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""), "product_categoryName": p.get("categoryName", ""), "product_variant": p.get("variant", ""), "candidate_rank": "", "match_status": STATUS["unmatched_product"], "warning": "No meaningful candidates found."})
+            is_designer_group = norm(p.get("brand", "")) == "designer"
+            unmatched_status = STATUS["unmatched_product_designer_group_mapping"] if is_designer_group else STATUS["unmatched_product"]
+            statuses[unmatched_status] += 1
+            warning = "No meaningful candidates found."
+            contract_note = ""
+            if is_designer_group:
+                warning = "Designer umbrella product needs designer-label folder or manual mapping."
+                if designer_label:
+                    contract_note = f"Inferred designer_label={designer_label} from collection/itemName for folder matching."
+                else:
+                    contract_note = "Designer umbrella product is missing a usable collection/itemName label for folder matching."
+            out_rows.append({"product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""), "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""), "product_categoryName": p.get("categoryName", ""), "product_variant": p.get("variant", ""), "candidate_rank": "", "match_status": unmatched_status, "contract_or_structure_notes": contract_note, "warning": warning})
             continue
 
         products_with_candidates += 1
