@@ -25,6 +25,7 @@ TOP_CANDIDATES_PER_PRODUCT = 5
 MIN_MEANINGFUL_SCORE = 8
 GENERIC_BRANDS = {"", "na", "n_a", "none", "null", "unknown", "generic", "unbranded"}
 BROAD_ONLY_FIELDS = {"brand", "gender", "categoryName", "subCategory", "subCategoryParent", "ageGroup", "sizeType", "fitStyle"}
+PRODUCT_SPECIFIC_FIELDS = {"collection", "itemName", "model_family", "construction", "fabric", "rise", "length", "neckline", "strap_configuration", "variant", "support_level", "scrunchFlag", "invisibleFlag", "model_id", "activityTags"}
 
 
 @dataclass
@@ -254,6 +255,7 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]
         "model_id_partial": model_id_partial,
         "existing_image_path_overlap": existing_overlap,
         "has_existing_image_path": has_existing_path,
+        "folder_segments": folder.segments,
     }
     notes = "Contract 23 aligned: terminal folder treated as likely colour/variant; identity compared primarily against parent model-root path."
     return score, signals, notes
@@ -266,9 +268,13 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
     known_folder_brand = folder_top in known_brands
     brand_mismatch_known = bool(product_brand and not brand_is_generic and known_folder_brand and folder_top != product_brand)
 
-    product_specific_fields = signals["matched_fields"] - BROAD_ONLY_FIELDS
+    segment_count = len(signals.get("folder_segments", []))
+    is_brand_root = segment_count == 1 and folder_top and folder_top == product_brand
+    product_specific_fields = signals["matched_fields"] & PRODUCT_SPECIFIC_FIELDS
     product_specific_count = len(product_specific_fields)
-    strong_identity = signals["model_id_exact"] or signals["existing_image_path_overlap"]
+    strong_identity = signals["model_id_exact"] or signals["existing_image_path_overlap"] or signals["model_id_partial"]
+    broad_only_signals = bool(signals["matched_fields"]) and not product_specific_fields
+    broad_folder = is_brand_root or (segment_count < 2 and not strong_identity) or (broad_only_signals and not strong_identity)
 
     if brand_mismatch_known:
         sc -= 38
@@ -284,7 +290,8 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
     else:
         brand_gate = "unknown_brand_path"
 
-    allow_high = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and (strong_identity or product_specific_count >= 2)
+    product_specific_gate = strong_identity or product_specific_count >= 2
+    allow_high = brand_gate in {"passed_exact_brand", "passed_generic_brand_by_identity"} and product_specific_gate and not broad_folder
     if signals["has_existing_image_path"] and not signals["existing_image_path_overlap"] and not (strong_identity or product_specific_count >= 3):
         allow_high = False
 
@@ -292,13 +299,22 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
 
     if allow_high and base_conf == "high" and sc >= 62:
         status = STATUS["high"]
-        reason = "Brand gate passed and strong product-specific identity matched."
+        reason = "Brand gate passed and passed_product_specific_gate."
+        if signals["existing_image_path_overlap"]:
+            reason = "Brand gate passed, image_path_overlap_pass, and passed_product_specific_gate."
     elif allow_possible and (base_conf in {"high", "possible"} or sc >= 30):
         status = STATUS["possible"]
         reason = "Brand gate passed with at least one product-specific identity signal."
+        if broad_folder:
+            reason = "Brand gate passed, but failed_broad_folder_gate; kept below high confidence."
     elif sc >= MIN_MEANINGFUL_SCORE:
         status = STATUS["low_candidate"] if brand_gate.startswith("passed") else STATUS["structure_unclear"]
-        reason = "Candidate kept for diagnostics only; identity gates insufficient for possible/high."
+        reason_parts = []
+        if broad_folder:
+            reason_parts.append("failed_broad_folder_gate")
+        if not product_specific_gate:
+            reason_parts.append("failed_product_specific_gate")
+        reason = f"Candidate kept for diagnostics only; {', '.join(reason_parts) if reason_parts else 'identity gates insufficient'}."
     else:
         status = STATUS["unmatched_product_candidates"]
         reason = "Insufficient score and identity evidence."
@@ -336,6 +352,10 @@ def main() -> None:
     products_with_candidates = 0
     high_conf_brand_pass = 0
     high_conf_brand_mismatch = 0
+    broad_folders_downgraded = 0
+    high_conf_with_product_specific_evidence = 0
+    high_conf_with_path_overlap = 0
+    high_conf_brand_root_warning = 0
 
     for p in products:
         scored = []
@@ -366,6 +386,14 @@ def main() -> None:
                     high_conf_brand_pass += 1
                 if mismatch:
                     high_conf_brand_mismatch += 1
+                if signals["existing_image_path_overlap"]:
+                    high_conf_with_path_overlap += 1
+                if pcount >= 2 or signals["model_id_exact"] or signals["model_id_partial"] or signals["existing_image_path_overlap"]:
+                    high_conf_with_product_specific_evidence += 1
+                if len(fr.segments) == 1 and norm(fr.segments[0]) == norm(p.get("brand", "")):
+                    high_conf_brand_root_warning += 1
+            if idx == 1 and status in {STATUS["possible"], STATUS["low_candidate"], STATUS["structure_unclear"]} and "failed_broad_folder_gate" in reason:
+                broad_folders_downgraded += 1
             out_rows.append({
                 "product_db_itemId": p.get("db_itemId", ""), "product_brand": p.get("brand", ""), "product_itemName": p.get("itemName", ""),
                 "product_model_id": p.get("model_id", ""), "product_collection": p.get("collection", ""), "product_subCategory": p.get("subCategory", ""),
@@ -417,12 +445,19 @@ def main() -> None:
         f.write("## Confidence diagnostics\n")
         f.write(f"- high-confidence rows: {statuses.get(STATUS['high'], 0)}\n")
         f.write(f"- high-confidence rows passing brand gate: {high_conf_brand_pass}\n")
+        f.write(f"- broad folders downgraded from high-confidence eligibility: {broad_folders_downgraded}\n")
+        f.write(f"- high-confidence rows with product-specific evidence: {high_conf_with_product_specific_evidence}\n")
+        f.write(f"- high-confidence rows with existing image-path overlap: {high_conf_with_path_overlap}\n")
         f.write(f"- possible + low-confidence rows: {statuses.get(STATUS['possible'], 0) + statuses.get(STATUS['low_candidate'], 0)}\n")
         f.write(f"- structure_rule_unclear rows: {statuses.get(STATUS['structure_unclear'], 0)}\n")
         if high_conf_brand_mismatch:
             f.write(f"- WARNING: {high_conf_brand_mismatch} high-confidence row(s) still have known-brand mismatch.\n")
         else:
             f.write("- No high-confidence rows with known-brand mismatch were detected.\n")
+        if high_conf_brand_root_warning:
+            f.write(f"- WARNING: {high_conf_brand_root_warning} high-confidence row(s) still point to brand-root folders.\n")
+        else:
+            f.write("- No high-confidence rows point to brand-root-only folders.\n")
 
         f.write("\n## Counts by match_status\n")
         for k, v in sorted(statuses.items()):
