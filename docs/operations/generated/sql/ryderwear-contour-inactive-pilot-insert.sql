@@ -114,21 +114,25 @@ ORDER BY c.categoryId;
 -- =========================================================
 
 -- Guard: fail-safe check to ensure backup table does not already exist
+SET @ryderwear_contour_backup_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_name = 'item_backup_before_ryderwear_contour_pilot'
+);
+
+-- Guard status: proceed only when status is OK_TO_RUN
 SELECT
     CASE
-        WHEN EXISTS (
-            SELECT 1
-            FROM information_schema.tables t
-            WHERE t.table_schema = DATABASE()
-              AND t.table_name = 'item_backup_before_ryderwear_contour_pilot'
-        ) THEN 'ERROR_BACKUP_TABLE_ALREADY_EXISTS'
-        ELSE 'OK_TO_CREATE_BACKUP'
-    END AS backup_table_guard_status;
+        WHEN @ryderwear_contour_backup_exists = 0 THEN 'OK_TO_RUN'
+        ELSE 'STOP_BACKUP_TABLE_ALREADY_EXISTS'
+    END AS ryderwear_contour_pilot_guard_status;
 
--- Create one-time backup snapshot (run only when guard status = OK_TO_CREATE_BACKUP)
-CREATE TABLE IF NOT EXISTS item_backup_before_ryderwear_contour_pilot AS
+-- Create one-time backup snapshot only when guard allows run
+CREATE TABLE item_backup_before_ryderwear_contour_pilot AS
 SELECT *
-FROM item;
+FROM item
+WHERE @ryderwear_contour_backup_exists = 0;
 
 
 -- =========================================================
@@ -203,6 +207,7 @@ WHERE pis.brand = 'Ryderwear'
   AND (pis.images IS NULL OR TRIM(pis.images) = '')
   AND pis.model_id IS NOT NULL
   AND TRIM(pis.model_id) <> ''
+  AND @ryderwear_contour_backup_exists = 0
 ORDER BY FIELD(
     pis.itemName,
     'Contour Halter Sports Bra',
