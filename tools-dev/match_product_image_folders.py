@@ -158,6 +158,26 @@ def collection_gate(prod: dict[str, str], folder: FolderRec) -> tuple[bool, list
     return not fail, reasons, explicit_marker
 
 
+def designer_label_gate(prod: dict[str, str], folder: FolderRec) -> tuple[bool, list[str]]:
+    if norm(prod.get("brand", "")) != "designer":
+        return True, []
+    designer_label = infer_designer_label(prod)
+    if not designer_label:
+        return True, ["designer_label_unavailable"]
+
+    segs = [norm(s) for s in folder.segments]
+    if len(segs) < 2 or segs[0] != "designer":
+        return True, [f"inferred_designer_label:{designer_label}", "candidate_designer_label_unavailable"]
+
+    candidate_designer_label = segs[1]
+    reasons = [f"inferred_designer_label:{designer_label}", f"candidate_designer_label:{candidate_designer_label}"]
+    if designer_label == candidate_designer_label:
+        reasons.append("designer_label_gate_pass")
+        return True, reasons
+    reasons.append("failed_designer_label_gate")
+    return False, reasons
+
+
 def parse_inventory(path: Path, repo_root: Path) -> list[FolderRec]:
     rows: list[tuple[str, str]] = []
     with path.open(newline="", encoding="utf-8-sig") as f:
@@ -391,7 +411,7 @@ def score_product_folder(prod: dict, folder: FolderRec) -> tuple[int, dict, str]
     return score, signals, notes
 
 
-def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set[str], collection_ok: bool, collection_reasons: list[str], candidate_has_explicit_collection: bool) -> tuple[str, str, int, str, bool]:
+def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set[str], collection_ok: bool, collection_reasons: list[str], candidate_has_explicit_collection: bool, designer_label_ok: bool, designer_label_reasons: list[str]) -> tuple[str, str, int, str, bool]:
     product_brand = signals["product_brand_norm"]
     folder_top = signals["folder_top_norm"]
     brand_is_generic = product_brand in GENERIC_BRANDS
@@ -430,6 +450,9 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
     if not collection_ok:
         allow_high = False
         allow_possible = False
+    if not designer_label_ok:
+        allow_high = False
+        allow_possible = False
     elif base_conf == "high" and sc >= 62 and not candidate_has_explicit_collection and collection_reasons:
         allow_high = False
 
@@ -454,8 +477,13 @@ def classify_candidate(base_conf: str, sc: int, signals: dict, known_brands: set
     else:
         status = STATUS["unmatched_product_candidates"]
         reason = "Insufficient score and identity evidence."
+    if not designer_label_ok and sc >= MIN_MEANINGFUL_SCORE:
+        status = STATUS["structure_unclear"]
+        reason = "Candidate kept for diagnostics only; failed_designer_label_gate."
     if collection_reasons:
         reason = f"{reason} [{'|'.join(collection_reasons)}]"
+    if designer_label_reasons:
+        reason = f"{reason} [{'|'.join(designer_label_reasons)}]"
 
     return status, brand_gate, product_specific_count, reason, brand_mismatch_known
 
@@ -504,7 +532,8 @@ def main() -> None:
             raw_score, signals, notes = score_product_folder(p, fr)
             base_conf = confidence(raw_score)
             collection_ok, collection_reasons, candidate_has_explicit_collection = collection_gate(p, fr)
-            status, brand_gate, pcount, reason, mismatch = classify_candidate(base_conf, raw_score, signals, known_brands, collection_ok, collection_reasons, candidate_has_explicit_collection)
+            designer_label_ok, designer_label_reasons = designer_label_gate(p, fr)
+            status, brand_gate, pcount, reason, mismatch = classify_candidate(base_conf, raw_score, signals, known_brands, collection_ok, collection_reasons, candidate_has_explicit_collection, designer_label_ok, designer_label_reasons)
             adjusted_score = raw_score - (38 if mismatch else 0)
             if adjusted_score >= MIN_MEANINGFUL_SCORE:
                 scored.append((adjusted_score, fr, signals, notes, status, brand_gate, pcount, reason, mismatch, inferred_product_collections))
