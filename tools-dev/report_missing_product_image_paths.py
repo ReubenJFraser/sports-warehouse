@@ -10,7 +10,7 @@ import csv
 import json
 import re
 import tempfile
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -82,6 +82,49 @@ def choose_best_plan_row(rows: list[dict[str, str]]) -> dict[str, str] | None:
     return sorted(rows, key=key_fn, reverse=True)[0]
 
 
+
+def derive_ryderwear_taxonomy(source_parts: list[str]) -> list[str]:
+    """Extract stable taxonomy segments from Ryderwear source path."""
+    if not source_parts:
+        return []
+
+    parts = source_parts[:]
+    if parts and parts[0] == "ryderwear":
+        parts = parts[1:]
+
+    top_level = {"women", "men", "accessories"}
+    category_tokens = {"tops", "bottoms", "sports-bra", "leggings", "shorts", "pilates-gym-bag"}
+
+    taxonomy: list[str] = []
+    for seg in parts:
+        if seg in top_level:
+            taxonomy = [seg]
+            continue
+        if seg in {"nkd", "non-nkd"} and taxonomy:
+            taxonomy.append(seg)
+            continue
+        if seg in category_tokens and taxonomy:
+            taxonomy.append(seg)
+            continue
+
+    # Keep a short, meaningful branch under accessories if available.
+    if taxonomy and taxonomy[0] == "accessories" and len(taxonomy) < 3:
+        for seg in parts:
+            if seg not in {"accessories"} and seg not in taxonomy:
+                taxonomy.append(seg)
+            if len(taxonomy) >= 3:
+                break
+
+    # Guarantee minimum useful depth for known apparel patterns.
+    if taxonomy and taxonomy[0] in {"women", "men"} and len(taxonomy) >= 2:
+        if taxonomy[1] in {"nkd", "non-nkd"} and len(taxonomy) == 2:
+            for seg in parts:
+                if seg in {"tops", "bottoms"} and seg not in taxonomy:
+                    taxonomy.append(seg)
+                    break
+
+    return taxonomy
+
 def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | None) -> tuple[str, str, str]:
     """Return proposed_path, review_action, review_note."""
     brand = normalize_slug(product.get("brand", ""))
@@ -101,9 +144,10 @@ def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | Non
     parts: list[str] = ["images", "brands", brand]
 
     if brand == "ryderwear" and source_parts:
-        for seg in source_parts[1:5]:
-            if seg and seg not in parts:
-                parts.append(seg)
+        taxonomy = derive_ryderwear_taxonomy(source_parts)
+        parts.extend(taxonomy)
+        if model:
+            parts.append(model)
     else:
         for seg in [audience, collection, subtype or model]:
             if seg:
@@ -191,6 +235,23 @@ def build_report_rows(plan_rows: list[dict[str, str]], product_rows: list[dict[s
             }
         )
 
+    proposed_index: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in report:
+        proposed = norm_path(str(row.get("proposed_images_path", ""))).strip()
+        if proposed:
+            proposed_index[proposed].append(row)
+
+    for proposed, rows in proposed_index.items():
+        if len(rows) < 2:
+            continue
+        item_ids = ", ".join(sorted(r["product_db_itemId"] for r in rows))
+        for row in rows:
+            row["review_action"] = "collision_review" if row.get("review_action") != "manual_review" else "manual_review"
+            row["review_note"] = (
+                f"duplicate proposed_images_path collision ({len(rows)} rows share '{proposed}'; itemIds: {item_ids}); "
+                f"{norm(str(row.get('review_note', '')))}"
+            ).strip("; ")
+
     rank = {
         "high_confidence_missing_images": 0,
         "lower_confidence_missing_images": 1,
@@ -221,6 +282,13 @@ def write_summary(path: Path, report_rows: list[dict[str, Any]], product_rows: l
     high = sum(1 for r in report_rows if r["priority"] == "high_confidence_missing_images")
     with_proposal = sum(1 for r in report_rows if norm(r["proposed_images_path"]))
     manual = sum(1 for r in report_rows if r["review_action"] == "manual_review")
+    collisions = sum(1 for r in report_rows if r["review_action"] == "collision_review")
+    dup_path_counts = Counter(
+        norm_path(str(r.get("proposed_images_path", ""))).strip()
+        for r in report_rows
+        if norm_path(str(r.get("proposed_images_path", ""))).strip()
+    )
+    duplicate_paths = {p: c for p, c in dup_path_counts.items() if c > 1}
     by_brand = Counter((r["product_brand"] or "(blank)") for r in report_rows)
     by_priority = Counter(r["priority"] for r in report_rows)
 
@@ -234,6 +302,8 @@ def write_summary(path: Path, report_rows: list[dict[str, Any]], product_rows: l
         f"- High-confidence missing-images products: {high}",
         f"- Rows with proposed_images_path: {with_proposal}",
         f"- Rows needing manual_review: {manual}",
+        f"- Rows flagged collision_review: {collisions}",
+        f"- Duplicate non-blank proposed_images_path values: {len(duplicate_paths)}",
         "",
         "## Count by brand",
         "",
@@ -243,6 +313,14 @@ def write_summary(path: Path, report_rows: list[dict[str, Any]], product_rows: l
     lines += ["", "## Count by priority", ""]
     for p, c in sorted(by_priority.items()):
         lines.append(f"- {p}: {c}")
+
+    lines += ["", "## Duplicate proposed path collisions", ""]
+    if not duplicate_paths:
+        lines.append("- none")
+    else:
+        for path_key, count in sorted(duplicate_paths.items(), key=lambda x: (-x[1], x[0])):
+            lines.append(f"- {path_key}: {count}")
+
     lines += ["", "No ProductDB rows were modified by this script.", ""]
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -260,19 +338,25 @@ def run_smoke_check() -> None:
         plan.write_text(
             "\n".join([
                 "product_db_itemId,reason,diagnostic_match_status,diagnostic_match_score,diagnostic_confidence_reason,diagnostic_warning,source_folder_relative_path,source_file_count,source_files",
-                '1001,missing ProductDB images path,matched_high_confidence,0.98,strong,missing_product_images_path,ryderwear/Women/NKD/Leggings,2,"[""a.jpg"",""b.jpg""]"',
-                '1002,missing ProductDB images path,matched_possible,0.66,weak,missing_product_images_path,nike/men/tees,1,"[""c.jpg""]"',
+                '1001,missing ProductDB images path,matched_high_confidence,0.98,strong,missing_product_images_path,ryderwear/Women/Non-NKD/Bottoms/Leggings/Rise/High_Waisted,2,"[""a.jpg"",""b.jpg""]"',
+                '1002,missing ProductDB images path,matched_high_confidence,0.96,strong,missing_product_images_path,ryderwear/Women/Non-NKD/Bottoms/Leggings/Core/Fit,3,"[""c.jpg""]"',
+                '1005,missing ProductDB images path,matched_high_confidence,0.97,strong,missing_product_images_path,ryderwear/Women/Non-NKD/Bottoms/Leggings/New/Drop,3,"[""d.jpg""]"',
+                '1006,missing ProductDB images path,matched_possible,0.66,weak,missing_product_images_path,nike/men/tees,1,"[""e.jpg""]"',
+                '1007,missing ProductDB images path,matched_high_confidence,0.95,strong,missing_product_images_path,ryderwear/Women/Non-NKD/Bottoms/Leggings/Alt,2,"[""f.jpg""]"',
             ]),
             encoding="utf-8",
         )
         pdb.write_text(
             "\n".join([
                 "db_itemId,brand,itemName,model_id,gender,ageGroup,categoryName,subCategory,collection,model_family,images",
-                "1001,Ryderwear,Power Legging,POWER_LEG,women,adult,Apparel,Bottoms,NKD,Power,",
-                "1001,Ryderwear,Power Legging,POWER_LEG,women,adult,Apparel,Bottoms,NKD,Power,",
-                "1002,Nike,Club Tee,CLUB_TEE,men,adult,Apparel,Tops,,Club,",
+                "1001,Ryderwear,Empower Legging,RYDERWEAR_FEMALE_EMPOWER_HIGH_WAISTED_LEGGINGS,women,adult,Apparel,Bottoms,Non-NKD,Empower,",
+                "1001,Ryderwear,Empower Legging,RYDERWEAR_FEMALE_EMPOWER_HIGH_WAISTED_LEGGINGS,women,adult,Apparel,Bottoms,Non-NKD,Empower,",
+                "1002,Ryderwear,Focus Legging,RYDERWEAR_FEMALE_FOCUS_HIGH_WAISTED_LEGGINGS,women,adult,Apparel,Bottoms,Non-NKD,Focus,",
                 "1003,Adidas,HasPath,HAS_PATH,men,adult,Apparel,Tops,,Core,images/brands/adidas/men/tops/",
                 "1004,Puma,NoCandidate,NO_CAND,men,adult,Apparel,Tops,,Core,",
+                "1005,Ryderwear,Collision A,duplicate-model,women,adult,Apparel,Bottoms,Non-NKD,Collision,",
+                "1007,Ryderwear,Collision B,duplicate-model,women,adult,Apparel,Bottoms,Non-NKD,Collision,",
+                "1006,Nike,Club Tee,CLUB_TEE,men,adult,Apparel,Tops,,Club,",
             ]),
             encoding="utf-8",
         )
@@ -282,15 +366,23 @@ def run_smoke_check() -> None:
         report = build_report_rows(plan_rows, product_rows)
         by_id = {r["product_db_itemId"]: r for r in report}
 
-        assert len(report) == 3, "rows should be deduplicated by product_db_itemId"
+        assert len(report) == 6, "rows should be deduplicated by product_db_itemId"
         assert by_id["1001"]["priority"] == "high_confidence_missing_images"
         assert "1003" not in by_id, "products with existing images path must be excluded"
-        assert by_id["1002"]["priority"] == "lower_confidence_missing_images"
+        assert by_id["1006"]["priority"] == "lower_confidence_missing_images"
         assert by_id["1004"]["priority"] == "no_candidate_missing_images"
+
+        assert by_id["1001"]["proposed_images_path"] != by_id["1002"]["proposed_images_path"]
+        assert by_id["1001"]["proposed_images_path"].endswith("/ryderwear-female-empower-high-waisted-leggings/")
+        assert by_id["1005"]["review_action"] in {"collision_review", "manual_review"}
+        assert "duplicate proposed_images_path collision" in by_id["1005"]["review_note"]
+        assert "duplicate proposed_images_path collision" in by_id["1007"]["review_note"]
 
         write_csv(out_csv, report)
         write_summary(out_md, report, product_rows)
         summary = out_md.read_text(encoding="utf-8")
+        assert "Duplicate non-blank proposed_images_path values:" in summary
+        assert "Rows flagged collision_review:" in summary
         assert "No ProductDB rows were modified" in summary
 
 
