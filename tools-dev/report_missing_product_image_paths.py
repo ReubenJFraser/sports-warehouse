@@ -42,6 +42,23 @@ def normalize_slug(value: str) -> str:
     return re.sub(r"-+", "-", value)
 
 
+def derive_ryderwear_taxonomy(source_parts: list[str]) -> list[str]:
+    """Derive Ryderwear taxonomy from source folder segments.
+
+    Preserves source hierarchy after the brand segment while preventing
+    accessories from being promoted ahead of women/men when nested.
+    """
+    if not source_parts:
+        return []
+
+    taxonomy: list[str] = []
+    after_brand = source_parts[1:] if source_parts and source_parts[0] == "ryderwear" else source_parts
+    for seg in after_brand:
+        if seg:
+            taxonomy.append(seg)
+    return taxonomy
+
+
 def parse_json_list(raw: str) -> list[str]:
     text = norm(raw)
     if not text:
@@ -101,19 +118,23 @@ def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | Non
     parts: list[str] = ["images", "brands", brand]
 
     if brand == "ryderwear" and source_parts:
-        for seg in source_parts[1:5]:
-            if seg and seg not in parts:
-                parts.append(seg)
+        for seg in derive_ryderwear_taxonomy(source_parts):
+            parts.append(seg)
     else:
         for seg in [audience, collection, subtype or model]:
             if seg:
                 parts.append(seg)
 
-    if len(parts) < 5 and model and model not in parts:
+    if model:
         parts.append(model)
 
     if len(parts) < 5:
         return "", "manual_review", "insufficient structured fields to safely propose runtime path"
+
+    # Preserve duplicate proposed_images_path collision visibility by allowing
+    # repeated slugs in taxonomy while ensuring a trailing slash path format.
+    if not parts[-1]:
+        return "", "manual_review", "model_id/itemName missing; cannot create safe runtime path"
 
     return "/".join(parts).rstrip("/") + "/", "propose_path", "proposal only; requires reviewer approval"
 
@@ -262,6 +283,7 @@ def run_smoke_check() -> None:
                 "product_db_itemId,reason,diagnostic_match_status,diagnostic_match_score,diagnostic_confidence_reason,diagnostic_warning,source_folder_relative_path,source_file_count,source_files",
                 '1001,missing ProductDB images path,matched_high_confidence,0.98,strong,missing_product_images_path,ryderwear/Women/NKD/Leggings,2,"[""a.jpg"",""b.jpg""]"',
                 '1002,missing ProductDB images path,matched_possible,0.66,weak,missing_product_images_path,nike/men/tees,1,"[""c.jpg""]"',
+                '1005,missing ProductDB images path,matched_high_confidence,0.97,strong,missing_product_images_path,Ryderwear/Women/Accessories/Pilates_Gym_Bag/Vanilla,2,"[""d.jpg"",""e.jpg""]"',
             ]),
             encoding="utf-8",
         )
@@ -273,6 +295,7 @@ def run_smoke_check() -> None:
                 "1002,Nike,Club Tee,CLUB_TEE,men,adult,Apparel,Tops,,Club,",
                 "1003,Adidas,HasPath,HAS_PATH,men,adult,Apparel,Tops,,Core,images/brands/adidas/men/tops/",
                 "1004,Puma,NoCandidate,NO_CAND,men,adult,Apparel,Tops,,Core,",
+                "1005,Ryderwear,Pilates Gym Bag,RW_ACC-991,RW,adult,Accessories,Bag,,,",
             ]),
             encoding="utf-8",
         )
@@ -282,11 +305,14 @@ def run_smoke_check() -> None:
         report = build_report_rows(plan_rows, product_rows)
         by_id = {r["product_db_itemId"]: r for r in report}
 
-        assert len(report) == 3, "rows should be deduplicated by product_db_itemId"
+        assert len(report) == 4, "rows should be deduplicated by product_db_itemId"
         assert by_id["1001"]["priority"] == "high_confidence_missing_images"
         assert "1003" not in by_id, "products with existing images path must be excluded"
         assert by_id["1002"]["priority"] == "lower_confidence_missing_images"
         assert by_id["1004"]["priority"] == "no_candidate_missing_images"
+        acc_path = by_id["1005"]["proposed_images_path"]
+        assert "images/brands/ryderwear/women/accessories/pilates-gym-bag/vanilla/" in acc_path
+        assert acc_path.endswith("/rw-acc-991/"), "proposed path must end with normalized model_id"
 
         write_csv(out_csv, report)
         write_summary(out_md, report, product_rows)
