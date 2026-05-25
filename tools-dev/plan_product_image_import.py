@@ -87,17 +87,39 @@ def build_product_index(product_rows: list[dict[str, str]]) -> dict[str, dict[st
     return idx
 
 
-def infer_out_of_scope(product: dict[str, str], match_status: str, item_name: str, model_id: str) -> bool:
+def infer_out_of_scope(product: dict[str, str], match_status: str, brand: str, item_name: str, model_id: str) -> bool:
     if match_status not in {"unmatched_product", "unmatched_product_with_candidates", "unmatched_folder"}:
         return False
-    cat = (product.get("categoryName") or "").strip().lower()
-    sub = (product.get("subCategory") or "").strip().lower()
-    if cat and cat != "clothing":
-        return True
-    if sub and "clothing" not in sub and cat and cat != "clothing":
-        return True
+
     marker = normalize_key(model_id or item_name)
-    return marker in EXPECTED_UNMATCHED_OUT_OF_SCOPE
+    if marker in EXPECTED_UNMATCHED_OUT_OF_SCOPE:
+        return True
+
+    text_blob = " ".join(
+        [
+            brand,
+            item_name,
+            model_id,
+            product.get("subCategory", ""),
+            product.get("categoryName", ""),
+        ]
+    ).lower()
+    out_of_scope_signals = (
+        "helmet",
+        "boxing",
+        "glove",
+        "gloves",
+        "mma",
+        "martial",
+        "combat",
+        "protective",
+        "protection",
+        "pad",
+        "pads",
+        "shin guard",
+        "headgear",
+    )
+    return any(signal in text_blob for signal in out_of_scope_signals)
 
 
 def to_json_list(items: list[str]) -> str:
@@ -108,12 +130,12 @@ def plan_rows(match_rows: list[dict[str, str]], product_idx: dict[str, dict[str,
     out: list[dict[str, Any]] = []
 
     for m in match_rows:
-        item_id = (m.get("db_itemId") or "").strip()
+        item_id = (m.get("product_db_itemId") or m.get("db_itemId") or "").strip()
         product = product_idx.get(item_id, {})
 
-        brand = (product.get("brand") or m.get("brand") or "").strip()
-        item_name = (product.get("itemName") or m.get("itemName") or "").strip()
-        model_id = (product.get("model_id") or m.get("model_id") or "").strip()
+        brand = (product.get("brand") or m.get("product_brand") or m.get("brand") or "").strip()
+        item_name = (product.get("itemName") or m.get("product_itemName") or m.get("itemName") or "").strip()
+        model_id = (product.get("model_id") or m.get("product_model_id") or m.get("model_id") or "").strip()
         images_path = normalize_path((product.get("images") or "").strip())
         thumbnails_json = (product.get("thumbnails_json") or "").strip()
 
@@ -126,6 +148,9 @@ def plan_rows(match_rows: list[dict[str, str]], product_idx: dict[str, dict[str,
         source_file_count = len(source_files)
 
         warnings: list[str] = []
+        matcher_warning = (m.get("warning") or "").strip()
+        if matcher_warning:
+            warnings.append(matcher_warning)
         if candidate_folder and source_file_count == 0:
             warnings.append("matched_folder_has_no_source_files")
         if not images_path:
@@ -134,7 +159,7 @@ def plan_rows(match_rows: list[dict[str, str]], product_idx: dict[str, dict[str,
         if match_status == "matched_high_confidence" and images_path and candidate_folder and source_file_count > 0:
             action = "copy"
             reason = "high-confidence match with usable ProductDB images path and source files"
-        elif infer_out_of_scope(product, match_status, item_name, model_id):
+        elif infer_out_of_scope(product, match_status, brand, item_name, model_id):
             action = "skip"
             reason = "outside_current_inventory_scope"
         elif match_status == "matched_high_confidence" and not images_path:
@@ -244,6 +269,62 @@ def write_summary(path: Path, rows: list[dict[str, Any]]) -> None:
         handle.write("\n".join(lines) + "\n")
 
 
+
+def run_smoke_check() -> None:
+    product_rows = [
+        {
+            "db_itemId": "1001",
+            "brand": "AS Colour",
+            "itemName": "Stencil Hood",
+            "model_id": "stencil_hood",
+            "images": "catalog/products/as_colour/stencil_hood",
+            "thumbnails_json": "[]",
+            "categoryName": "Tops",
+            "subCategory": "Hoodies",
+        }
+    ]
+    match_rows = [
+        {
+            "product_db_itemId": "1001",
+            "product_brand": "AS Colour",
+            "product_itemName": "Stencil Hood",
+            "product_model_id": "stencil_hood",
+            "candidate_folder_relative_path": "tops/hoodies/stencil-hood",
+            "match_status": "matched_high_confidence",
+            "match_score": "0.98",
+            "confidence_reason": "clean_slug_match",
+            "warning": "matcher_warn_sample",
+        },
+        {
+            "product_db_itemId": "1002",
+            "product_brand": "AS Colour",
+            "product_itemName": "Fallback Tee",
+            "product_model_id": "fallback_tee",
+            "candidate_folder_relative_path": "tops/tees/fallback-tee",
+            "match_status": "structure_rule_unclear",
+            "match_score": "0.41",
+            "confidence_reason": "ambiguous_folder_structure",
+            "warning": "needs_human_validation",
+        },
+    ]
+    inv = {
+        "tops/hoodies/stencil-hood": ["front.jpg", "back.jpg"],
+        "tops/tees/fallback-tee": ["main.jpg"],
+    }
+
+    planned = plan_rows(match_rows, build_product_index(product_rows), inv)
+
+    first = planned[0]
+    assert first["product_db_itemId"] == "1001"
+    assert first["action"] == "copy"
+    assert first["proposed_runtime_folder"] == "catalog/products/as_colour/stencil_hood"
+    assert "matcher_warn_sample" in first["diagnostic_warning"]
+
+    second = planned[1]
+    assert second["action"] == "manual_review"
+    assert "needs_human_validation" in second["diagnostic_warning"]
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description="Generate a local image import planning report (no file operations)."
@@ -253,11 +334,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--inventory", type=Path, default=DEFAULT_INVENTORY)
     p.add_argument("--out-csv", type=Path, default=DEFAULT_PLAN_CSV)
     p.add_argument("--out-summary", type=Path, default=DEFAULT_SUMMARY_MD)
+    p.add_argument("--smoke-check", action="store_true", help="Run lightweight in-memory smoke assertions and exit.")
     return p
 
 
 def main() -> int:
     args = build_parser().parse_args()
+    if args.smoke_check:
+        run_smoke_check()
+        print("Smoke check passed.")
+        return 0
+
     try:
         fail_if_missing([args.match_review, args.product_db, args.inventory])
     except FileNotFoundError as exc:
