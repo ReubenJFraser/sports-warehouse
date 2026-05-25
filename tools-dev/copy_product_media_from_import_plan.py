@@ -66,6 +66,21 @@ def is_allowed_media_file(filename: str) -> bool:
     return Path(filename).suffix.lower() in ALLOWED_EXTENSIONS
 
 
+def resolve_within_root(root: Path, candidate: Path, label: str) -> tuple[Path | None, str | None]:
+    try:
+        resolved_root = root.resolve()
+        resolved_candidate = candidate.resolve()
+    except Exception as exc:  # noqa: BLE001
+        return None, f"unsafe {label} path: failed to resolve path ({exc})"
+
+    try:
+        resolved_candidate.relative_to(resolved_root)
+    except ValueError:
+        return None, f"unsafe {label} path: resolves outside {label}_root"
+
+    return resolved_candidate, None
+
+
 def process_plan(rows: list[dict[str, str]], source_root: Path, repo_root: Path, execute: bool) -> tuple[list[CopyResult], int]:
     results: list[CopyResult] = []
     copy_rows_processed = 0
@@ -107,8 +122,38 @@ def process_plan(rows: list[dict[str, str]], source_root: Path, repo_root: Path,
         for source_file, target_rel_raw in zip(source_files, target_files):
             source_rel_name = Path(source_file).name
             target_rel_path = normalize_rel(target_rel_raw)
-            source_abs = source_folder / source_rel_name
-            target_abs = repo_root / Path(target_rel_path)
+            raw_target_path = Path(target_rel_raw or "")
+            source_abs_candidate = source_folder / source_rel_name
+            target_abs_candidate = repo_root / raw_target_path
+            source_abs, source_err = resolve_within_root(source_root, source_abs_candidate, "source")
+            target_abs, target_err = resolve_within_root(repo_root, target_abs_candidate, "target")
+            if raw_target_path.is_absolute():
+                target_err = "unsafe target path: absolute paths are not allowed"
+
+            if source_err or target_err:
+                reason = "; ".join([item for item in [source_err, target_err] if item])
+                source_abs_text = str(source_abs_candidate.resolve())
+                if source_abs is not None:
+                    source_abs_text = str(source_abs)
+                target_abs_text = str(target_abs_candidate.resolve())
+                if target_abs is not None:
+                    target_abs_text = str(target_abs)
+                results.append(
+                    CopyResult(
+                        product_id,
+                        product_brand,
+                        product_name,
+                        source_rel_name,
+                        source_abs_text,
+                        target_rel_path,
+                        target_abs_text,
+                        str(source_abs_candidate.exists()).lower(),
+                        str(target_abs_candidate.exists()).lower(),
+                        "error",
+                        reason,
+                    )
+                )
+                continue
 
             if not is_allowed_media_file(source_rel_name):
                 results.append(
@@ -269,12 +314,13 @@ def run_smoke_check() -> int:
                 "product_brand": "Brand",
                 "product_itemName": "Item",
                 "source_folder_relative_path": "brand/item",
-                "source_files": json.dumps(["img1.jpg", "missing.png", "video.mp4"]),
+                "source_files": json.dumps(["img1.jpg", "missing.png", "video.mp4", "img1.jpg"]),
                 "proposed_target_files": json.dumps(
                     [
                         "runtime/cache/catalog/abc/img1.jpg",
                         "runtime/cache/catalog/abc/missing.png",
                         "runtime/cache/catalog/abc/video.mp4",
+                        "../outside/file.png",
                     ]
                 ),
                 "action": "copy",
@@ -292,7 +338,9 @@ def run_smoke_check() -> int:
         assert any(r.action_taken == "dry_run_copy" for r in dry_results)
         assert any(r.action_taken == "missing_source" for r in dry_results)
         assert any(r.action_taken == "skipped_existing" for r in dry_results)
+        assert any(r.action_taken == "error" and "unsafe target path" in r.reason for r in dry_results)
         assert not (repo_root / "runtime/cache/catalog/abc/img1.jpg").exists()
+        assert not (root / "outside/file.png").exists()
 
         # Execute: one file copied, existing not overwritten
         exe_results, _ = process_plan(parsed, source_root, repo_root, execute=True)
