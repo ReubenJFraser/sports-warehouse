@@ -82,6 +82,24 @@ def choose_best_plan_row(rows: list[dict[str, str]]) -> dict[str, str] | None:
     return sorted(rows, key=key_fn, reverse=True)[0]
 
 
+def _extract_ryderwear_taxonomy(source_parts: list[str]) -> list[str]:
+    """Return Ryderwear taxonomy segments before model_id.
+
+    Preserves Women/Men before nested Accessories. If path starts with Accessories
+    directly after brand, allow accessories as first taxonomy segment.
+    """
+    if len(source_parts) < 2:
+        return []
+
+    taxonomy = source_parts[1:]
+    head = taxonomy[0]
+    if head in {"women", "men"}:
+        return taxonomy[:4]
+    if head == "accessories":
+        return taxonomy[:4]
+    return taxonomy[:4]
+
+
 def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | None) -> tuple[str, str, str]:
     """Return proposed_path, review_action, review_note."""
     brand = normalize_slug(product.get("brand", ""))
@@ -101,7 +119,7 @@ def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | Non
     parts: list[str] = ["images", "brands", brand]
 
     if brand == "ryderwear" and source_parts:
-        for seg in source_parts[1:5]:
+        for seg in _extract_ryderwear_taxonomy(source_parts):
             if seg and seg not in parts:
                 parts.append(seg)
     else:
@@ -109,11 +127,14 @@ def propose_images_path(product: dict[str, str], best_plan: dict[str, str] | Non
             if seg:
                 parts.append(seg)
 
-    if len(parts) < 5 and model and model not in parts:
+    if model:
         parts.append(model)
 
     if len(parts) < 5:
         return "", "manual_review", "insufficient structured fields to safely propose runtime path"
+
+    if len(parts) < 6 and model and model not in parts:
+        parts.append(model)
 
     return "/".join(parts).rstrip("/") + "/", "propose_path", "proposal only; requires reviewer approval"
 
@@ -191,6 +212,16 @@ def build_report_rows(plan_rows: list[dict[str, str]], product_rows: list[dict[s
             }
         )
 
+    proposed_counter = Counter(norm_path(r["proposed_images_path"]).strip("/") for r in report if norm(r["proposed_images_path"]))
+    for row in report:
+        proposed_key = norm_path(row["proposed_images_path"]).strip("/")
+        collisions = proposed_counter.get(proposed_key, 0) if proposed_key else 0
+        row["proposed_path_collision_count"] = collisions
+        row["proposed_path_has_collision"] = "yes" if collisions > 1 else "no"
+        if collisions > 1:
+            row["review_action"] = "manual_review"
+            row["review_note"] = f"duplicate proposed_images_path collision ({collisions} rows); reviewer must resolve"
+
     rank = {
         "high_confidence_missing_images": 0,
         "lower_confidence_missing_images": 1,
@@ -205,7 +236,8 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         "product_db_itemId","product_brand","product_itemName","product_model_id","product_gender","product_ageGroup",
         "product_categoryName","product_subCategory","product_collection","product_model_family","current_product_images_path",
         "best_matched_source_folder_relative_path","source_file_count","source_files","proposed_images_path","diagnostic_match_status",
-        "diagnostic_match_score","diagnostic_confidence_reason","diagnostic_warning","priority","review_action","review_note",
+        "diagnostic_match_score","diagnostic_confidence_reason","diagnostic_warning","proposed_path_collision_count",
+        "proposed_path_has_collision","priority","review_action","review_note",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -221,6 +253,12 @@ def write_summary(path: Path, report_rows: list[dict[str, Any]], product_rows: l
     high = sum(1 for r in report_rows if r["priority"] == "high_confidence_missing_images")
     with_proposal = sum(1 for r in report_rows if norm(r["proposed_images_path"]))
     manual = sum(1 for r in report_rows if r["review_action"] == "manual_review")
+    collision_rows = sum(1 for r in report_rows if r.get("proposed_path_has_collision") == "yes")
+    collision_unique_paths = len({
+        norm_path(r["proposed_images_path"]).strip("/")
+        for r in report_rows
+        if r.get("proposed_path_has_collision") == "yes" and norm(r.get("proposed_images_path", ""))
+    })
     by_brand = Counter((r["product_brand"] or "(blank)") for r in report_rows)
     by_priority = Counter(r["priority"] for r in report_rows)
 
@@ -234,6 +272,8 @@ def write_summary(path: Path, report_rows: list[dict[str, Any]], product_rows: l
         f"- High-confidence missing-images products: {high}",
         f"- Rows with proposed_images_path: {with_proposal}",
         f"- Rows needing manual_review: {manual}",
+        f"- Rows flagged for proposed_images_path collisions: {collision_rows}",
+        f"- Unique duplicated proposed_images_path values: {collision_unique_paths}",
         "",
         "## Count by brand",
         "",
@@ -262,6 +302,10 @@ def run_smoke_check() -> None:
                 "product_db_itemId,reason,diagnostic_match_status,diagnostic_match_score,diagnostic_confidence_reason,diagnostic_warning,source_folder_relative_path,source_file_count,source_files",
                 '1001,missing ProductDB images path,matched_high_confidence,0.98,strong,missing_product_images_path,ryderwear/Women/NKD/Leggings,2,"[""a.jpg"",""b.jpg""]"',
                 '1002,missing ProductDB images path,matched_possible,0.66,weak,missing_product_images_path,nike/men/tees,1,"[""c.jpg""]"',
+                '1005,missing ProductDB images path,matched_high_confidence,0.97,strong,missing_product_images_path,ryderwear/Women/Accessories/Pilates_Gym_Bag/Vanilla,2,"[""d.jpg"",""e.jpg""]"',
+                '1006,missing ProductDB images path,matched_high_confidence,0.96,strong,missing_product_images_path,ryderwear/Women/NKD/Leggings/Black,1,"[""f.jpg""]"',
+                '1008,missing ProductDB images path,matched_possible,0.60,weak,missing_product_images_path,nike/men/tees,1,"[""g.jpg""]"',
+                '1009,missing ProductDB images path,matched_possible,0.59,weak,missing_product_images_path,nike/men/tees,1,"[""h.jpg""]"',
             ]),
             encoding="utf-8",
         )
@@ -273,6 +317,11 @@ def run_smoke_check() -> None:
                 "1002,Nike,Club Tee,CLUB_TEE,men,adult,Apparel,Tops,,Club,",
                 "1003,Adidas,HasPath,HAS_PATH,men,adult,Apparel,Tops,,Core,images/brands/adidas/men/tops/",
                 "1004,Puma,NoCandidate,NO_CAND,men,adult,Apparel,Tops,,Core,",
+                "1005,Ryderwear,Pilates Gym Bag,PILATES_BAG,women,adult,Accessories,Bags,,Accessories,",
+                "1006,Ryderwear,Power Legging 2,POWER_LEG_2,women,adult,Apparel,Bottoms,NKD,Power,",
+                "1007,Ryderwear,Power Legging 3,POWER_LEG_3,women,adult,Apparel,Bottoms,NKD,Power,",
+                "1008,Nike,Dup Tee,,men,adult,Apparel,Tops,,Club,",
+                "1009,Nike,Dup Tee,,men,adult,Apparel,Tops,,Club,",
             ]),
             encoding="utf-8",
         )
@@ -282,16 +331,24 @@ def run_smoke_check() -> None:
         report = build_report_rows(plan_rows, product_rows)
         by_id = {r["product_db_itemId"]: r for r in report}
 
-        assert len(report) == 3, "rows should be deduplicated by product_db_itemId"
+        assert len(report) == 8, "rows should be deduplicated by product_db_itemId"
         assert by_id["1001"]["priority"] == "high_confidence_missing_images"
         assert "1003" not in by_id, "products with existing images path must be excluded"
         assert by_id["1002"]["priority"] == "lower_confidence_missing_images"
         assert by_id["1004"]["priority"] == "no_candidate_missing_images"
+        assert by_id["1001"]["proposed_images_path"] != by_id["1006"]["proposed_images_path"]
+        assert by_id["1005"]["proposed_images_path"].startswith(
+            "images/brands/ryderwear/women/accessories/pilates-gym-bag/vanilla/pilates-bag/"
+        )
+        assert by_id["1008"]["proposed_path_has_collision"] == "yes"
+        assert by_id["1009"]["proposed_path_has_collision"] == "yes"
+        assert by_id["1008"]["review_action"] == "manual_review"
 
         write_csv(out_csv, report)
         write_summary(out_md, report, product_rows)
         summary = out_md.read_text(encoding="utf-8")
         assert "No ProductDB rows were modified" in summary
+        assert "Rows flagged for proposed_images_path collisions" in summary
 
 
 def main() -> None:
