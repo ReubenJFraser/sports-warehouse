@@ -1,23 +1,19 @@
--- Ryderwear Batch 2 targeted MySQL image update script
--- Generated for local DBeaver/Laragon MySQL review and controlled execution only.
--- DO NOT run against production.
--- Scope: update only `images` for the 24 Ryderwear rows with application_status=updated_images.
--- IMPORTANT: confirm table/column names (`item`, `model_id`, `images`) against your local schema before execution.
+-- Ryderwear Batch 2 MySQL image update script (audited)
+-- Generated from suspicious-mapping audit; SQL NOT executed by this task.
+-- Original plan rows: 25
+-- Rows kept for SQL updates: 21
+-- Rows excluded for suspicious mapping review: 4
 
--- Preflight: review current values for the exact target rows.
-SELECT model_id, images
-FROM item
+/* Preflight review for included rows only */
+SELECT model_id, images FROM item
 WHERE model_id IN (
   'ryderwear_female_nkd_leggings_v_high_waisted_scrunch',
-  'ryderwear_female_nkd_leggings_v_full_length_scrunch',
   'ryderwear_female_nkd_leggings_v_full_length_pocket_scrunch',
   'ryderwear_female_nkd_shorts_v_pocket_scrunch',
-  'ryderwear_female_nkd_shorts_v_scrunch',
   'ryderwear_female_nkd_tank_top_scrunch',
   'ryderwear_female_nkd_bodysuit_v_scrunch',
   'ryderwear_female_nkd_leggings_flared_cross_over',
   'ryderwear_female_nkd_long_sleeve_half_zip',
-  'ryderwear_female_nkd_tank_top_square_neck',
   'ryderwear_female_nkd_t_shirt',
   'ryderwear_female_nkd_bodysuit_underwire_keyhole_cross_over_back_scrunch',
   'ryderwear_female_lift_2_0_leggings_foldover_ribbed_high_waisted',
@@ -32,124 +28,44 @@ WHERE model_id IN (
   'ryderwear_female_ultra_tank_top_scoop',
   'ryderwear_female_ultra_t_shirt_scoop',
   'ryderwear_female_slouchy_off_shoulder_top'
-)
-ORDER BY model_id;
+);
 
 START TRANSACTION;
 
--- Targeted updates: `images` column only.
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/01.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/02.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/03.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/04.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/05.webp'
-WHERE model_id = 'ryderwear_female_nkd_leggings_v_high_waisted_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/construction/v/scrunch/banner/stonewash/01-2023_Collection-Page_Banner-Desktop_2680x.webp'
-WHERE model_id = 'ryderwear_female_nkd_leggings_v_full_length_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/01.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/02.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/03.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/04.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/05.webp'
-WHERE model_id = 'ryderwear_female_nkd_leggings_v_full_length_pocket_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/01.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/02.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/03.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/04.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/05.webp'
-WHERE model_id = 'ryderwear_female_nkd_shorts_v_pocket_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/01.webp;images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/02.webp;images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/03.webp;images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/04.webp;images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/05.webp;images/brands/ryderwear/plus-size/women/nkd/high-waisted-scrunch-shorts/mocha/06.webp'
-WHERE model_id = 'ryderwear_female_nkd_shorts_v_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/01.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/02.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/03.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/04.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/05.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/06.webp'
-WHERE model_id = 'ryderwear_female_nkd_tank_top_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/01.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/02.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/03.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/04.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/05.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/06.webp'
-WHERE model_id = 'ryderwear_female_nkd_bodysuit_v_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/01.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/02.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/03.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/04.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/05.png'
-WHERE model_id = 'ryderwear_female_nkd_leggings_flared_cross_over';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/01.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/02.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/03.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/04.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/05.webp'
-WHERE model_id = 'ryderwear_female_nkd_long_sleeve_half_zip';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/tops/sports-bra/cut/crop-top/white/01.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/crop-top/white/02.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/crop-top/white/03.jpg;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/crop-top/white/04.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/crop-top/white/05.webp'
-WHERE model_id = 'ryderwear_female_nkd_tank_top_square_neck';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/01.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/02.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/03.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/04.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/05.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/06.webp'
-WHERE model_id = 'ryderwear_female_nkd_t_shirt';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/01.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/02.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/03.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/04.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/05.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/06.webp'
-WHERE model_id = 'ryderwear_female_nkd_bodysuit_underwire_keyhole_cross_over_back_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/04.webp'
-WHERE model_id = 'ryderwear_female_lift_2_0_leggings_foldover_ribbed_high_waisted';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/05.webp'
-WHERE model_id = 'ryderwear_female_lift_2_0_shorts_foldover_ribbed_high_waisted';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/01.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/02.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/03.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/04.png'
-WHERE model_id = 'ryderwear_female_contour_sports_bra_rib_waistband_light_support';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/01.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/02.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/03.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/04.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/05.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/06.png'
-WHERE model_id = 'ryderwear_female_contour_shorts_foldover_ribbed_high_waisted';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/01.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/02.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/03.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/04.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/05.png'
-WHERE model_id = 'ryderwear_female_contour_leggings_foldover_ribbed_high_waisted';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/02.jpg;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/04.jpg;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/06.webp'
-WHERE model_id = 'ryderwear_female_contour_track_pants_brushed_fleece_elastic_waistband_ankle_cuff';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/06.webp'
-WHERE model_id = 'ryderwear_female_sculpt_shorts_foldover_ribbed_high_waisted_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/06.webp'
-WHERE model_id = 'ryderwear_female_sculpt_leggings_foldover_ribbed_high_waisted_scrunch';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/05.webp'
-WHERE model_id = 'ryderwear_female_ultra_tank_top_mesh';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/05.webp'
-WHERE model_id = 'ryderwear_female_ultra_tank_top_scoop';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/05.webp'
-WHERE model_id = 'ryderwear_female_ultra_t_shirt_scoop';
-
-UPDATE item
-SET images = 'images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/01.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/02.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/03.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/04.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/05.webp'
-WHERE model_id = 'ryderwear_female_slouchy_off_shoulder_top';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/01.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/02.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/03.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/04.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/rise/high-waisted/scrunch/black/05.webp' WHERE model_id = 'ryderwear_female_nkd_leggings_v_high_waisted_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/01.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/02.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/03.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/04.webp;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/pocket/v/pink-sugar/05.webp' WHERE model_id = 'ryderwear_female_nkd_leggings_v_full_length_pocket_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/01.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/02.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/03.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/04.webp;images/brands/ryderwear/women/nkd/bottoms/shorts/construction/pocket/v/scrunch/black/05.webp' WHERE model_id = 'ryderwear_female_nkd_shorts_v_pocket_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/01.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/02.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/03.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/04.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/05.webp;images/brands/ryderwear/women/nkd/tops/sports-bra/cut/halter/construction/scrunch/tank/shelf-bra/black/06.webp' WHERE model_id = 'ryderwear_female_nkd_tank_top_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/01.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/02.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/03.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/04.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/05.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/jumpsuit/fabric/ultra-soft/black/06.webp' WHERE model_id = 'ryderwear_female_nkd_bodysuit_v_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/01.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/02.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/03.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/04.png;images/brands/ryderwear/women/nkd/bottoms/leggings/construction/flared/cross-waist/05.png' WHERE model_id = 'ryderwear_female_nkd_leggings_flared_cross_over';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/01.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/02.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/03.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/04.webp;images/brands/ryderwear/women/nkd/tops/long-sleeve/half-zip/black/05.webp' WHERE model_id = 'ryderwear_female_nkd_long_sleeve_half_zip';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/01.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/02.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/03.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/04.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/05.webp;images/brands/ryderwear/women/nkd/tops/tee/slight-cropped/chocolate/06.webp' WHERE model_id = 'ryderwear_female_nkd_t_shirt';
+UPDATE item SET images = 'images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/01.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/02.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/03.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/04.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/05.webp;images/brands/ryderwear/women/nkd/bodysuit/construction/underwire/keyhole/sports-bra/vanilla/06.webp' WHERE model_id = 'ryderwear_female_nkd_bodysuit_underwire_keyhole_cross_over_back_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/berry/04.webp' WHERE model_id = 'ryderwear_female_lift_2_0_leggings_foldover_ribbed_high_waisted';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/construction/scrunch/invisible/seamless/--collection/lift-2.0/bbl/apple-green/05.webp' WHERE model_id = 'ryderwear_female_lift_2_0_shorts_foldover_ribbed_high_waisted';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/01.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/02.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/03.png;images/brands/ryderwear/women/non-nkd/tops/sports-bra/cut/halter/seamless/fabric/ultra-soft/--collection/contour/marl/berry/04.png' WHERE model_id = 'ryderwear_female_contour_sports_bra_rib_waistband_light_support';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/01.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/02.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/03.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/04.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/05.png;images/brands/ryderwear/women/non-nkd/bottoms/shorts/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/black/06.png' WHERE model_id = 'ryderwear_female_contour_shorts_foldover_ribbed_high_waisted';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/01.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/02.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/03.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/04.png;images/brands/ryderwear/women/non-nkd/bottoms/leggings/fabric/ultra-soft/seamless/scrunch/invisible/--collection/contour/high-waisted/marl/berry/05.png' WHERE model_id = 'ryderwear_female_contour_leggings_foldover_ribbed_high_waisted';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/02.jpg;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/04.jpg;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/track-pants/fabric/ultra-soft/high-waisted/--collection/contour/black/06.webp' WHERE model_id = 'ryderwear_female_contour_track_pants_brushed_fleece_elastic_waistband_ankle_cuff';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/shorts/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/06.webp' WHERE model_id = 'ryderwear_female_sculpt_shorts_foldover_ribbed_high_waisted_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/01.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/02.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/03.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/04.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/05.webp;images/brands/ryderwear/women/non-nkd/bottoms/leggings/rise/high-waisted/scrunch/minimal/seamless/--collection/sculpt/azure/06.webp' WHERE model_id = 'ryderwear_female_sculpt_leggings_foldover_ribbed_high_waisted_scrunch';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tank/mesh/--collection/legacy/ultra/tan/05.webp' WHERE model_id = 'ryderwear_female_ultra_tank_top_mesh';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tank/scoop/--collection/legacy/ultra/tan/05.webp' WHERE model_id = 'ryderwear_female_ultra_tank_top_scoop';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/01.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/02.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/03.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/04.webp;images/brands/ryderwear/women/non-nkd/tops/tee/slight-crop/--collection/legacy/ultra/tan/05.webp' WHERE model_id = 'ryderwear_female_ultra_t_shirt_scoop';
+UPDATE item SET images = 'images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/01.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/02.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/03.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/04.webp;images/brands/ryderwear/women/non-nkd/tops/slouchy-off-shoulder-top/espresso/05.webp' WHERE model_id = 'ryderwear_female_slouchy_off_shoulder_top';
 
 COMMIT;
 
--- Post-update verification: confirm applied values for the same target rows.
-SELECT model_id, images
-FROM item
+/* Post-update verification for included rows only */
+SELECT model_id, images FROM item
 WHERE model_id IN (
   'ryderwear_female_nkd_leggings_v_high_waisted_scrunch',
-  'ryderwear_female_nkd_leggings_v_full_length_scrunch',
   'ryderwear_female_nkd_leggings_v_full_length_pocket_scrunch',
   'ryderwear_female_nkd_shorts_v_pocket_scrunch',
-  'ryderwear_female_nkd_shorts_v_scrunch',
   'ryderwear_female_nkd_tank_top_scrunch',
   'ryderwear_female_nkd_bodysuit_v_scrunch',
   'ryderwear_female_nkd_leggings_flared_cross_over',
   'ryderwear_female_nkd_long_sleeve_half_zip',
-  'ryderwear_female_nkd_tank_top_square_neck',
   'ryderwear_female_nkd_t_shirt',
   'ryderwear_female_nkd_bodysuit_underwire_keyhole_cross_over_back_scrunch',
   'ryderwear_female_lift_2_0_leggings_foldover_ribbed_high_waisted',
@@ -164,5 +80,4 @@ WHERE model_id IN (
   'ryderwear_female_ultra_tank_top_scoop',
   'ryderwear_female_ultra_t_shirt_scoop',
   'ryderwear_female_slouchy_off_shoulder_top'
-)
-ORDER BY model_id;
+);
