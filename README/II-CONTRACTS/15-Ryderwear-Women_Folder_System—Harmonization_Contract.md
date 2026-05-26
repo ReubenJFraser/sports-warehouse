@@ -358,3 +358,15 @@ They require controlled execution.
 - Stability outweighs local optimisation.
 
 This contract must remain stable unless formally amended.
+
+
+## Current Interpretation Note (2026-05-26)
+
+This harmonization contract remains active. The following clarifications apply for present operations:
+
+- `model_id` is the canonical identity anchor for deterministic product ↔ image mapping (see Contracts 22 and 24).
+- Final product/variant branches should not repeat brand/gender/collection/product-type/sub-type tokens already encoded by parent folders.
+- Colour/variant folders are terminal or near-terminal before media files; numeric files are acceptable within those governed colour folders.
+- Runtime/database image paths may be semantic-path-based, model_id-based, or mapping-based, provided the strategy is deterministic and documented.
+- Token-overlap matching is insufficient when it conflicts with structured identity fields (`model_id`, `collection`, `subCategory`, product type).
+- Batch 1 remains operationally valid unless superseded by a later reviewed migration; Batch 2 must be convention-planned before any copying or ProductDB/MySQL reconciliation work.

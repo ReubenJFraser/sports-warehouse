@@ -13,6 +13,14 @@ This is not a beauty pass. It is a **semantic and structural correctness** revie
 
 ---
 
+## Current Interpretation Note (2026-05-26)
+
+This file remains a historical audit/review artifact. For active convention governance, use Contract 24 as the entrypoint and read Contracts 13, 15, 22, and 23 together.
+
+The remediation suggestions in this audit are not self-executing migration authority and do not override model_id identity governance or deterministic folder-translation rules.
+
+---
+
 ## 2. High-Level Structure Assessment
 
 Top-level:

@@ -238,3 +238,14 @@ This contract preserves both semantic archive value and model_id-centered canoni
 This is a clarification contract.
 
 It does not replace Contracts 13–22 and must be interpreted with them, with Contract 19 governing model_id generation and Contract 22 governing model_id’s canonical cross-system identity role.
+
+
+## Current Interpretation Note (2026-05-26)
+
+This translation contract remains valid and is interpreted as follows:
+
+- Translation must be driven by governed structured fields and axis boundaries, not naive underscore token splitting.
+- Parent folders define broad taxonomy; final product/variant branches should avoid redundantly repeating tokens already encoded above.
+- Colour/variant folders remain terminal or near-terminal before media files; numeric filenames are valid at that level.
+- Runtime path implementation may be semantic-path-based, model_id-based, or mapping-based if deterministic and documented.
+- Matching by token overlap is insufficient when it conflicts with model_id, collection, subCategory, or product type constraints.
