@@ -16,7 +16,8 @@ if (-not (Test-Path -LiteralPath $resolvedPlanPath)) {
 $planRows = Import-Csv -LiteralPath $resolvedPlanPath
 $results = New-Object System.Collections.Generic.List[object]
 
-Write-Host "Mode: $([string]::new(($Execute ? 'EXECUTE' : 'DRY-RUN')))"
+$mode = if ($Execute) { "EXECUTE" } else { "DRY-RUN" }
+Write-Host "Mode: $mode"
 Write-Host "SourceRoot: $SourceRoot"
 Write-Host "ProjectRoot: $ProjectRoot"
 Write-Host "PlanPath: $resolvedPlanPath"
