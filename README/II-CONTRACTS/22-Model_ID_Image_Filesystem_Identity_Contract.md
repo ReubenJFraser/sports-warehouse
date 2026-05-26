@@ -161,3 +161,15 @@ However, `model_id` is only one signal. Future AI/recommendation logic may also 
 This contract is a bridge clarification for identity alignment across data and filesystem systems.
 
 It does **not** replace Contracts 13–21; it should be interpreted together with them, with Contract 19 remaining authoritative for model_id-generation governance.
+
+
+## Current Interpretation Note (2026-05-26)
+
+This identity contract remains in force. Additional interpretation for present governance:
+
+- `model_id` is the canonical identity anchor; token overlap alone is non-authoritative when conflicting with governed fields.
+- Numeric media filenames are acceptable only inside correctly governed product/colour folders.
+- Semantic source/archive folder hierarchy must be field-governed and must not be produced by blind underscore splitting.
+- Parent taxonomy levels carry broad governed axes; child product/variant branches should avoid redundant re-encoding of those parent tokens.
+- Batch 1 is operationally valid unless a later reviewed migration explicitly normalises it.
+- Batch 2 planning must align to the convention before any folder copy/move activity or ProductDB/MySQL reconciliation execution.
