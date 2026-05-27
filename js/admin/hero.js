@@ -442,7 +442,13 @@ document.addEventListener("DOMContentLoaded", () => {
       node.appendChild(makeEl("div", "hero-shortlist-preview__state", message));
     };
 
-    fetch(`${String(window.BASE_URL || "").replace(/\/+$/, "")}/admin/hero-shortlists.php?limit=100`)
+    const statusFilterRaw = String(window.HERO_STATUS_FILTER || "active").toLowerCase().trim();
+    const statusFilter = ["active", "inactive", "all"].includes(statusFilterRaw) ? statusFilterRaw : "active";
+    const shortlistUrl = new URL(`${String(window.BASE_URL || "").replace(/\/+$/, "")}/admin/hero-shortlists.php`, window.location.origin);
+    shortlistUrl.searchParams.set("limit", "100");
+    shortlistUrl.searchParams.set("status", statusFilter);
+
+    fetch(shortlistUrl.toString())
       .then(res => {
         if (!res.ok) {
           throw new Error("endpoint");

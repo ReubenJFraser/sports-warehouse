@@ -725,6 +725,7 @@ admin_layout_start("Hero Manager");
 
 <script>
   window.BASE_URL = "<?= BASE_URL ?>";
+  window.HERO_STATUS_FILTER = <?= json_encode($statusFilter, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 <script src="<?= BASE_URL ?>/js/admin/hero.js"></script>
 
