@@ -382,6 +382,7 @@ $enforcementSummary = $pdo
    6. LAYOUT START
    ============================================================ */
 admin_layout_start("Hero Manager");
+$isInactiveReviewView = ($statusFilter === 'inactive');
 ?>
 
 <link rel="stylesheet" href="<?= BASE_URL ?>/css/admin/hero.css">
@@ -403,9 +404,14 @@ admin_layout_start("Hero Manager");
          Header
          ======================================================== -->
     <header class="admin-header hero-admin__header">
-        <h1><i class="fa-solid fa-images"></i> Hero Manager</h1>
+        <h1>
+            <i class="fa-solid fa-images"></i>
+            <?= $isInactiveReviewView ? 'Inactive Product Review' : 'Hero Manager' ?>
+        </h1>
         <p class="subtitle">
-            Review all computed hero fields and regenerate them when required.
+            <?= $isInactiveReviewView
+                ? 'These products are not public. This view is for backend image, hero, and readiness preparation only.'
+                : 'Review all computed hero fields and regenerate them when required.' ?>
         </p>
 
         <button type="button" class="btn btn-ghost hero-info-toggle" data-target="heroInfoPanel">
@@ -419,7 +425,9 @@ admin_layout_start("Hero Manager");
         <a class="hero-badge <?= $statusFilter === 'inactive' ? 'hero-badge--manual' : '' ?>" href="hero-manager.php?status=inactive">Inactive only</a>
         <a class="hero-badge <?= $statusFilter === 'all' ? 'hero-badge--manual' : '' ?>" href="hero-manager.php?status=all">All products</a>
         <div class="context-note">
-            Inactive products may be reviewed for hero readiness in admin. Activation/publication remains a separate readiness decision.
+            <?= $isInactiveReviewView
+                ? 'You are reviewing inactive items only. Activation/publication remains a separate readiness decision.'
+                : 'Inactive products may be reviewed for hero readiness in admin. Activation/publication remains a separate readiness decision.' ?>
         </div>
     </div>
 

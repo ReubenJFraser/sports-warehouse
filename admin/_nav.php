@@ -7,6 +7,8 @@
 function admin_render_nav(): string
 {
     $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+    $query = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY) ?: '';
+    parse_str($query, $currentQueryParams);
 
     if (preg_match('#^(.*?/admin)(?:/|$)#', $path, $m)) {
         $adminBase = rtrim($m[1], '/');   // e.g. /sports-warehouse-home-page/admin OR /admin
@@ -33,6 +35,13 @@ function admin_render_nav(): string
                 'href'  => $adminBase . '/hero-manager.php',
                 'icon'  => 'fa-solid fa-images',
                 'label' => 'Hero Manager',
+                'excludeQuery' => ['status' => 'inactive'],
+            ],
+            [
+                'href'       => $adminBase . '/hero-manager.php?status=inactive',
+                'icon'       => 'fa-solid fa-eye-slash',
+                'label'      => 'Inactive Product Review',
+                'matchQuery' => ['status' => 'inactive'],
             ],
             [
                 'href'  => $adminBase . '/hero-edit.php',
@@ -104,6 +113,25 @@ function admin_render_nav(): string
             $hrefNorm = $normalize($item['href']);
             $isActive = ($hrefNorm === $currentPath);
 
+            if ($isActive && !empty($item['matchQuery']) && is_array($item['matchQuery'])) {
+                foreach ($item['matchQuery'] as $key => $expectedValue) {
+                    $actualValue = isset($currentQueryParams[$key]) ? (string)$currentQueryParams[$key] : null;
+                    if ((string)$expectedValue !== $actualValue) {
+                        $isActive = false;
+                        break;
+                    }
+                }
+            }
+            if ($isActive && !empty($item['excludeQuery']) && is_array($item['excludeQuery'])) {
+                foreach ($item['excludeQuery'] as $key => $excludedValue) {
+                    $actualValue = isset($currentQueryParams[$key]) ? (string)$currentQueryParams[$key] : null;
+                    if ((string)$excludedValue === $actualValue) {
+                        $isActive = false;
+                        break;
+                    }
+                }
+            }
+
             if (
                 !$isActive &&
                 $hrefNorm === $normalize($adminBase . '/index.php') &&
@@ -131,4 +159,3 @@ function admin_render_nav(): string
     $html .= '</nav>';
     return $html;
 }
-
