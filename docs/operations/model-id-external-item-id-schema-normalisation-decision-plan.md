@@ -79,7 +79,7 @@ Scope: Decision-planning and audit only (no SQL execution, no MySQL/ProductDB/co
 
 ## 5) Options
 
-## Option A — Keep `external_item_id` as MySQL physical column indefinitely
+## Option A - Keep `external_item_id` as MySQL physical column indefinitely
 
 **Pros**
 - Zero schema disruption.
@@ -99,7 +99,7 @@ Scope: Decision-planning and audit only (no SQL execution, no MySQL/ProductDB/co
 **Effect on Codex governance**
 - Compatible short-term, but perpetuates dual-term ambiguity.
 
-## Option B — Rename `external_item_id` to `model_id` in MySQL now
+## Option B - Rename `external_item_id` to `model_id` in MySQL now
 
 **Pros**
 - Terminology alignment between governance and physical schema.
@@ -124,7 +124,7 @@ Scope: Decision-planning and audit only (no SQL execution, no MySQL/ProductDB/co
 **Effect footprint**
 - Impacts importers, scripts, docs, ProductDB mapping assumptions, and runtime expectations.
 
-## Option C — Add `model_id` to MySQL, keep `external_item_id` temporarily as compatibility alias
+## Option C - Add `model_id` to MySQL, keep `external_item_id` temporarily as compatibility alias
 
 **Pros**
 - Enables gradual migration.
@@ -155,7 +155,7 @@ Scope: Decision-planning and audit only (no SQL execution, no MySQL/ProductDB/co
 **Required updates**
 - Importers, diagnostics, reporting scripts, docs contracts/ops guides, and compatibility notes.
 
-## Option D — Defer schema-normalisation; use `external_item_id` for immediate Ryderwear SQL
+## Option D - Defer schema-normalisation; use `external_item_id` for immediate Ryderwear SQL
 
 **Pros**
 - Safest for immediate audited image-update objective.
