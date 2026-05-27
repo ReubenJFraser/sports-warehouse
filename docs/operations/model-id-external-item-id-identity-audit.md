@@ -12,6 +12,7 @@ This revision explicitly corrects that limitation:
 1. The audit only found earliest references within the currently available Git history window.
 2. `external_item_id` is known to have existed before early February 2026.
 3. Therefore, the current repository history available to this audit is insufficient to explain why `external_item_id` was originally created.
+4. January 16-24 contract-writing evidence must be treated as origin-context evidence for identity architecture, while May 2026 files remain current-governance confirmation only.
 
 ---
 
@@ -75,7 +76,6 @@ The current repository history available to this audit begins too late to answer
 
 ---
 
-
 ## 3) Importer evidence from local source search
 
 ### Command executed
@@ -96,28 +96,66 @@ The current repository history available to this audit begins too late to answer
 - The original prose rationale for the name `external_item_id` is still not found.
 
 ---
-## 4) Evidence quality and limits
 
-### Found
-- Strong current-state evidence that operations map `model_id` -> `item.external_item_id`.
-- Evidence for when this mapping language appears in the currently available repository history window.
+## 4) January identity-architecture context
 
-### Not found
-- No explicit, older architectural rationale commit message or design note (within available repo history) that conclusively states why the physical column was first named `external_item_id`.
-- No available in-repo history before the observed 2026-05-21 window that can test the pre-February-2026 origin period.
+This section evaluates January 16-24 identity-architecture contracts as context evidence, not just string matches.
 
-### Quality assessment
-- Current-state mapping conclusion: **high confidence**.
-- Historical-origin intent (why originally named `external_item_id`): **unknown from current repo history**.
-- Historical sequencing claim (`external_item_id` predates governance `model_id`): **plausible externally, but not provable from currently available repository history alone**.
+### Contract 17 (`17-Product_Model_and_Variant_Separation_Contract.md`)
+Contract 17 establishes the model-vs-variant split:
+- Product Model is separated from Product Variant.
+- Colour is treated as variant-defining.
+- ProductDB is framed as model-level storage.
+- ProductVariants is framed as variant-level storage.
+- `product_id` is introduced as a future ProductDB identifier in this architecture.
 
-The origin of `external_item_id` likely lies in earlier local project files, older database exports, earlier Excel/database design work, or project history not preserved in the current Git repository.
+### Contract 18 (`18-ProductVariants_Sheet_Schema_Contract.md`)
+Contract 18 establishes ProductVariants linking and variant identity rules:
+- ProductVariants references `SportWarehouse_ProductDB` via `product_id`.
+- `product_id + colour` is used as the variant uniqueness mechanism.
+- This is a forward relational/SKU architecture for future schema alignment, not the legacy importer linkage pattern that used `db_itemId`/`itemId` row location with `external_item_id` updates.
 
-The current audit can only document current operational mapping, not original naming intent.
+### Contract 19 (`19-Model_ID_Generation_&_Identity_Governance_Contract.md`)
+Contract 19 establishes model identity governance in Excel workflows:
+- `model_id` is generated in Excel.
+- `model_id` is defined as a structural identifier.
+- `model_id` governs formula/identity-generation behavior in workbook governance.
+- Contract 19 explicitly does **not** govern database ingestion logic.
+
+### Architectural interpretation for `external_item_id`
+From the January sequence plus importer behavior:
+- `external_item_id` appears to predate the later `model_id` governance formalization.
+- `external_item_id` aligns with earlier importer/reconciliation linkage usage.
+- `product_id`, ProductVariants, and `model_id` represent a later formalized identity architecture layer.
+- `model_id` did not originally create `external_item_id`.
+- Later workflows mapped `model_id` values onto `item.external_item_id` for compatibility with the existing MySQL physical column.
+
+### Unresolved point
+- The original prose rationale for why the column was first named `external_item_id` is still not found.
+- However, the January architecture sequence now supports the interpretation that `external_item_id` already existed as importer/external-linkage infrastructure before model/product governance contracts were formalized.
 
 ---
 
-## 5) Evidence still required to answer historical origin
+## 5) Evidence quality and limits
+
+### Found
+- Strong current-state evidence that operations map `model_id` -> `item.external_item_id`.
+- Functional importer evidence showing `external_item_id` as imported linkage onto existing `item` rows keyed by `itemId`.
+- January contract sequence evidence clarifying later formalization of `product_id`, ProductVariants, and `model_id` governance boundaries.
+
+### Not found
+- No explicit original prose rationale that conclusively states why the physical column was first named `external_item_id`.
+- No available in-repo history before the observed 2026-05-21 window that can directly document pre-February implementation commits.
+
+### Quality assessment
+- Current-state mapping conclusion: **high confidence**.
+- Importer-function conclusion: **high confidence**.
+- January architecture sequencing conclusion: **high confidence** for governance layering.
+- Original naming intent (exact wording/rationale): **still unresolved**.
+
+---
+
+## 6) Evidence still required to answer naming-origin prose fully
 
 Likely evidence sources outside the currently available Git history include:
 
@@ -130,25 +168,12 @@ Likely evidence sources outside the currently available Git history include:
 
 ---
 
-## 6) Operational decision despite incomplete history
+## 7) Revised conclusion and operational decision
 
-- The historical origin is not yet known.
-- DBeaver has confirmed `item.external_item_id` is the current physical identity column in local MySQL.
-- Therefore, Ryderwear SQL regeneration may proceed using `external_item_id` as a compatibility match column while the historical-origin question remains unresolved.
-- A future schema-normalization project can decide whether to rename `external_item_id` to `model_id`.
+- **Direct January evidence:** Phase 7 (`2026-01-17-Phase-7-Enforcement_Readiness.md`) shows missing `external_item_id` was already an importer concern by **2026-01-17**.
+- **Functional importer evidence:** `import_external_item_id.php` populated `item.external_item_id` on existing rows located by `db_itemId`/`itemId`.
+- **January identity-architecture evidence:** Contracts 17-19 formalize later `product_id`/ProductVariants/`model_id` governance, with Contract 19 explicitly outside database ingestion logic.
+- **Current operational decision:** Ryderwear SQL should use `item.external_item_id` as the current MySQL physical compatibility column.
+- **Future schema-normalization:** any rename or separation of `model_id` / `external_item_id` / `product_id` belongs to a later migration project.
+- **May 2026 material positioning:** May 2026 README/governance files are useful for current-state confirmation, but are not treated as origin evidence for January-era field creation intent.
 
----
-
-## 7) Consequence for current Ryderwear SQL and docs
-
-1. Do **not** rename columns in this phase.
-2. SQL targeting current local MySQL should continue using `item.external_item_id` where that is the actual physical column.
-3. Document this as a compatibility mapping (`model_id` logical -> `external_item_id` physical), not as proof of original schema intent.
-
----
-
-## Final conclusion
-
-- Historical origin rationale: still not fully documented in prose.
-- Functional origin/evidence: stronger evidence now supports an importer/reconciliation purpose for `external_item_id`.
-- Current operational decision: use `item.external_item_id` for Ryderwear SQL matching, and do not rename columns in this phase.
