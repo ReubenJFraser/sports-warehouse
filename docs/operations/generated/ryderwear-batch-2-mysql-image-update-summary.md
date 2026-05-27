@@ -10,4 +10,4 @@
 
 - **Pending regeneration note (2026-05-26):** Local MySQL uses `item.external_item_id` as the physical column carrying ProductDB `model_id` identity values. The Batch 2 UPDATE SQL must be regenerated to target `external_item_id`-based matching before execution.
 
-- **Audit dependency note (2026-05-27):** SQL regeneration remains pending until the historical `model_id` vs `external_item_id` origin audit correction is reviewed/accepted. This task does not regenerate SQL.
+- **Audit dependency note (2026-05-27):** Historical-origin analysis is limited by currently available repository history and remains unresolved; this does not change the operational requirement to match on `item.external_item_id` for local MySQL compatibility. This task does not regenerate SQL.

@@ -5,10 +5,13 @@ Scope: Documentation and repository history audit only (no MySQL changes, no Pro
 
 ## Why this revision exists
 
-This audit replaces the prior incomplete version by adding both:
+PR #197 expanded current-tree and Git-history searching, but the historical-origin question remains unresolved because the currently available repository history begins too late.
 
-1. Current-tree reference search, and
-2. Git history search (including earliest discoverable references in repo history).
+This revision explicitly corrects that limitation:
+
+1. The audit only found earliest references within the currently available Git history window.
+2. `external_item_id` is known to have existed before early February 2026.
+3. Therefore, the current repository history available to this audit is insufficient to explain why `external_item_id` was originally created.
 
 ---
 
@@ -18,7 +21,7 @@ This audit replaces the prior incomplete version by adding both:
 - `rg -n "external_item_id|model_id|db_itemId|itemId" README docs tools scripts db .`
 - `rg -n "external item|external id|external_item|supplier|source id|import id|staging|ProductDB|Excel" README docs tools scripts db .`
 
-### Git history search
+### Git history search (available repository history only)
 - `git log --all --oneline --decorate -- README docs tools scripts db`
 - `git log --all -S "external_item_id" -- README docs tools scripts db`
 - `git log --all -S "model_id" -- README docs tools scripts db`
@@ -42,13 +45,13 @@ This audit replaces the prior incomplete version by adding both:
 
 For current local MySQL operations in this repository, ProductDB/governance `model_id` is mapped to MySQL `item.external_item_id` in planning and migration artifacts.
 
-This should be treated as a **compatibility mapping in the current system state**, not by itself as proof of original naming intent.
+This is a current compatibility mapping in present operations, not proof of original naming intent.
 
 ---
 
-## 2) Historical-origin findings from Git history
+## 2) Historical-origin findings from available repository history
 
-## Earliest discovered references in this repo history
+### Earliest discovered references in currently available history
 
 - Earliest discoverable commit touching relevant tree paths and containing foundational docs/files in this repository snapshot:  
   `980f39b5604ee331174a678b120252bf0af97883` (2026-05-21, merge PR #93).
@@ -62,22 +65,13 @@ This should be treated as a **compatibility mapping in the current system state*
 - Earliest discoverable `external_item_id`-specific SQL/schema planning evidence in generated ops docs:  
   `9041b1695629cde75f36d6ea2bfe937cfceaef46` (2026-05-24; widen `item.external_item_id` for `model_id`).
 
-## What this implies about “predates model_id” inside available history
+### What this does and does not answer
 
-Within the repository history currently available, this audit **did not find evidence that `external_item_id` clearly predates `model_id`**. Earliest discoverable scoped hits for both terms appear at the same date window (2026-05-21).
+Within the current repository history available to this audit, earliest scoped hits for `external_item_id` and `model_id` appear in the same 2026-05-21 window.
 
-Because of that, this audit cannot prove from this repo alone that:
+This does **not** answer the true origin question, because `external_item_id` is known to have existed before early February 2026.
 
-- `external_item_id` was introduced earlier than `model_id`, or
-- `model_id` was definitively mapped later onto a much older pre-existing column.
-
-## Was `external_item_id` originally import/source/staging identity?
-
-Inference from document language suggests `external_item_id` is often described in “external linkage/identity” terms and appears alongside staging/import planning vocabulary. However, no single explicit historical design note was found in available history that unambiguously states:
-
-> “`external_item_id` was originally created specifically as supplier/platform/import identity and only later repurposed for `model_id`.”
-
-So this point remains **inferred, not explicitly proven** by current evidence.
+The current repository history available to this audit begins too late to answer the origin question.
 
 ---
 
@@ -85,28 +79,55 @@ So this point remains **inferred, not explicitly proven** by current evidence.
 
 ### Found
 - Strong current-state evidence that operations map `model_id` -> `item.external_item_id`.
-- Git-history evidence for when this mapping language appears in the present repo history window.
+- Evidence for when this mapping language appears in the currently available repository history window.
 
 ### Not found
-- No explicit, older architectural rationale commit message or design note conclusively stating why the physical column was first named `external_item_id`.
-- No discoverable earlier commit (before the currently available history window) proving `external_item_id` predated `model_id`.
+- No explicit, older architectural rationale commit message or design note (within available repo history) that conclusively states why the physical column was first named `external_item_id`.
+- No available in-repo history before the observed 2026-05-21 window that can test the pre-February-2026 origin period.
 
 ### Quality assessment
 - Current-state mapping conclusion: **high confidence**.
-- Historical-origin intent (“why named external_item_id originally”): **inconclusive in explicit form**.
-- Historical sequencing claim (“external_item_id definitively existed long before model_id”): **not proven from available Git history**.
+- Historical-origin intent (why originally named `external_item_id`): **unknown from current repo history**.
+- Historical sequencing claim (`external_item_id` predates governance `model_id`): **plausible externally, but not provable from currently available repository history alone**.
+
+The origin of `external_item_id` likely lies in earlier local project files, older database exports, earlier Excel/database design work, or project history not preserved in the current Git repository.
+
+The current audit can only document current operational mapping, not original naming intent.
 
 ---
 
-## 4) Consequence for current Ryderwear SQL and docs
+## 4) Evidence still required to answer historical origin
+
+Likely evidence sources outside the currently available Git history include:
+
+- Older local project folders from before February 2026.
+- Older SQL exports/backups.
+- DBeaver database creation/migration history (if available).
+- Excel workbook versions from before `model_id` governance was created.
+- Earlier README or planning documents outside the current Git history.
+- Old ChatGPT handovers or saved notes from the period when `external_item_id` was first introduced.
+
+---
+
+## 5) Operational decision despite incomplete history
+
+- The historical origin is not yet known.
+- DBeaver has confirmed `item.external_item_id` is the current physical identity column in local MySQL.
+- Therefore, Ryderwear SQL regeneration may proceed using `external_item_id` as a compatibility match column while the historical-origin question remains unresolved.
+- A future schema-normalization project can decide whether to rename `external_item_id` to `model_id`.
+
+---
+
+## 6) Consequence for current Ryderwear SQL and docs
 
 1. Do **not** rename columns in this phase.
 2. SQL targeting current local MySQL should continue using `item.external_item_id` where that is the actual physical column.
-3. This must be documented as a **compatibility mapping** (`model_id` logical -> `external_item_id` physical), not as proof of original schema intent.
+3. Document this as a compatibility mapping (`model_id` logical -> `external_item_id` physical), not as proof of original schema intent.
 
 ---
 
 ## Final conclusion
 
-- The prior “no rationale found” style conclusion is **now constrained** by actual Git-history search: the historical-origin rationale remains inconclusive in explicit wording, but the search was materially expanded and documented.
-- Current operational behavior remains unchanged: use `item.external_item_id` for local MySQL compatibility when matching ProductDB/governance `model_id`.
+The historical-origin search is not sufficient yet: it is constrained by an incomplete repository-history window that begins too late for the pre-February-2026 origin period.
+
+Operationally, current behavior remains unchanged: use `item.external_item_id` for local MySQL compatibility when matching ProductDB/governance `model_id` values, while separately tracking unresolved historical-origin research.
