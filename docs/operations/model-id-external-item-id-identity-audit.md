@@ -75,7 +75,28 @@ The current repository history available to this audit begins too late to answer
 
 ---
 
-## 3) Evidence quality and limits
+
+## 3) Importer evidence from local source search
+
+### Command executed
+- `Select-String -Path ".\tools\importers\*.php" -Pattern "external_item_id","external item","external id","source id","import id","staging" -SimpleMatch -Context 8,8`
+
+### Evidence found
+- `tools/importers/diagnostic_external_item_id.php` requires Excel headers including both `db_itemId` and `external_item_id`.
+- `tools/importers/import_external_item_id.php` requires Excel headers including both `db_itemId` and `external_item_id`.
+- `tools/importers/import_external_item_id.php` resolves both the `db_itemId` column and the `external_item_id` column from the Excel input.
+- `tools/importers/import_external_item_id.php` prepares row-location validation SQL using `SELECT itemId FROM item WHERE itemId = :itemId`.
+- `tools/importers/import_external_item_id.php` updates with `UPDATE item SET external_item_id = :external_item_id WHERE itemId = :itemId`.
+
+### Interpretation
+- `external_item_id` functioned as an imported external identity field populated onto existing `item` rows.
+- `db_itemId`/`itemId` remained the row-location mechanism.
+- `external_item_id` was a secondary identity/reconciliation field, not the row primary key.
+- Later ProductDB `model_id` values can be matched through `external_item_id` in current local MySQL as a compatibility mapping.
+- The original prose rationale for the name `external_item_id` is still not found.
+
+---
+## 4) Evidence quality and limits
 
 ### Found
 - Strong current-state evidence that operations map `model_id` -> `item.external_item_id`.
@@ -96,7 +117,7 @@ The current audit can only document current operational mapping, not original na
 
 ---
 
-## 4) Evidence still required to answer historical origin
+## 5) Evidence still required to answer historical origin
 
 Likely evidence sources outside the currently available Git history include:
 
@@ -109,7 +130,7 @@ Likely evidence sources outside the currently available Git history include:
 
 ---
 
-## 5) Operational decision despite incomplete history
+## 6) Operational decision despite incomplete history
 
 - The historical origin is not yet known.
 - DBeaver has confirmed `item.external_item_id` is the current physical identity column in local MySQL.
@@ -118,7 +139,7 @@ Likely evidence sources outside the currently available Git history include:
 
 ---
 
-## 6) Consequence for current Ryderwear SQL and docs
+## 7) Consequence for current Ryderwear SQL and docs
 
 1. Do **not** rename columns in this phase.
 2. SQL targeting current local MySQL should continue using `item.external_item_id` where that is the actual physical column.
@@ -128,6 +149,6 @@ Likely evidence sources outside the currently available Git history include:
 
 ## Final conclusion
 
-The historical-origin search is not sufficient yet: it is constrained by an incomplete repository-history window that begins too late for the pre-February-2026 origin period.
-
-Operationally, current behavior remains unchanged: use `item.external_item_id` for local MySQL compatibility when matching ProductDB/governance `model_id` values, while separately tracking unresolved historical-origin research.
+- Historical origin rationale: still not fully documented in prose.
+- Functional origin/evidence: stronger evidence now supports an importer/reconciliation purpose for `external_item_id`.
+- Current operational decision: use `item.external_item_id` for Ryderwear SQL matching, and do not rename columns in this phase.
