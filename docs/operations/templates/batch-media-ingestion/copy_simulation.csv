@@ -1,0 +1,1 @@
+batch_id,sim_id,itemId,external_item_id,source_asset_id,source_path,simulated_destination_path,op_type,destination_collision_after_apply,source_files_detected,existing_destination_files_detected,simulation_status,simulation_notes
