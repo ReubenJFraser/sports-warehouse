@@ -1,0 +1,2 @@
+batch_id,brand,source_root,catalog_snapshot_date,status,owner,notes
+ryderwear-batch2-2026-05-27-01,Ryderwear,planning_artifacts_only_no_new_source_scan,2026-05-27,backfill_planning_only,ops-audit,Backfill from existing Ryderwear Batch 2 planning artifacts; non-destructive.
