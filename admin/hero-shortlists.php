@@ -13,8 +13,18 @@ $offset = max(0, $offset);
 $brand = trim((string)($_GET['brand'] ?? ''));
 $section = trim((string)($_GET['section'] ?? ''));
 $q = trim((string)($_GET['q'] ?? ''));
+$status = strtolower(trim((string)($_GET['status'] ?? 'active')));
+$allowedStatuses = ['active', 'inactive', 'all'];
+if (!in_array($status, $allowedStatuses, true)) {
+    $status = 'active';
+}
 
-$where = ["i.is_active = 1"];
+$where = [];
+if ($status === 'active') {
+    $where[] = 'i.is_active = 1';
+} elseif ($status === 'inactive') {
+    $where[] = 'i.is_active = 0';
+}
 $params = [];
 
 if ($brand !== '') {
@@ -33,7 +43,7 @@ if ($q !== '') {
     $params[':q'] = '%' . $q . '%';
 }
 
-$whereSql = 'WHERE ' . implode(' AND ', $where);
+$whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
 $sql = "
     SELECT
@@ -122,6 +132,7 @@ echo json_encode([
         'category' => null,
         'limit' => $limit,
         'offset' => $offset,
+        'status' => $status,
     ],
     'products' => $products,
     'summary' => [
