@@ -73,12 +73,12 @@ Missing-by-design templates (`source_asset_inventory.csv`, `suspicious_mapping_r
 ### Evidence-based reconciliation
 The manifest set indicates this is a **definition mismatch**, not a raw counting error:
 
-1. `hero_field_prep_plan.csv` has exactly **21** rows (all pending hero-manager recalc), which aligns with the reported “image-ready” count of 21.
+1. `hero_field_prep_plan.csv` has exactly **21** rows (all pending hero-manager recalc), which aligns with the reported "image-ready" count of 21.
 2. `publication_gate_report.csv` has **25** total rows, where 23 are `media_status=ready` and 2 are `media_status=blocked`.
 3. The two blocked publication-gate rows are suspicious-mapping rows with `blocked_reasons=suspicious_mapping_manual_review_required` (female NKD leggings full-length scrunch, unisex gym bag accessories).
 
-### Conclusion on the two “extra” ready rows
-- The 23 “ready” rows in publication gate appear to represent **media-readiness at publication gate level** (i.e., not blocked by suspicious mapping), while the 21 figure in backfill summary appears tied to **hero-field preparation coverage** (rows represented in `hero_field_prep_plan.csv`).
+### Conclusion on the two "extra" ready rows
+- The 23 "ready" rows in publication gate appear to represent **media-readiness at publication gate level** (i.e., not blocked by suspicious mapping), while the 21 figure in backfill summary appears tied to **hero-field preparation coverage** (rows represented in `hero_field_prep_plan.csv`).
 - Therefore, the +2 delta is most likely attributable to rows counted as media-ready in publication-gate logic but not represented in hero-field prep scope.
 - This should be treated as a **classification/terminology issue** to normalize in a later cleanup task (e.g., explicitly distinguishing `image_ready_for_hero_prep` vs `media_ready_for_publication_gate`).
 
