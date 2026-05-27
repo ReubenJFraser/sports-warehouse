@@ -17,73 +17,73 @@ All **12 Ryderwear duplicate-destination collision rows** remain unresolved and 
 
 ## 3) Per-product decision notes (all 12 rows)
 
-1. **Item 138 — Activate Sports Bra**  
+1. **Item 138 - Activate Sports Bra**  
    - Collision destination: `.../--collection/activate/black`.  
    - Competing model: `ryderwear_female_momentum_sports_bra_twist`.  
    - Evidence: worksheet status `confirmed_duplicate_destination_collision`; exception `duplicate-destination-collision`; action `needs_manual_review`.  
    - Needed decision: confirm whether `activate` folder is canonical for item 138 or should belong to momentum competitor.
 
-2. **Item 153 — Lift 2.0 Seamless Sports Bra**  
+2. **Item 153 - Lift 2.0 Seamless Sports Bra**  
    - Collision destination: `.../--collection/lift/black`.  
    - Competing model: row 154 external ID.  
    - Evidence: pairwise reciprocal competitor relation in worksheet with same destination path.  
    - Needed decision: determine if item 153 owns this destination or must be split to a distinct variant folder.
 
-3. **Item 154 — Lift Rib Seamless Halter Sports Bra**  
+3. **Item 154 - Lift Rib Seamless Halter Sports Bra**  
    - Collision destination: `.../--collection/lift/black`.  
    - Competing model: row 153 external ID.  
    - Evidence: same destination + reciprocal competitor link.  
    - Needed decision: same adjudication as item 153; choose single owner or split folders.
 
-4. **Item 157 — NKD Bandeau Sports Bra**  
+4. **Item 157 - NKD Bandeau Sports Bra**  
    - Collision destination: `.../low-support/staples/black`.  
    - Competing model: row 163 external ID.  
    - Evidence: confirmed duplicate destination and mirrored competitor between bandeau and one-shoulder variant.  
    - Needed decision: decide if staples folder is truly shared or must separate by cut type.
 
-5. **Item 158 — NKD Core Bra**  
+5. **Item 158 - NKD Core Bra**  
    - Collision destination: `.../light-support/embody/blue`.  
    - Competing model: row 160 external ID.  
    - Evidence: same destination mapped to two different style descriptors.  
    - Needed decision: determine owner of embody folder vs introducing separate core path.
 
-6. **Item 160 — NKD Embody Sports Crop**  
+6. **Item 160 - NKD Embody Sports Crop**  
    - Collision destination: `.../light-support/embody/blue`.  
    - Competing model: row 158 external ID.  
    - Evidence: reciprocal pair collision with item 158.  
    - Needed decision: same as above; approve canonical owner or split destinations.
 
-7. **Item 162 — NKD Knot Sports Bra**  
+7. **Item 162 - NKD Knot Sports Bra**  
    - Collision destination: `.../tank/cross-over/white`.  
    - Competing model: row 174 external ID.  
    - Evidence: paired collision in worksheet with cross-over destination.  
    - Needed decision: assign ownership to knot or twist lineage, then re-path the other.
 
-8. **Item 163 — NKD One Shoulder Sports Bra**  
+8. **Item 163 - NKD One Shoulder Sports Bra**  
    - Collision destination: `.../low-support/staples/black`.  
    - Competing model: row 157 external ID.  
    - Evidence: pairwise collision confirmation and duplicate exception.  
    - Needed decision: decide shared vs split ownership with bandeau variant.
 
-9. **Item 166 — NKD Scrunch V Halter Bra**  
+9. **Item 166 - NKD Scrunch V Halter Bra**  
    - Collision destination: `.../scrunch/bra/espresso`.  
    - Competing model: row 176 external ID.  
    - Evidence: confirmed duplicate destination against underwire keyhole competitor.  
    - Needed decision: determine if scrunch folder is canonical for one style or needs structural split.
 
-10. **Item 174 — NKD Twist Sports Bra**  
+10. **Item 174 - NKD Twist Sports Bra**  
     - Collision destination: `.../tank/cross-over/white`.  
     - Competing model: row 162 external ID.  
     - Evidence: reciprocal collision with knot variant in same destination folder.  
     - Needed decision: confirm twist vs knot owner and support-level foldering policy.
 
-11. **Item 176 — NKD Underwire Keyhole Sports Bra**  
+11. **Item 176 - NKD Underwire Keyhole Sports Bra**  
     - Collision destination: `.../scrunch/bra/espresso`.  
     - Competing model: row 166 external ID.  
     - Evidence: same destination collision despite distinct construction keywords (underwire/keyhole/racerback).  
     - Needed decision: owner assignment or split structural destination.
 
-12. **Item 184 — Sculpt Seamless Halter Sports Bra**  
+12. **Item 184 - Sculpt Seamless Halter Sports Bra**  
     - Collision destination: `.../--collection/sculpt/halter-bra/azure`.  
     - Competing models/items: 3 model IDs listed in worksheet (rib seamless, stonewash, icon).  
     - Evidence: exception-derived collision with `recommended_owner=unassigned`; notes explicitly say ownership is not deterministically inferable.  
@@ -106,7 +106,7 @@ For every collision row/group, reviewer may choose one:
 4. After approvals, generate a **new non-destructive copy/mapping plan artifact** first (documentation/worksheet), then stage separate downstream approval steps for any future DB/ProductDB actions.
 
 ## 6) Encoding check
-The referenced next-step summary heading currently renders as `Inactive Products Image Remediation — Next Step Summary` (em dash appears valid in the current file view). No `â€”` artifact was observed during this task.
+Visible encoding/punctuation artifacts were found in prior rendering (including em-dash style separators) and were corrected to ASCII-safe punctuation in this report. The heading is now represented as `Inactive Products Image Remediation - Next Step Summary`, and no visible mojibake artifacts remain.
 
 ## 7) Non-goals and safety boundaries
 This report intentionally performs **documentation-only** work. Specifically:
