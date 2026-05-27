@@ -7,3 +7,5 @@
 - Gym bag row excluded from SQL.
 - Duplicate-collision rows included: 0 (none present in plan).
 - SQL was generated only and not executed.
+
+- **Pending regeneration note (2026-05-26):** Local MySQL uses `item.external_item_id` as the physical column carrying ProductDB `model_id` identity values. The Batch 2 UPDATE SQL must be regenerated to target `external_item_id`-based matching before execution.
