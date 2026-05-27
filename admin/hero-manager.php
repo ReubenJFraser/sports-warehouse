@@ -230,6 +230,22 @@ if (!empty($_GET['recalc'])) {
 }
 
 /* ============================================================
+   3B. STATUS FILTER (ADMIN REVIEW SCOPE)
+   ============================================================ */
+$allowedStatuses = ['active', 'inactive', 'all'];
+$statusFilter = strtolower(trim((string)($_GET['status'] ?? 'active')));
+if (!in_array($statusFilter, $allowedStatuses, true)) {
+    $statusFilter = 'active';
+}
+
+$statusWhereSql = 'WHERE i.is_active = 1';
+if ($statusFilter === 'inactive') {
+    $statusWhereSql = 'WHERE i.is_active = 0';
+} elseif ($statusFilter === 'all') {
+    $statusWhereSql = '';
+}
+
+/* ============================================================
    4. FETCH ITEMS
    ============================================================ */
 $sql = "
@@ -241,12 +257,13 @@ $sql = "
     i.hero_score,
     i.hero_ratio,
     i.hero_orientation,
+    i.is_active,
     i.chosen_image,
     ho.chosen_image AS override_image,
     (SELECT COUNT(*) FROM hero_rejections r WHERE r.itemId = i.itemId) AS rejection_count
   FROM item i
   LEFT JOIN hero_override ho ON ho.itemId = i.itemId
-  WHERE i.is_active = 1
+  {$statusWhereSql}
   ORDER BY i.brand, i.itemName
 ";
 
@@ -283,7 +300,7 @@ $sqlSummary = "
         FROM hero_rejections
         GROUP BY itemId
     ) r ON r.itemId = i.itemId
-    WHERE i.is_active = 1
+    {$statusWhereSql}
 ";
 
 $summary = $pdo->query($sqlSummary)->fetch(PDO::FETCH_ASSOC);
@@ -354,7 +371,7 @@ $enforcementSummarySql = "
         FROM hero_rejections
         GROUP BY itemId
     ) r ON r.itemId = i.itemId
-    WHERE i.is_active = 1
+    {$statusWhereSql}
 ";
 
 $enforcementSummary = $pdo
@@ -395,6 +412,16 @@ admin_layout_start("Hero Manager");
             <span class="btn__dot"></span> Show details
         </button>
     </header>
+
+    <div class="context-panel hero-context">
+        <strong>Product status scope.</strong>
+        <a class="hero-badge <?= $statusFilter === 'active' ? 'hero-badge--manual' : '' ?>" href="hero-manager.php?status=active">Active only</a>
+        <a class="hero-badge <?= $statusFilter === 'inactive' ? 'hero-badge--manual' : '' ?>" href="hero-manager.php?status=inactive">Inactive only</a>
+        <a class="hero-badge <?= $statusFilter === 'all' ? 'hero-badge--manual' : '' ?>" href="hero-manager.php?status=all">All products</a>
+        <div class="context-note">
+            Inactive products may be reviewed for hero readiness in admin. Activation/publication remains a separate readiness decision.
+        </div>
+    </div>
 
     <!-- ========================================================
          Context Panel
@@ -501,7 +528,7 @@ admin_layout_start("Hero Manager");
          Item List
          ======================================================== -->
     <?php if (empty($items)): ?>
-        <p class="hero-empty">No active items found.</p>
+        <p class="hero-empty">No items found for this status filter.</p>
 
     <?php else: ?>
         <div class="hero-list">
@@ -516,6 +543,7 @@ admin_layout_start("Hero Manager");
                 $ratio = $row['hero_ratio'];
                 $orient = strtoupper($row['hero_orientation'] ?? '');
                 $rejects = (int)$row['rejection_count'];
+                $isActive = (int)($row['is_active'] ?? 0) === 1;
 
                 $orientLabel = $orient === 'L' ? 'Landscape'
                               : ($orient === 'S' ? 'Square' : 'Portrait');
@@ -551,6 +579,9 @@ admin_layout_start("Hero Manager");
                             <?php else: ?>
                                 <span class="hero-badge hero-badge--auto">Automatic</span>
                             <?php endif; ?>
+                            <?php if (!$isActive): ?>
+                                <span class="hero-badge hero-badge--missing">Inactive (not public)</span>
+                            <?php endif; ?>
 
                             <span class="hero-badge">
                                 <?= $score !== null ? "Score: " . number_format($score, 1) : "No score" ?>
@@ -573,7 +604,7 @@ admin_layout_start("Hero Manager");
                                 Edit hero
                             </a>
 
-                            <a class="btn btn-ghost hero-card__action-button hero-card__action-button--secondary" href="hero-manager.php?recalc=<?= $itemId ?>">
+                            <a class="btn btn-ghost hero-card__action-button hero-card__action-button--secondary" href="hero-manager.php?recalc=<?= $itemId ?>&status=<?= urlencode($statusFilter) ?>">
                                 Recalculate
                             </a>
                         </div>
