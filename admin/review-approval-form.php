@@ -3,6 +3,7 @@ define('ADMIN_CONTEXT', true);
 
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/_header.php';
+require_once __DIR__ . '/image-helper.php';
 
 $allowedWorkflow = [
     'id' => 'ryderwear-batch-2',
@@ -166,6 +167,98 @@ $batchPolicies = [
     ['policy_id' => 'provenance_note_policy', 'label' => 'Provenance_note policy', 'controls' => 'Specifies required provenance note structure for reviewer-auditable decisions.', 'why_it_matters' => 'Creates a traceable rationale for acceptance/revision decisions.', 'proposed_decision' => 'approve_policy', 'approval_prereq' => 'Reviewer confirms guidance remains aligned with source-root finalization guardrails.', 'source_artifact' => 'proposed_reviewer_decisions.md §5 (batch-level policies)'],
 ];
 
+
+function parse_csv_assoc(string $relativePath): array {
+    $abs = __DIR__ . '/../' . $relativePath;
+    if (!is_file($abs) || !is_readable($abs)) {
+        return [];
+    }
+
+    $rows = [];
+    $fh = fopen($abs, 'rb');
+    if ($fh === false) {
+        return [];
+    }
+
+    $header = fgetcsv($fh);
+    if (!is_array($header)) {
+        fclose($fh);
+        return [];
+    }
+
+    while (($data = fgetcsv($fh)) !== false) {
+        $rows[] = array_combine($header, array_pad($data, count($header), '')) ?: [];
+    }
+
+    fclose($fh);
+    return $rows;
+}
+
+function split_image_list(string $value): array {
+    $parts = array_values(array_filter(array_map('trim', explode(';', $value)), static fn($p) => $p !== ''));
+    return array_values(array_unique($parts));
+}
+
+function render_image_evidence(string $label, array $paths, string $fallback): void {
+    echo '<div class="evidence-block"><div><strong>' . htmlspecialchars($label) . '</strong></div>';
+    if (!$paths) {
+        echo '<p class="context-note">' . htmlspecialchars($fallback) . '</p></div>';
+        return;
+    }
+
+    echo '<div class="evidence-thumb-grid">';
+    foreach ($paths as $path) {
+        $isPreviewable = str_starts_with($path, 'images/') && admin_image_exists($path);
+        echo '<div class="evidence-thumb-card">';
+        if ($isPreviewable) {
+            echo admin_render_thumbnail_safe($path, $label . ' image', ['style' => 'max-width:120px;height:auto;']);
+        } else {
+            echo '<div class="context-note">Image preview unavailable from allowlisted artifact data.</div>';
+        }
+        echo '<code class="reference-path">' . htmlspecialchars($path) . '</code>';
+        echo '</div>';
+    }
+    echo '</div></div>';
+}
+
+$batchBase = $allowedWorkflow['batch_folder'];
+$productRows = parse_csv_assoc($batchBase . 'product_identity_snapshot.csv');
+$imageRows = parse_csv_assoc($batchBase . 'image_field_update_plan.csv');
+$collisionRows = parse_csv_assoc($batchBase . 'destination_collision_report.csv');
+
+$productByDbItemId = [];
+$productByModelId = [];
+foreach ($productRows as $row) {
+    $dbItem = trim((string)($row['db_itemId'] ?? ''));
+    $model = trim((string)($row['model_id'] ?? ''));
+    if ($dbItem !== '') {
+        $productByDbItemId[$dbItem] = $row;
+    }
+    if ($model !== '') {
+        $productByModelId[$model] = $row;
+    }
+}
+
+$imageByModelId = [];
+foreach ($imageRows as $row) {
+    $model = trim((string)($row['model_id'] ?? ''));
+    if ($model !== '') {
+        $imageByModelId[$model] = $row;
+    }
+}
+
+$collisionByItemId = [];
+$collisionByModelId = [];
+foreach ($collisionRows as $row) {
+    $item = trim((string)($row['candidate_itemId'] ?? ''));
+    $model = trim((string)($row['candidate_model_id'] ?? ''));
+    if ($item !== '') {
+        $collisionByItemId[$item][] = $row;
+    }
+    if ($model !== '') {
+        $collisionByModelId[$model][] = $row;
+    }
+}
 $workflowId = (string)($_GET['workflow'] ?? $_POST['workflow_id'] ?? '');
 $recordRelativePath = $allowedWorkflow['batch_folder'] . $allowedWorkflow['record_file'];
 $recordAbsolutePath = __DIR__ . '/../' . $recordRelativePath;
@@ -292,6 +385,13 @@ admin_layout_start('Review Approval Form');
 admin_page_header('Review Approval Form', 'Record human reviewer decisions for Ryderwear Batch 2.');
 ?>
 <div class="admin-wrapper">
+    <style>
+        .evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:10px 0;}
+        .evidence-card{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:10px;}
+        .evidence-thumb-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
+        .evidence-thumb-card{border:1px solid #dbe4ee;border-radius:8px;padding:8px;background:#fff;max-width:170px;}
+        .reference-path{display:block;white-space:normal;word-break:break-word;background:#f4f4f5;padding:4px;border-radius:4px;margin-top:6px;}
+    </style>
     <section class="context-panel">
         <p><strong>Workflow:</strong> <?= htmlspecialchars($allowedWorkflow['title']) ?> (<code><?= htmlspecialchars($allowedWorkflow['id']) ?></code>)</p>
         <p><strong>Warning:</strong> This form records human reviewer input only, keeps downstream artifacts blocked, and does not imply final approval.</p>
@@ -319,6 +419,12 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <p><strong>Recommended reviewer action:</strong> <?= htmlspecialchars($row['recommended_action']) ?></p>
                     <p><strong>Proposed reviewer notes:</strong> <?= htmlspecialchars($row['proposed_reviewer_notes']) ?></p>
                     <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($row['source_artifact']) ?></code></p>
+                    <?php $itemId=(string)$row['itemId']; $collisions=$collisionByItemId[$itemId] ?? []; ?>
+                    <div class="evidence-grid"><div class="evidence-card"><strong>Decision ownership note</strong><p class="context-note">This decision is destination ownership/split review; image evidence is supplemental.</p></div>
+                    <?php if (!$collisions): ?><div class="evidence-card"><p class="context-note">No allowlisted collision row matched this itemId.</p></div><?php endif; ?>
+                    <?php foreach ($collisions as $collision): $model=(string)($collision['candidate_model_id'] ?? ''); $prod=$productByModelId[$model] ?? []; $img=$imageByModelId[$model] ?? []; $current=split_image_list((string)($img['gallery_paths_json'] ?? '')); $primary=(string)($img['primary_image_path'] ?? ''); if ($primary !== '' && !in_array($primary,$current,true)) { array_unshift($current,$primary);} $notes=(string)($collision['notes'] ?? ''); $proposed=''; foreach (explode('|',$notes) as $part){ if (str_starts_with($part,'proposed_destination=')){ $proposed=substr($part,21);} } ?>
+                        <div class="evidence-card"><p><strong>Item context</strong></p><p>itemId <code><?= htmlspecialchars($itemId) ?></code> · model <code><?= htmlspecialchars($model) ?></code></p><p><?= htmlspecialchars((string)($prod['itemName'] ?? 'Name unavailable from allowlisted artifact data.')) ?></p><p class="context-note">Brand: <?= htmlspecialchars((string)($prod['brand'] ?? '')) ?> · Category: <?= htmlspecialchars((string)($prod['categoryName'] ?? '')) ?> · Gender: <?= htmlspecialchars((string)($prod['gender'] ?? '')) ?></p><p class="context-note">Current destination: <code><?= htmlspecialchars((string)($collision['destination_path'] ?? '')) ?></code></p><p class="context-note">Proposed destination: <code><?= htmlspecialchars($proposed !== '' ? $proposed : 'Not provided') ?></code></p><?php render_image_evidence('Current', $current, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?></div>
+                    <?php endforeach; ?></div>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
                     <label>human_acceptance_status <select name="split[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
@@ -337,7 +443,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
             <p><strong>Evidence needed to move forward:</strong> <?= htmlspecialchars($item184['evidence_needed']) ?></p>
             <p><strong>approved_source_root requirement:</strong> <?= htmlspecialchars($item184['approved_source_root_requirement']) ?></p>
             <p><strong>Competing ownership/provenance risk:</strong> <?= htmlspecialchars($item184['competing_risk']) ?></p>
-            <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($item184['source_artifact']) ?></code></p>
+            <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($item184['source_artifact']) ?></code></p><p><strong>Deferred: source/provenance evidence required</strong> · Do not approve from visual evidence alone.</p><?php $deferredCollisions=$collisionByItemId['184'] ?? []; foreach ($deferredCollisions as $collision): $model=(string)($collision['candidate_model_id'] ?? ''); $prod=$productByModelId[$model] ?? []; $img=$imageByModelId[$model] ?? []; ?><div class="evidence-card"><p><strong>Item context</strong></p><p>itemId <code>184</code> · model <code><?= htmlspecialchars($model) ?></code></p><p><?= htmlspecialchars((string)($prod['itemName'] ?? 'Name unavailable from allowlisted artifact data.')) ?></p><?php render_image_evidence('Needs verification', split_image_list((string)($img['gallery_paths_json'] ?? '')), 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?></div><?php endforeach; ?>
             <hr>
             <p><strong>Reviewer input required</strong></p>
             <label>approved_source_root <input type="text" name="item_184[approved_source_root]" value="<?= htmlspecialchars($itemSaved['approved_source_root'] ?? '') ?>"></label>
@@ -356,7 +462,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <p><strong>Unresolved risk:</strong> <?= htmlspecialchars($case['unresolved_risk']) ?></p>
                     <p><strong>Recommended reviewer action:</strong> <?= htmlspecialchars($case['recommended_action']) ?></p>
                     <p><strong>Proposed decision:</strong> <code><?= htmlspecialchars($case['proposed_reviewer_decision']) ?></code> · Confidence level: <code><?= htmlspecialchars($case['confidence_level']) ?></code> · Follow-up required: <code><?= htmlspecialchars($case['follow_up_required']) ?></code></p>
-                    <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($case['source_artifact']) ?></code></p>
+                    <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($case['source_artifact']) ?></code></p><?php $slug=(string)$case['key']; $img=$imageByModelId[$slug] ?? []; $current=split_image_list((string)($img['gallery_paths_json'] ?? '')); $candidate=split_image_list((string)($img['planned_images'] ?? '')); render_image_evidence('Current', $current, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); render_image_evidence('Candidate / Proposed', $candidate, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
                     <label>human_acceptance_status <select name="suspicious[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
