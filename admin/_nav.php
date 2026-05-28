@@ -29,6 +29,8 @@ function admin_render_nav(): string
                 'icon'  => 'fa-solid fa-gauge',
                 'label' => 'Dashboard',
             ],
+        ],
+        'WORKFLOW' => [
             [
                 'href'  => $adminBase . '/review-approvals.php',
                 'icon'  => 'fa-solid fa-clipboard-check',
