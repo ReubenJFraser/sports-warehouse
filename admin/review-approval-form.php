@@ -206,19 +206,28 @@ function render_image_evidence(string $label, array $paths, string $fallback): v
         return;
     }
 
-    echo '<div class="evidence-thumb-grid">';
+    echo '<div class="evidence-thumb-grid"><div class="evidence-thumb-row" style="--thumb-count:' . count($paths) . ';">';
     foreach ($paths as $path) {
         $isPreviewable = str_starts_with($path, 'images/') && admin_image_exists($path);
+        $compactPath = basename($path);
         echo '<div class="evidence-thumb-card">';
         if ($isPreviewable) {
-            echo admin_render_thumbnail_safe($path, $label . ' image', ['style' => 'max-width:120px;height:auto;']);
+            echo admin_render_thumbnail_safe($path, $label . ' image', ['class' => 'evidence-thumb-image']);
         } else {
             echo '<div class="context-note">Image preview unavailable from allowlisted artifact data.</div>';
         }
-        echo '<code class="reference-path">' . htmlspecialchars($path) . '</code>';
+        echo '<code class="reference-path" title="' . htmlspecialchars($path) . '">' . htmlspecialchars($compactPath) . '</code>';
         echo '</div>';
     }
-    echo '</div></div>';
+    echo '</div></div></div>';
+}
+
+function render_image_evidence_comparison(array $currentPaths, array $candidatePaths, string $fallback): void {
+    render_image_evidence('Current', $currentPaths, $fallback);
+    render_image_evidence('Candidate / Proposed', $candidatePaths, $fallback);
+    if ($currentPaths !== [] && $currentPaths === $candidatePaths) {
+        echo '<p class="context-note evidence-identical-note"><strong>Current and candidate/proposed image sets appear identical in the available evidence.</strong></p>';
+    }
 }
 
 $batchBase = $allowedWorkflow['batch_folder'];
@@ -384,13 +393,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 admin_layout_start('Review Approval Form');
 admin_page_header('Review Approval Form', 'Record human reviewer decisions for Ryderwear Batch 2.');
 ?>
-<div class="admin-wrapper">
+<div class="admin-wrapper review-approval-page">
     <style>
+        .review-approval-page{max-width:none;}
         .evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:10px 0;}
         .evidence-card{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:10px;}
-        .evidence-thumb-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
-        .evidence-thumb-card{border:1px solid #dbe4ee;border-radius:8px;padding:8px;background:#fff;max-width:170px;}
-        .reference-path{display:block;white-space:normal;word-break:break-word;background:#f4f4f5;padding:4px;border-radius:4px;margin-top:6px;}
+        .evidence-thumb-grid{margin-top:6px;overflow-x:auto;padding-bottom:4px;}
+        .evidence-thumb-row{display:grid;grid-template-columns:repeat(var(--thumb-count, 1), minmax(94px, 1fr));gap:8px;min-width:100%;}
+        .evidence-thumb-card{border:1px solid #dbe4ee;border-radius:8px;padding:6px;background:#fff;min-width:94px;}
+        .evidence-thumb-image{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:4px;}
+        .reference-path{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#f4f4f5;padding:4px;border-radius:4px;margin-top:6px;font-size:12px;}
+        .evidence-identical-note{margin-top:8px;color:#334155;}
+        @media (max-width: 1100px){.reference-path{font-size:11px;}}
+        @media (max-width: 820px){
+            .evidence-thumb-row{min-width:max-content;}
+            .evidence-thumb-card{width:100px;}
+        }
     </style>
     <section class="context-panel">
         <p><strong>Workflow:</strong> <?= htmlspecialchars($allowedWorkflow['title']) ?> (<code><?= htmlspecialchars($allowedWorkflow['id']) ?></code>)</p>
@@ -462,7 +480,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <p><strong>Unresolved risk:</strong> <?= htmlspecialchars($case['unresolved_risk']) ?></p>
                     <p><strong>Recommended reviewer action:</strong> <?= htmlspecialchars($case['recommended_action']) ?></p>
                     <p><strong>Proposed decision:</strong> <code><?= htmlspecialchars($case['proposed_reviewer_decision']) ?></code> · Confidence level: <code><?= htmlspecialchars($case['confidence_level']) ?></code> · Follow-up required: <code><?= htmlspecialchars($case['follow_up_required']) ?></code></p>
-                    <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($case['source_artifact']) ?></code></p><?php $slug=(string)$case['key']; $img=$imageByModelId[$slug] ?? []; $current=split_image_list((string)($img['gallery_paths_json'] ?? '')); $candidate=split_image_list((string)($img['planned_images'] ?? '')); render_image_evidence('Current', $current, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); render_image_evidence('Candidate / Proposed', $candidate, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?>
+                    <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($case['source_artifact']) ?></code></p><?php $slug=(string)$case['key']; $img=$imageByModelId[$slug] ?? []; $current=split_image_list((string)($img['gallery_paths_json'] ?? '')); $candidate=split_image_list((string)($img['planned_images'] ?? '')); render_image_evidence_comparison($current, $candidate, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
                     <label>human_acceptance_status <select name="suspicious[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
