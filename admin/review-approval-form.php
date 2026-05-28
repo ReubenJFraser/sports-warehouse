@@ -276,6 +276,8 @@ $errors = [];
 $successMessage = null;
 $loadedRecord = [];
 $successAnchor = '';
+$formRecord = [];
+$existingRecordLastSaved = null;
 
 if ($workflowId !== $allowedWorkflow['id']) {
     http_response_code(400);
@@ -287,6 +289,7 @@ if ($workflowId !== $allowedWorkflow['id']) {
 }
 
 if (is_file($recordAbsolutePath)) {
+    $existingRecordLastSaved = gmdate('c', (int)filemtime($recordAbsolutePath));
     $raw = file_get_contents($recordAbsolutePath);
     if ($raw !== false) {
         $decoded = json_decode($raw, true);
@@ -295,6 +298,7 @@ if (is_file($recordAbsolutePath)) {
         }
     }
 }
+$formRecord = $loadedRecord;
 
 function posted_status(array $allowedStatuses, string $value): string {
     return array_key_exists($value, $allowedStatuses) ? $value : '';
@@ -318,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $saveAnchor = preg_match('/^[a-z0-9\/_-]+$/', $saveAnchorRaw) ? $saveAnchorRaw : '';
 
     if ($existingRecord && !$overwriteConfirmed) {
-        $errors[] = 'A saved acceptance record already exists. Confirm overwrite to update this draft record.';
+        $errors[] = 'Existing draft record detected. Confirm overwrite before saving, or the record will not be updated.';
     }
 
     $splitOut = [];
@@ -371,8 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
     }
 
-    if (!$errors) {
-        $record = [
+    $record = [
             'workflow_id' => $allowedWorkflow['id'],
             'workflow_title' => $allowedWorkflow['title'],
             'submitted_at' => gmdate('c'),
@@ -385,16 +388,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'saved_as' => 'draft',
             'last_save_scope' => $saveScope !== '' ? $saveScope : 'full_form',
             'last_saved_anchor' => $saveAnchor,
-        ];
+    ];
+    $formRecord = $record;
 
+    if (!$errors) {
         $encoded = json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($encoded === false || file_put_contents($recordAbsolutePath, $encoded . PHP_EOL, LOCK_EX) === false) {
             $errors[] = 'Failed to save acceptance record.';
         } else {
-            $scopeLabel = $saveScope === 'full_form' ? 'entire draft form state' : ('scope: ' . $saveScope);
-            $successMessage = 'Draft review record saved/in-progress updated (' . $scopeLabel . ').';
+            $successMessage = 'Draft review record updated. This is not final approval. Downstream artifacts remain blocked.';
             $loadedRecord = $record;
+            $formRecord = $record;
             $successAnchor = $saveAnchor;
+            $existingRecordLastSaved = $record['submitted_at'];
         }
     }
 }
@@ -419,8 +425,8 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
         .evidence-identical-note{margin-top:8px;color:#334155;}
         .draft-save-panel{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:12px;margin:10px 0;}
         .review-input-grid label{display:block;margin:8px 0;}
-        .review-input-grid input[type="text"], .review-input-grid textarea, .review-input-grid select{display:block;width:100%;max-width:760px;margin-top:4px;}
-        .review-input-grid textarea{min-height:90px;}
+        .review-input-grid input[type="text"], .review-input-grid textarea, .review-input-grid select{display:block;width:100%;max-width:none;margin-top:4px;}
+        .review-input-grid textarea{min-height:3.75em;resize:vertical;}
         .section-save-row{margin-top:12px;}
         @media (max-width: 1100px){.reference-path{font-size:11px;}}
         @media (max-width: 820px){
@@ -435,6 +441,10 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
             <p><strong>Draft save guidance:</strong> You may save after completing one decision or any subset of decisions.</p>
             <p>Saving creates or updates a draft/in-progress review record at the allowlisted path. Saving does not mean final approval.</p>
             <p>Downstream artifacts remain blocked until a later completion/validation step.</p>
+            <?php if (is_file($recordAbsolutePath)): ?>
+                <p><strong>Existing draft record detected.</strong> Last saved: <code><?= htmlspecialchars((string)$existingRecordLastSaved) ?></code>.</p>
+                <p>To update this existing draft, tick <strong>Confirm overwrite</strong> before saving. If you do not tick Confirm overwrite, the record will not be updated.</p>
+            <?php endif; ?>
         </div>
         <p><strong>Record path:</strong> <code><?= htmlspecialchars($recordRelativePath) ?></code></p>
         <p><strong>Read-only context fields:</strong> Decision summary, evidence, risk, recommendation, and source reference are explanatory only.</p>
@@ -449,6 +459,9 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
         <section class="context-panel" id="save-top">
             <h2>Save draft review record</h2>
             <p>Partial saves are allowed. Save one decision, one product item, one suspicious case, one policy section, or the full in-progress form at any time.</p>
+            <?php if (is_file($recordAbsolutePath)): ?>
+                <p><strong>Existing draft record detected.</strong> Last saved: <code><?= htmlspecialchars((string)$existingRecordLastSaved) ?></code>. To update this existing draft, tick <strong>Confirm overwrite</strong> before saving. If you do not tick Confirm overwrite, the record will not be updated.</p>
+            <?php endif; ?>
             <p>
                 <input type="hidden" name="save_scope" value="full_form">
                 <input type="hidden" name="save_anchor" value="save-top">
@@ -458,7 +471,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
 
         <section class="context-panel">
             <h2>Split-destination decisions (dec-001 to dec-011)</h2>
-            <?php foreach ($splitDecisions as $row): $id = $row['decision_id']; $existing = find_saved_row($loadedRecord['split_destination_decisions'] ?? [], 'decision_id', $id); ?>
+            <?php foreach ($splitDecisions as $row): $id = $row['decision_id']; $existing = find_saved_row($formRecord['split_destination_decisions'] ?? [], 'decision_id', $id); ?>
                 <fieldset id="<?= htmlspecialchars($id) ?>">
                     <legend><?= htmlspecialchars($id) ?> / itemId <?= htmlspecialchars($row['itemId']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
@@ -489,7 +502,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
 
         <section class="context-panel" id="dec-012/item-184">
             <h2>itemId 184 / dec-012 deferred source verification</h2>
-            <?php $itemSaved = $loadedRecord['item_184_decision'] ?? []; ?>
+            <?php $itemSaved = $formRecord['item_184_decision'] ?? []; ?>
             <p><strong>Read-only evidence context</strong></p>
             <p><strong>Proposed decision:</strong> <code><?= htmlspecialchars($item184['proposed_reviewer_decision']) ?></code></p>
             <p><strong>Deferred status explanation:</strong> <?= htmlspecialchars($item184['defer_explanation']) ?></p>
@@ -510,7 +523,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
 
         <section class="context-panel">
             <h2>Suspicious/remap cases</h2>
-            <?php foreach ($suspiciousCases as $case): $id=$case['case_id']; $existing = find_saved_row($loadedRecord['suspicious_remap_decisions'] ?? [], 'case_id', $id); ?>
+            <?php foreach ($suspiciousCases as $case): $id=$case['case_id']; $existing = find_saved_row($formRecord['suspicious_remap_decisions'] ?? [], 'case_id', $id); ?>
                 <fieldset id="<?= htmlspecialchars($id) ?>"><legend><?= htmlspecialchars($id) ?> / <?= htmlspecialchars($case['key']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
                     <p><strong>Current signal/status:</strong> <?= htmlspecialchars($case['current_signal']) ?></p>
@@ -532,7 +545,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
         </section>
 
         <section class="context-panel"><h2>Batch-level policy decisions</h2>
-            <?php foreach ($batchPolicies as $policy): $id=$policy['policy_id']; $existing = find_saved_row($loadedRecord['batch_policy_decisions'] ?? [], 'policy_id', $id); ?>
+            <?php foreach ($batchPolicies as $policy): $id=$policy['policy_id']; $existing = find_saved_row($formRecord['batch_policy_decisions'] ?? [], 'policy_id', $id); ?>
                 <fieldset id="<?= htmlspecialchars($id) ?>"><legend><?= htmlspecialchars($policy['label']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
                     <p><strong>What this policy controls:</strong> <?= htmlspecialchars($policy['controls']) ?></p>
@@ -551,6 +564,8 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                 </fieldset>
             <?php endforeach; ?>
             <?php if (is_file($recordAbsolutePath)): ?>
+                <p><strong>Existing draft record detected.</strong> Last saved: <code><?= htmlspecialchars((string)$existingRecordLastSaved) ?></code>.</p>
+                <p>To update this existing draft, tick <strong>Confirm overwrite</strong> before saving. If you do not tick Confirm overwrite, the record will not be updated.</p>
                 <label><input type="checkbox" name="confirm_overwrite" value="yes"> Confirm overwrite existing saved draft acceptance record</label>
             <?php endif; ?>
             <p><button type="submit" name="save_scope" value="full_form" onclick="this.form.elements['save_anchor'].value='save-bottom'">Save draft review record</button></p>
