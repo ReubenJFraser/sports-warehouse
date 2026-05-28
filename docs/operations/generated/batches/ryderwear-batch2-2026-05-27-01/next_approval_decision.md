@@ -1,4 +1,4 @@
-# Ryderwear Batch 2 — Next Approval Decision Worksheet
+# Ryderwear Batch 2 - Next Approval Decision Worksheet
 
 ## Purpose
 This document is a documentation-only approval decision worksheet to unblock controlled source-evidence work for batch `ryderwear-batch2-2026-05-27-01`.
@@ -114,5 +114,5 @@ The following artifacts remain blocked and must **not** be created until approva
 - `suspicious_mapping_report.csv`
 - `copy_simulation.csv`
 
-Exception note: `suspicious_mapping_report.csv` may only be created as a **report-only** artifact after the strategy’s reason-code/evidence/status normalization is explicitly approved and all three suspicious/remap cases have reviewer decisions.
+Exception note: `suspicious_mapping_report.csv` may only be created as a **report-only** artifact after the strategy's reason-code/evidence/status normalization is explicitly approved and all three suspicious/remap cases have reviewer decisions.
 
