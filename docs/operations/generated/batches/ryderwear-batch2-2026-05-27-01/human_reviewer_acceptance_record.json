@@ -1,0 +1,185 @@
+{
+    "workflow_id": "ryderwear-batch-2",
+    "workflow_title": "Ryderwear Batch 2",
+    "submitted_at": "2026-05-28T09:29:32+00:00",
+    "record_type": "human_reviewer_acceptance_record",
+    "split_destination_decisions": [
+        {
+            "decision_id": "dec-001",
+            "itemId": "156",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "accept_proposed",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-002",
+            "itemId": "157",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-003",
+            "itemId": "158",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-004",
+            "itemId": "159",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "medium",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-005",
+            "itemId": "160",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "medium",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-006",
+            "itemId": "161",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-007",
+            "itemId": "162",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "medium",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-008",
+            "itemId": "163",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-009",
+            "itemId": "164",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "medium",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-010",
+            "itemId": "165",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "high",
+            "follow_up_required": "no",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "decision_id": "dec-011",
+            "itemId": "166",
+            "proposed_reviewer_decision": "accept",
+            "confidence_level": "medium",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        }
+    ],
+    "item_184_decision": {
+        "itemId": "184",
+        "proposed_reviewer_decision": "approve selected source root",
+        "approved_source_root": "",
+        "human_acceptance_status": "",
+        "human_final_decision": "",
+        "human_reviewer_notes": ""
+    },
+    "suspicious_remap_decisions": [
+        {
+            "case_id": "suspicious-01",
+            "slug": "ryderwear_female_nkd_leggings_v_full_length_scrunch",
+            "proposed_reviewer_decision": "revise",
+            "confidence_level": "low",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "case_id": "suspicious-02",
+            "slug": "ryderwear_unisex_gym_bag_accessories",
+            "proposed_reviewer_decision": "defer",
+            "confidence_level": "low",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "case_id": "suspicious-03",
+            "slug": "ryderwear_female_nkd_shorts_v_scrunch",
+            "proposed_reviewer_decision": "revise",
+            "confidence_level": "low",
+            "follow_up_required": "yes",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        }
+    ],
+    "batch_policy_decisions": [
+        {
+            "policy_id": "approved_source_root_policy",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "policy_id": "deterministic_source_asset_id_policy",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "policy_id": "checksum_bytes_mime_normalization_policy",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        },
+        {
+            "policy_id": "provenance_note_policy",
+            "human_acceptance_status": "",
+            "human_final_decision": "",
+            "human_reviewer_notes": ""
+        }
+    ],
+    "downstream_artifacts_blocked": true
+}
