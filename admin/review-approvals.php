@@ -41,6 +41,17 @@ $reviewWorkflows = [
     ],
 ];
 
+$workflowLinks = [];
+foreach ($reviewWorkflows as $workflow) {
+    if (empty($workflow['batch_folder']) || empty($workflow['documents']) || empty($workflow['id'])) {
+        continue;
+    }
+
+    foreach ($workflow['documents'] as $document) {
+        $workflowLinks[$workflow['id']][$document] = 'review-workflow-document.php?workflow=' . rawurlencode($workflow['id']) . '&doc=' . rawurlencode($document);
+    }
+}
+
 $currentWorkflow = null;
 foreach ($reviewWorkflows as $workflow) {
     if (!empty($workflow['is_current'])) {
@@ -83,22 +94,41 @@ admin_page_header('Review Approvals', 'Track human reviewer acceptance workflows
     <?php if ($currentWorkflow): ?>
         <section class="context-panel">
             <p><strong>Active workflow:</strong> <?= htmlspecialchars($currentWorkflow['name']) ?></p>
+            <?php
+            $primaryDoc = $currentWorkflow['primary_worksheet'] ?? '';
+            $primaryDocHref = $workflowLinks[$currentWorkflow['id']][$primaryDoc] ?? null;
+            ?>
             <p><strong>Status:</strong> <span class="badge badge-accent"><?= htmlspecialchars($reviewWorkflowStatuses[$currentWorkflow['status']] ?? $currentWorkflow['status']) ?></span></p>
-            <p><strong>Batch folder:</strong> <code><?= htmlspecialchars($currentWorkflow['batch_folder']) ?></code></p>
-            <p><strong>Primary worksheet:</strong> <code><?= htmlspecialchars($currentWorkflow['primary_worksheet']) ?></code></p>
+            <p><strong>Batch folder:</strong> <code><?= htmlspecialchars($currentWorkflow['batch_folder']) ?></code> <span class="context-note">(Reference path)</span></p>
+            <p><strong>Primary reviewer worksheet:</strong>
+                <?php if ($primaryDocHref): ?>
+                    <a href="<?= htmlspecialchars($primaryDocHref) ?>"><code><?= htmlspecialchars($primaryDoc) ?></code></a>
+                    <span aria-hidden="true">·</span>
+                    <a href="<?= htmlspecialchars($primaryDocHref) ?>">Open acceptance worksheet</a>
+                <?php else: ?>
+                    <code><?= htmlspecialchars($primaryDoc) ?></code>
+                <?php endif; ?>
+            </p>
 
-            <p><strong>Workflow documents:</strong></p>
+            <p><strong>Open workflow documents:</strong></p>
             <ul>
                 <?php foreach ($currentWorkflow['documents'] as $document): ?>
-                    <li><code><?= htmlspecialchars($currentWorkflow['batch_folder'] . $document) ?></code></li>
+                    <?php $docHref = $workflowLinks[$currentWorkflow['id']][$document] ?? null; ?>
+                    <li>
+                        <?php if ($docHref): ?>
+                            <a href="<?= htmlspecialchars($docHref) ?>"><code><?= htmlspecialchars($currentWorkflow['batch_folder'] . $document) ?></code></a>
+                        <?php else: ?>
+                            <code><?= htmlspecialchars($currentWorkflow['batch_folder'] . $document) ?></code>
+                        <?php endif; ?>
+                    </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="context-note">Open these paths directly in VS Code if an internal document-linking tool is not available in this environment.</p>
+            <p class="context-note">Only workflow-registered documents are linked here to avoid unrestricted filesystem browsing.</p>
         </section>
     <?php endif; ?>
 
     <section class="context-panel">
-        <p><strong>Guardrail:</strong> The following downstream artifacts remain blocked until human acceptance and policy/source-root decisions are recorded:</p>
+        <p><strong>Guardrail:</strong> Blocked downstream artifacts remain blocked until human acceptance and policy/source-root decisions are recorded:</p>
         <ul>
             <li><code>source_asset_inventory.csv</code></li>
             <li><code>suspicious_mapping_report.csv</code></li>
