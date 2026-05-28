@@ -1,0 +1,185 @@
+{
+  "manifest_version": "1.0.0-draft",
+  "manifest_id": "manifest_example_ryderwear_style_001",
+  "generated_at": "2026-05-28T00:00:00Z",
+  "batch_id": "example_only_no_live_ryderwear_manifest",
+  "source_roots": [
+    {
+      "source_root_id": "src_example_ryderwear_approved_001",
+      "root_label": "Example approved Ryderwear-style source root",
+      "root_type": "repository_path",
+      "allowlist_rule_id": "allow_example_product_images_001",
+      "root_scope": "docs/architecture/examples/source-roots/not-real",
+      "exclusions": [
+        "banners/",
+        "marketing/"
+      ],
+      "approval_status": "approved",
+      "reviewer_notes": "Example source root only. Do not use as a live Ryderwear manifest."
+    }
+  ],
+  "products": [
+    {
+      "product_key": "example-ryderwear-core-tank-black",
+      "item_id": "SW-EX-1001",
+      "external_item_id": "RW-EX-CORE-TANK-BLK",
+      "sku": "RW-CORE-TANK-BLK-M",
+      "gtin": "0000000000000",
+      "title": "Example Core Training Tank - Black",
+      "model_id": "RW-EX-CORE-TANK",
+      "variant_group": "black",
+      "approval_status": "proposed",
+      "review_decision_code": "not_reviewed",
+      "images": [
+        {
+          "image_id": "img_example_core_tank_black_primary_001",
+          "sequence": 1,
+          "role": "primary",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "products/core-tank-black/core-tank-black-front.jpg",
+          "original_filename": "core-tank-black-front.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 1600,
+          "height_px": 2000,
+          "byte_size": 245000,
+          "checksum_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "digital_source_type": "supplier_asset",
+          "derived_from_image_id": null,
+          "products_shown": [
+            "example-ryderwear-core-tank-black"
+          ],
+          "approval_status": "approved",
+          "review_decision_code": "accept_proposed",
+          "reviewer_notes": "Primary product front image accepted for example.",
+          "delivery": [
+            {
+              "delivery_id": "del_example_core_tank_black_primary_001",
+              "role": "primary",
+              "destination_relpath": "products/example-ryderwear-core-tank-black/primary.jpg",
+              "url": "https://example.invalid/products/example-ryderwear-core-tank-black/primary.jpg",
+              "width_px": 1200,
+              "height_px": 1500,
+              "mime_type": "image/jpeg",
+              "derived_from_image_id": "img_example_core_tank_black_primary_001",
+              "generated_by": "example_manifest_template"
+            }
+          ]
+        },
+        {
+          "image_id": "img_example_core_tank_black_gallery_002",
+          "sequence": 2,
+          "role": "gallery",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "products/core-tank-black/core-tank-black-back.jpg",
+          "original_filename": "core-tank-black-back.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 1600,
+          "height_px": 2000,
+          "byte_size": 238000,
+          "checksum_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "digital_source_type": "supplier_asset",
+          "derived_from_image_id": null,
+          "products_shown": [
+            "example-ryderwear-core-tank-black"
+          ],
+          "approval_status": "approved",
+          "review_decision_code": "accept_proposed",
+          "reviewer_notes": "Gallery back image accepted for example.",
+          "delivery": []
+        },
+        {
+          "image_id": "img_example_core_tank_black_thumbnail_003",
+          "sequence": 3,
+          "role": "thumbnail",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "products/core-tank-black/core-tank-black-thumb.jpg",
+          "original_filename": "core-tank-black-thumb.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 600,
+          "height_px": 750,
+          "byte_size": 64000,
+          "checksum_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "digital_source_type": "derived_internal_crop",
+          "derived_from_image_id": "img_example_core_tank_black_primary_001",
+          "products_shown": [
+            "example-ryderwear-core-tank-black"
+          ],
+          "approval_status": "approved",
+          "review_decision_code": "accept_modified",
+          "reviewer_notes": "Thumbnail crop accepted for example.",
+          "delivery": []
+        },
+        {
+          "image_id": "img_example_core_tank_black_zoom_004",
+          "sequence": 4,
+          "role": "zoom",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "products/core-tank-black/core-tank-black-detail.jpg",
+          "original_filename": "core-tank-black-detail.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 2400,
+          "height_px": 3000,
+          "byte_size": 410000,
+          "checksum_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "digital_source_type": "supplier_asset",
+          "derived_from_image_id": null,
+          "products_shown": [
+            "example-ryderwear-core-tank-black"
+          ],
+          "approval_status": "approved",
+          "review_decision_code": "accept_proposed",
+          "reviewer_notes": "Zoom detail image accepted for example.",
+          "delivery": []
+        },
+        {
+          "image_id": "img_example_core_tank_black_deferred_005",
+          "sequence": 5,
+          "role": "gallery",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "products/core-tank-black/core-tank-black-lifestyle.jpg",
+          "original_filename": "core-tank-black-lifestyle.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 1600,
+          "height_px": 2000,
+          "byte_size": 260000,
+          "checksum_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "digital_source_type": "supplier_asset",
+          "derived_from_image_id": null,
+          "products_shown": [
+            "example-ryderwear-core-tank-black"
+          ],
+          "approval_status": "deferred",
+          "review_decision_code": "defer_decision",
+          "reviewer_notes": "Deferred because the product match needs human confirmation.",
+          "delivery": []
+        },
+        {
+          "image_id": "img_example_core_tank_banner_excluded_006",
+          "sequence": 99,
+          "role": "banner",
+          "variant_group": "black",
+          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_relpath": "banners/core-training-campaign.jpg",
+          "original_filename": "core-training-campaign.jpg",
+          "mime_type": "image/jpeg",
+          "width_px": 2400,
+          "height_px": 900,
+          "byte_size": 350000,
+          "checksum_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "digital_source_type": "marketing_banner",
+          "derived_from_image_id": null,
+          "products_shown": [],
+          "approval_status": "rejected",
+          "review_decision_code": "reject_banner",
+          "reviewer_notes": "Banner marked non_product for product gallery export and excluded by default.",
+          "delivery": []
+        }
+      ]
+    }
+  ]
+}
