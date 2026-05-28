@@ -60,6 +60,11 @@ function admin_render_nav(): string
                 'icon'  => 'fa-solid fa-chart-simple',
                 'label' => 'Rationale Report',
             ],
+            [
+                'href'  => $adminBase . '/debug/hero-analysis.php',
+                'icon'  => 'fa-solid fa-chart-column',
+                'label' => 'Hero Analysis'
+            ],
         ],
         'Diagnostics' => [
             [
@@ -76,11 +81,6 @@ function admin_render_nav(): string
                 'href'  => $adminBase . '/debug/duplicate-trees.php',
                 'icon'  => 'fa-solid fa-clone',
                 'label' => 'Duplicate Site Trees',
-            ],
-            [
-                'href'  => $adminBase . '/debug/hero-analysis.php',
-                'icon'  => 'fa-solid fa-chart-column',
-                'label' => 'Hero Analysis'
             ],
             [
                 'href'  => $adminBase . '/image-integrity.php',
