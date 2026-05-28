@@ -275,6 +275,7 @@ $recordAbsolutePath = __DIR__ . '/../' . $recordRelativePath;
 $errors = [];
 $successMessage = null;
 $loadedRecord = [];
+$successAnchor = '';
 
 if ($workflowId !== $allowedWorkflow['id']) {
     http_response_code(400);
@@ -312,6 +313,9 @@ function find_saved_row(array $savedRows, string $lookupKey, string $lookupValue
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $existingRecord = is_file($recordAbsolutePath);
     $overwriteConfirmed = (string)($_POST['confirm_overwrite'] ?? '') === 'yes';
+    $saveScope = trim((string)($_POST['save_scope'] ?? 'full_form'));
+    $saveAnchorRaw = trim((string)($_POST['save_anchor'] ?? ''));
+    $saveAnchor = preg_match('/^[a-z0-9\/_-]+$/', $saveAnchorRaw) ? $saveAnchorRaw : '';
 
     if ($existingRecord && !$overwriteConfirmed) {
         $errors[] = 'A saved acceptance record already exists. Confirm overwrite to update this draft record.';
@@ -378,14 +382,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'suspicious_remap_decisions' => $suspiciousOut,
             'batch_policy_decisions' => $policyOut,
             'downstream_artifacts_blocked' => true,
+            'saved_as' => 'draft',
+            'last_save_scope' => $saveScope !== '' ? $saveScope : 'full_form',
+            'last_saved_anchor' => $saveAnchor,
         ];
 
         $encoded = json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($encoded === false || file_put_contents($recordAbsolutePath, $encoded . PHP_EOL, LOCK_EX) === false) {
             $errors[] = 'Failed to save acceptance record.';
         } else {
-            $successMessage = 'Acceptance record saved as a draft/in-progress reviewer record.';
+            $scopeLabel = $saveScope === 'full_form' ? 'entire draft form state' : ('scope: ' . $saveScope);
+            $successMessage = 'Draft review record saved/in-progress updated (' . $scopeLabel . ').';
             $loadedRecord = $record;
+            $successAnchor = $saveAnchor;
         }
     }
 }
@@ -408,6 +417,11 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
         .reference-path{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#f4f4f5;padding:4px;border-radius:4px;margin-top:6px;font-size:12px;}
         .review-approval-page .context-panel code{display:inline-block;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;vertical-align:bottom;}
         .evidence-identical-note{margin-top:8px;color:#334155;}
+        .draft-save-panel{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:12px;margin:10px 0;}
+        .review-input-grid label{display:block;margin:8px 0;}
+        .review-input-grid input[type="text"], .review-input-grid textarea, .review-input-grid select{display:block;width:100%;max-width:760px;margin-top:4px;}
+        .review-input-grid textarea{min-height:90px;}
+        .section-save-row{margin-top:12px;}
         @media (max-width: 1100px){.reference-path{font-size:11px;}}
         @media (max-width: 820px){
             .evidence-thumb-row{min-width:max-content;}
@@ -417,21 +431,35 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
     <section class="context-panel">
         <p><strong>Workflow:</strong> <?= htmlspecialchars($allowedWorkflow['title']) ?> (<code><?= htmlspecialchars($allowedWorkflow['id']) ?></code>)</p>
         <p><strong>Warning:</strong> This form records human reviewer input only, keeps downstream artifacts blocked, and does not imply final approval.</p>
+        <div class="draft-save-panel">
+            <p><strong>Draft save guidance:</strong> You may save after completing one decision or any subset of decisions.</p>
+            <p>Saving creates or updates a draft/in-progress review record at the allowlisted path. Saving does not mean final approval.</p>
+            <p>Downstream artifacts remain blocked until a later completion/validation step.</p>
+        </div>
         <p><strong>Record path:</strong> <code><?= htmlspecialchars($recordRelativePath) ?></code></p>
         <p><strong>Read-only context fields:</strong> Decision summary, evidence, risk, recommendation, and source reference are explanatory only.</p>
         <p><a href="review-approvals.php">Back to Review Approvals</a></p>
     </section>
 
-    <?php if ($successMessage): ?><section class="context-panel"><p><strong><?= htmlspecialchars($successMessage) ?></strong> Saved to <code><?= htmlspecialchars($recordRelativePath) ?></code>.</p></section><?php endif; ?>
+    <?php if ($successMessage): ?><section class="context-panel"><p><strong><?= htmlspecialchars($successMessage) ?></strong> Saved to <code><?= htmlspecialchars($recordRelativePath) ?></code><?php if ($successAnchor !== ''): ?> at anchor <code>#<?= htmlspecialchars($successAnchor) ?></code><?php endif; ?>.</p></section><?php endif; ?>
     <?php if ($errors): ?><section class="context-panel"><ul><?php foreach ($errors as $error): ?><li><?= htmlspecialchars($error) ?></li><?php endforeach; ?></ul></section><?php endif; ?>
 
-    <form method="post" action="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?>">
+    <form method="post" action="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?><?= $successAnchor !== '' ? '#' . rawurlencode($successAnchor) : '' ?>">
         <input type="hidden" name="workflow_id" value="<?= htmlspecialchars($allowedWorkflow['id']) ?>">
+        <section class="context-panel" id="save-top">
+            <h2>Save draft review record</h2>
+            <p>Partial saves are allowed. Save one decision, one product item, one suspicious case, one policy section, or the full in-progress form at any time.</p>
+            <p>
+                <input type="hidden" name="save_scope" value="full_form">
+                <input type="hidden" name="save_anchor" value="save-top">
+                <button type="submit">Save draft review record</button>
+            </p>
+        </section>
 
         <section class="context-panel">
             <h2>Split-destination decisions (dec-001 to dec-011)</h2>
             <?php foreach ($splitDecisions as $row): $id = $row['decision_id']; $existing = find_saved_row($loadedRecord['split_destination_decisions'] ?? [], 'decision_id', $id); ?>
-                <fieldset>
+                <fieldset id="<?= htmlspecialchars($id) ?>">
                     <legend><?= htmlspecialchars($id) ?> / itemId <?= htmlspecialchars($row['itemId']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
                     <p>Proposed reviewer decision: <code><?= htmlspecialchars($row['proposed_reviewer_decision']) ?></code> · Confidence level: <code><?= htmlspecialchars($row['confidence_level']) ?></code> · Follow-up required: <code><?= htmlspecialchars($row['follow_up_required']) ?></code></p>
@@ -449,14 +477,17 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <?php endforeach; ?></div>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
+                    <div class="review-input-grid">
                     <label>human_acceptance_status <select name="split[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
                     <label>human_final_decision <input type="text" name="split[<?= htmlspecialchars($id) ?>][human_final_decision]" value="<?= htmlspecialchars($existing['human_final_decision'] ?? '') ?>"></label>
                     <label>human_reviewer_notes <textarea name="split[<?= htmlspecialchars($id) ?>][human_reviewer_notes]"><?= htmlspecialchars($existing['human_reviewer_notes'] ?? '') ?></textarea></label>
+                    </div>
+                    <p class="section-save-row"><button type="submit" name="save_scope" value="<?= htmlspecialchars($id) ?>" formaction="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?>#<?= htmlspecialchars($id) ?>" onclick="this.form.elements['save_anchor'].value='<?= htmlspecialchars($id) ?>'">Save this decision as draft</button></p>
                 </fieldset>
             <?php endforeach; ?>
         </section>
 
-        <section class="context-panel">
+        <section class="context-panel" id="dec-012/item-184">
             <h2>itemId 184 / dec-012 deferred source verification</h2>
             <?php $itemSaved = $loadedRecord['item_184_decision'] ?? []; ?>
             <p><strong>Read-only evidence context</strong></p>
@@ -468,16 +499,19 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
             <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($item184['source_artifact']) ?></code></p><p><strong>Deferred: source/provenance evidence required</strong> · Do not approve from visual evidence alone.</p><?php $deferredCollisions=$collisionByItemId['184'] ?? []; foreach ($deferredCollisions as $collision): $model=(string)($collision['candidate_model_id'] ?? ''); $prod=$productByModelId[$model] ?? []; $img=$imageByModelId[$model] ?? []; ?><div class="evidence-card"><p><strong>Item context</strong></p><p>itemId <code>184</code> · model <code><?= htmlspecialchars($model) ?></code></p><p><?= htmlspecialchars((string)($prod['itemName'] ?? 'Name unavailable from allowlisted artifact data.')) ?></p><?php render_image_evidence('Needs verification', split_image_list((string)($img['gallery_paths_json'] ?? '')), 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?></div><?php endforeach; ?>
             <hr>
             <p><strong>Reviewer input required</strong></p>
+            <div class="review-input-grid">
             <label>approved_source_root <input type="text" name="item_184[approved_source_root]" value="<?= htmlspecialchars($itemSaved['approved_source_root'] ?? '') ?>"></label>
             <label>human_acceptance_status <select name="item_184[human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($itemSaved['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
             <label>human_final_decision <input type="text" name="item_184[human_final_decision]" value="<?= htmlspecialchars($itemSaved['human_final_decision'] ?? '') ?>"></label>
             <label>human_reviewer_notes <textarea name="item_184[human_reviewer_notes]"><?= htmlspecialchars($itemSaved['human_reviewer_notes'] ?? '') ?></textarea></label>
+            </div>
+            <p class="section-save-row"><button type="submit" name="save_scope" value="dec-012/item-184" formaction="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?>#dec-012/item-184" onclick="this.form.elements['save_anchor'].value='dec-012/item-184'">Save this decision as draft</button></p>
         </section>
 
         <section class="context-panel">
             <h2>Suspicious/remap cases</h2>
             <?php foreach ($suspiciousCases as $case): $id=$case['case_id']; $existing = find_saved_row($loadedRecord['suspicious_remap_decisions'] ?? [], 'case_id', $id); ?>
-                <fieldset><legend><?= htmlspecialchars($id) ?> / <?= htmlspecialchars($case['key']) ?></legend>
+                <fieldset id="<?= htmlspecialchars($id) ?>"><legend><?= htmlspecialchars($id) ?> / <?= htmlspecialchars($case['key']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
                     <p><strong>Current signal/status:</strong> <?= htmlspecialchars($case['current_signal']) ?></p>
                     <p><strong>Why suspicious:</strong> <?= htmlspecialchars($case['why_suspicious']) ?></p>
@@ -487,16 +521,19 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($case['source_artifact']) ?></code></p><?php $slug=(string)$case['key']; $img=$imageByModelId[$slug] ?? []; $current=split_image_list((string)($img['gallery_paths_json'] ?? '')); $candidate=split_image_list((string)($img['planned_images'] ?? '')); render_image_evidence_comparison($current, $candidate, 'Image preview unavailable from allowlisted artifact data. Use source artifact path/reference for manual verification.'); ?>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
+                    <div class="review-input-grid">
                     <label>human_acceptance_status <select name="suspicious[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
                     <label>human_final_decision <input type="text" name="suspicious[<?= htmlspecialchars($id) ?>][human_final_decision]" value="<?= htmlspecialchars($existing['human_final_decision'] ?? '') ?>"></label>
                     <label>human_reviewer_notes <textarea name="suspicious[<?= htmlspecialchars($id) ?>][human_reviewer_notes]"><?= htmlspecialchars($existing['human_reviewer_notes'] ?? '') ?></textarea></label>
+                    </div>
+                    <p class="section-save-row"><button type="submit" name="save_scope" value="<?= htmlspecialchars($id) ?>" formaction="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?>#<?= htmlspecialchars($id) ?>" onclick="this.form.elements['save_anchor'].value='<?= htmlspecialchars($id) ?>'">Save this decision as draft</button></p>
                 </fieldset>
             <?php endforeach; ?>
         </section>
 
         <section class="context-panel"><h2>Batch-level policy decisions</h2>
             <?php foreach ($batchPolicies as $policy): $id=$policy['policy_id']; $existing = find_saved_row($loadedRecord['batch_policy_decisions'] ?? [], 'policy_id', $id); ?>
-                <fieldset><legend><?= htmlspecialchars($policy['label']) ?></legend>
+                <fieldset id="<?= htmlspecialchars($id) ?>"><legend><?= htmlspecialchars($policy['label']) ?></legend>
                     <p><strong>Read-only evidence context</strong></p>
                     <p><strong>What this policy controls:</strong> <?= htmlspecialchars($policy['controls']) ?></p>
                     <p><strong>Why it matters:</strong> <?= htmlspecialchars($policy['why_it_matters']) ?></p>
@@ -505,16 +542,21 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
                     <p><strong>Source artifact reference:</strong> <code><?= htmlspecialchars($policy['source_artifact']) ?></code></p>
                     <hr>
                     <p><strong>Reviewer input required</strong></p>
+                    <div class="review-input-grid">
                     <label>human_acceptance_status <select name="policy[<?= htmlspecialchars($id) ?>][human_acceptance_status]"><?php foreach($allowedStatuses as $k=>$v): ?><option value="<?= htmlspecialchars($k) ?>" <?= (($existing['human_acceptance_status'] ?? '') === $k) ? 'selected' : '' ?>><?= htmlspecialchars($v) ?></option><?php endforeach; ?></select></label>
                     <label>human_final_decision <input type="text" name="policy[<?= htmlspecialchars($id) ?>][human_final_decision]" value="<?= htmlspecialchars($existing['human_final_decision'] ?? '') ?>"></label>
                     <label>human_reviewer_notes <textarea name="policy[<?= htmlspecialchars($id) ?>][human_reviewer_notes]"><?= htmlspecialchars($existing['human_reviewer_notes'] ?? '') ?></textarea></label>
+                    </div>
+                    <p class="section-save-row"><button type="submit" name="save_scope" value="<?= htmlspecialchars($id) ?>" formaction="review-approval-form.php?workflow=<?= rawurlencode($allowedWorkflow['id']) ?>#<?= htmlspecialchars($id) ?>" onclick="this.form.elements['save_anchor'].value='<?= htmlspecialchars($id) ?>'">Save this decision as draft</button></p>
                 </fieldset>
             <?php endforeach; ?>
             <?php if (is_file($recordAbsolutePath)): ?>
                 <label><input type="checkbox" name="confirm_overwrite" value="yes"> Confirm overwrite existing saved draft acceptance record</label>
             <?php endif; ?>
-            <p><button type="submit">Save acceptance record</button></p>
+            <p><button type="submit" name="save_scope" value="full_form" onclick="this.form.elements['save_anchor'].value='save-bottom'">Save draft review record</button></p>
         </section>
+        <div id="save-bottom"></div>
+        <input type="hidden" name="save_anchor" value="save-bottom">
     </form>
 </div>
 <?php admin_layout_end();
