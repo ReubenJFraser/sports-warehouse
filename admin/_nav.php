@@ -29,6 +29,11 @@ function admin_render_nav(): string
                 'icon'  => 'fa-solid fa-gauge',
                 'label' => 'Dashboard',
             ],
+            [
+                'href'  => $adminBase . '/review-approvals.php',
+                'icon'  => 'fa-solid fa-clipboard-check',
+                'label' => 'Review Approvals',
+            ],
         ],
         'Hero Tools' => [
             [
