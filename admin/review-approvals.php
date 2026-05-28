@@ -19,11 +19,13 @@ $reviewWorkflows = [
         'status' => 'awaiting_human_acceptance',
         'batch_folder' => 'docs/operations/generated/batches/ryderwear-batch2-2026-05-27-01/',
         'primary_worksheet' => 'human_reviewer_acceptance_worksheet.md',
+        'acceptance_record' => 'human_reviewer_acceptance_record.json',
         'documents' => [
             'human_reviewer_acceptance_worksheet.md',
             'proposed_reviewer_decisions.md',
             'approval_decision_readiness_review.md',
             'source_evidence_strategy.md',
+            'human_reviewer_acceptance_record.json',
         ],
         'is_current' => true,
     ],
@@ -89,6 +91,7 @@ admin_page_header('Review Approvals', 'Track human reviewer acceptance workflows
             <?php endforeach; ?>
         </select>
         <p class="context-note">Workflow selection is explicitly tracked in this page configuration; active workflow is not inferred from folder scan or last-modified time.</p>
+        <p class="context-note">Only one workflow is currently configured.</p>
     </section>
 
     <?php if ($currentWorkflow): ?>
@@ -109,6 +112,22 @@ admin_page_header('Review Approvals', 'Track human reviewer acceptance workflows
                     <code><?= htmlspecialchars($primaryDoc) ?></code>
                 <?php endif; ?>
             </p>
+
+
+            <?php
+            $fillableHref = 'review-approval-form.php?workflow=' . rawurlencode($currentWorkflow['id']);
+            $recordFile = $currentWorkflow['acceptance_record'] ?? '';
+            $recordRelativePath = ($currentWorkflow['batch_folder'] ?? '') . $recordFile;
+            $recordAbsolutePath = realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $recordRelativePath);
+            $recordExists = $recordFile !== '' && is_file($recordAbsolutePath);
+            $recordHref = $recordExists ? ($workflowLinks[$currentWorkflow['id']][$recordFile] ?? ('review-workflow-document.php?workflow=' . rawurlencode($currentWorkflow['id']) . '&doc=' . rawurlencode($recordFile))) : null;
+            ?>
+            <p><a href="<?= htmlspecialchars($primaryDocHref ?? '#') ?>">View worksheet</a> <span aria-hidden="true">·</span> <a href="<?= htmlspecialchars($fillableHref) ?>">Fill acceptance form</a></p>
+            <p class="context-note">View worksheet opens the read-only worksheet document. Fill acceptance form opens the admin form for recording reviewer decisions.</p>
+            <?php if ($recordExists): ?>
+                <p><strong>Saved acceptance record found</strong></p>
+                <p><a href="<?= htmlspecialchars($recordHref) ?>">View saved acceptance record</a></p>
+            <?php endif; ?>
 
             <p><strong>Open workflow documents:</strong></p>
             <ul>
