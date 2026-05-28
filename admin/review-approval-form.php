@@ -395,7 +395,10 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
 ?>
 <div class="admin-wrapper review-approval-page">
     <style>
-        .review-approval-page{max-width:none;}
+        .review-approval-page{max-width:none; width:100%;}
+        .review-approval-page *,
+        .review-approval-page *::before,
+        .review-approval-page *::after{box-sizing:border-box;}
         .evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:10px 0;}
         .evidence-card{background:#f8fafc;border:1px solid #dbe4ee;border-radius:8px;padding:10px;}
         .evidence-thumb-grid{margin-top:6px;overflow-x:auto;padding-bottom:4px;}
@@ -403,6 +406,7 @@ admin_page_header('Review Approval Form', 'Record human reviewer decisions for R
         .evidence-thumb-card{border:1px solid #dbe4ee;border-radius:8px;padding:6px;background:#fff;min-width:94px;}
         .evidence-thumb-image{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:4px;}
         .reference-path{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#f4f4f5;padding:4px;border-radius:4px;margin-top:6px;font-size:12px;}
+        .review-approval-page .context-panel code{display:inline-block;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;vertical-align:bottom;}
         .evidence-identical-note{margin-top:8px;color:#334155;}
         @media (max-width: 1100px){.reference-path{font-size:11px;}}
         @media (max-width: 820px){
