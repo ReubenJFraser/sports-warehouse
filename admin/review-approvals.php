@@ -121,11 +121,38 @@ admin_page_header('Review Approvals', 'Track human reviewer acceptance workflows
             $recordAbsolutePath = realpath(__DIR__ . '/..') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $recordRelativePath);
             $recordExists = $recordFile !== '' && is_file($recordAbsolutePath);
             $recordHref = $recordExists ? ($workflowLinks[$currentWorkflow['id']][$recordFile] ?? ('review-workflow-document.php?workflow=' . rawurlencode($currentWorkflow['id']) . '&doc=' . rawurlencode($recordFile))) : null;
+            $recordStateLabel = 'Saved draft/incomplete record';
+            if ($recordExists) {
+                $recordRaw = file_get_contents($recordAbsolutePath);
+                $recordDecoded = is_string($recordRaw) ? json_decode($recordRaw, true) : null;
+                if (is_array($recordDecoded)) {
+                    $sections = ['split_destination_decisions', 'item_184_decision', 'suspicious_remap_decisions', 'batch_policy_decisions'];
+                    $hasAnyHumanInput = false;
+                    foreach ($sections as $sectionKey) {
+                        $sectionValue = $recordDecoded[$sectionKey] ?? [];
+                        if (is_array($sectionValue)) {
+                            $rows = isset($sectionValue['human_acceptance_status']) ? [$sectionValue] : $sectionValue;
+                            foreach ($rows as $row) {
+                                if (!is_array($row)) {
+                                    continue;
+                                }
+                                if (($row['human_acceptance_status'] ?? '') !== '' || trim((string)($row['human_final_decision'] ?? '')) !== '' || trim((string)($row['human_reviewer_notes'] ?? '')) !== '') {
+                                    $hasAnyHumanInput = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                    if ($hasAnyHumanInput) {
+                        $recordStateLabel = 'Saved acceptance record (in progress; not final approval)';
+                    }
+                }
+            }
             ?>
             <p><a href="<?= htmlspecialchars($primaryDocHref ?? '#') ?>">View worksheet</a> <span aria-hidden="true">·</span> <a href="<?= htmlspecialchars($fillableHref) ?>">Fill acceptance form</a></p>
             <p class="context-note">View worksheet opens the read-only worksheet document. Fill acceptance form opens the admin form for recording reviewer decisions.</p>
             <?php if ($recordExists): ?>
-                <p><strong>Saved acceptance record found</strong></p>
+                <p><strong><?= htmlspecialchars($recordStateLabel) ?></strong></p>
                 <p><a href="<?= htmlspecialchars($recordHref) ?>">View saved acceptance record</a></p>
             <?php endif; ?>
 
