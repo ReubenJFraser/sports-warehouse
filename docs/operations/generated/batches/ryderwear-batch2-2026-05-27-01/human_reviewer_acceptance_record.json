@@ -1,7 +1,7 @@
 {
     "workflow_id": "ryderwear-batch-2",
     "workflow_title": "Ryderwear Batch 2",
-    "submitted_at": "2026-05-28T09:29:32+00:00",
+    "submitted_at": "2026-05-28T12:50:05+00:00",
     "record_type": "human_reviewer_acceptance_record",
     "split_destination_decisions": [
         {
@@ -10,9 +10,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "accept_proposed",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-002",
@@ -20,9 +20,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-003",
@@ -30,9 +30,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-004",
@@ -40,9 +40,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "medium",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-005",
@@ -50,9 +50,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "medium",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-006",
@@ -60,9 +60,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-007",
@@ -70,9 +70,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "medium",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-008",
@@ -80,9 +80,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-009",
@@ -90,9 +90,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "medium",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-010",
@@ -100,9 +100,9 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "high",
             "follow_up_required": "no",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "decision_id": "dec-011",
@@ -110,18 +110,18 @@
             "proposed_reviewer_decision": "accept",
             "confidence_level": "medium",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         }
     ],
     "item_184_decision": {
         "itemId": "184",
         "proposed_reviewer_decision": "approve selected source root",
         "approved_source_root": "",
-        "human_acceptance_status": "",
-        "human_final_decision": "",
-        "human_reviewer_notes": ""
+        "human_acceptance_status": "defer_decision",
+        "human_final_decision": "deferred - image evidence not visible",
+        "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
     },
     "suspicious_remap_decisions": [
         {
@@ -130,9 +130,9 @@
             "proposed_reviewer_decision": "revise",
             "confidence_level": "low",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - banner/non-product workflow review required",
+            "human_reviewer_notes": "This is a banner and non-product item rather than a product-item image decision. It should not be approved under the product-item visual evidence rule."
         },
         {
             "case_id": "suspicious-02",
@@ -140,9 +140,9 @@
             "proposed_reviewer_decision": "defer",
             "confidence_level": "low",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "accept_proposed",
+            "human_final_decision": "approve based on visible product/image evidence",
+            "human_reviewer_notes": "Product/image evidence is visible in the Review Approvals form and supports the proposed decision."
         },
         {
             "case_id": "suspicious-03",
@@ -150,36 +150,39 @@
             "proposed_reviewer_decision": "revise",
             "confidence_level": "low",
             "follow_up_required": "yes",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "accept_proposed",
+            "human_final_decision": "approve based on visible product/image evidence",
+            "human_reviewer_notes": "Product/image evidence is visible in the Review Approvals form and supports the proposed decision."
         }
     ],
     "batch_policy_decisions": [
         {
             "policy_id": "approved_source_root_policy",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "policy_id": "deterministic_source_asset_id_policy",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "policy_id": "checksum_bytes_mime_normalization_policy",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         },
         {
             "policy_id": "provenance_note_policy",
-            "human_acceptance_status": "",
-            "human_final_decision": "",
-            "human_reviewer_notes": ""
+            "human_acceptance_status": "defer_decision",
+            "human_final_decision": "deferred - image evidence not visible",
+            "human_reviewer_notes": "Image evidence is not visible in the Review Approvals form, so I am deferring rather than approving."
         }
     ],
-    "downstream_artifacts_blocked": true
+    "downstream_artifacts_blocked": true,
+    "saved_as": "draft",
+    "last_save_scope": "full_form",
+    "last_saved_anchor": "save-bottom"
 }
