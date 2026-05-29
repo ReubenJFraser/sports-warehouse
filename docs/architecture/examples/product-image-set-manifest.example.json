@@ -32,13 +32,11 @@
   ],
   "products": [
     {
-      "product_key": "example-ryderwear-core-tank-black",
-      "item_id": "SW-EX-1001",
-      "external_item_id": "RW-EX-CORE-TANK-BLK",
+      "item_id": 1001,
+      "model_id": "example_ryderwear_core_tank",
       "sku": "RW-CORE-TANK-BLK-M",
       "gtin": "0000000000000",
       "title": "Example Core Training Tank - Black",
-      "model_id": "RW-EX-CORE-TANK",
       "variant_group": "black",
       "approval_status": "proposed",
       "review_decision_code": "not_reviewed",
@@ -59,7 +57,7 @@
           "digital_source_type": "supplier_asset",
           "derived_from_image_id": null,
           "products_shown": [
-            "example-ryderwear-core-tank-black"
+            "example_ryderwear_core_tank"
           ],
           "approval_status": "approved",
           "review_decision_code": "accept_proposed",
@@ -94,7 +92,7 @@
           "digital_source_type": "supplier_asset",
           "derived_from_image_id": null,
           "products_shown": [
-            "example-ryderwear-core-tank-black"
+            "example_ryderwear_core_tank"
           ],
           "approval_status": "approved",
           "review_decision_code": "accept_proposed",
@@ -117,7 +115,7 @@
           "digital_source_type": "derived_internal_crop",
           "derived_from_image_id": "img_example_core_tank_black_primary_001",
           "products_shown": [
-            "example-ryderwear-core-tank-black"
+            "example_ryderwear_core_tank"
           ],
           "approval_status": "approved",
           "review_decision_code": "accept_modified",
@@ -140,7 +138,7 @@
           "digital_source_type": "supplier_asset",
           "derived_from_image_id": null,
           "products_shown": [
-            "example-ryderwear-core-tank-black"
+            "example_ryderwear_core_tank"
           ],
           "approval_status": "approved",
           "review_decision_code": "accept_proposed",
@@ -163,7 +161,7 @@
           "digital_source_type": "supplier_asset",
           "derived_from_image_id": null,
           "products_shown": [
-            "example-ryderwear-core-tank-black"
+            "example_ryderwear_core_tank"
           ],
           "approval_status": "deferred",
           "review_decision_code": "defer_decision",
