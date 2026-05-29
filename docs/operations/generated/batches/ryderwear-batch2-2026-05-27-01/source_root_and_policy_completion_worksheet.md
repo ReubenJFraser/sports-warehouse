@@ -1,5 +1,38 @@
 # Ryderwear Batch 2 source-root and policy completion worksheet
 
+## Manual completion guidance
+
+This worksheet should be completed manually in Markdown first. Markdown completion is preferred before an admin UI because the policy structure is still being stabilized. A fillable admin UI may be built later after one completed Markdown example exists.
+
+Completing this worksheet does not itself authorize copying, import, publication, storefront changes, ProductDB updates, or downstream artifact generation.
+
+## Completion status
+
+| Field | Value |
+|---|---|
+| worksheet_completion_status | incomplete |
+| completed_by | TBD |
+| completion_date | TBD |
+| review_scope | TBD |
+| final_gate_recommendation | TBD |
+| next_allowed_task | TBD |
+| downstream_artifacts_unblocked | no |
+
+## What completion means
+
+Completing this worksheet may authorize only the next controlled task: generating a Ryderwear Batch 2 candidate product-image-set manifest from approved source roots and accepted/eligible decisions.
+
+Completing this worksheet does not authorize:
+
+- `source_asset_inventory.csv` as canonical source truth
+- `suspicious_mapping_report.csv`
+- `copy_simulation.csv`
+- image copying
+- SQL/import payloads
+- ProductDB changes
+- storefront gallery changes
+- publication
+
 ## 1. Purpose
 
 This worksheet is documentation-only. It records the remaining human, source-root, and policy decisions required before controlled source-evidence preparation can proceed for Ryderwear Batch 2.
@@ -407,6 +440,10 @@ Conservative gate recommendation:
 - SQL/import payloads remain blocked until later gates.
 - Storefront publication and storefront gallery exports remain blocked until later gates.
 - This worksheet does not unblock copy simulation, image copying, import, reconciliation, publication, ProductDB changes, admin views, storefront views, or public storefront changes.
+
+## Future admin UI note
+
+After this worksheet is completed once in Markdown, a future admin UI can be designed around the stable decision fields. The UI should not be built first because the policy structure is still being settled.
 
 ## 14. Recommended next Codex task
 
