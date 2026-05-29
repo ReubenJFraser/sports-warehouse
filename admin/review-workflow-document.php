@@ -14,6 +14,11 @@ $reviewWorkflows = [
             'proposed_reviewer_decisions.md',
             'approval_decision_readiness_review.md',
             'source_evidence_strategy.md',
+            'ryderwear_batch2_2026_05_27_candidate_product_image_set_manifest_v2.json',
+            'ryderwear_batch2_2026_05_27_candidate_product_image_set_manifest_v2_flat.csv',
+            'ryderwear_batch2_2026_05_27_manifest_v2_gate_report.md',
+            'ryderwear_batch2_2026_05_27_candidate_product_image_set_manifest_v2_report.md',
+            'ryderwear_batch2_2026_05_27_candidate_product_image_set_manifest_v2_flat_report.md',
         ],
     ],
 ];
