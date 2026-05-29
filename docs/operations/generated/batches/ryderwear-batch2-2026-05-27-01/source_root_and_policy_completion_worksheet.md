@@ -92,14 +92,14 @@ Human reviewer or policy owner completion area:
 
 | Field | Human completion value |
 |---|---|
-| approved_source_root | TBD |
-| approved_source_root_type | TBD |
-| source_root_owner_or_origin | TBD |
-| source_root_scope | TBD |
-| source_root_exclusions | TBD |
-| reviewer_decision | TBD |
-| reviewer_notes | TBD |
-| approval_date | TBD |
+| approved_source_root | images/brands/ryderwear |
+| approved_source_root_type | repository_path |
+| source_root_owner_or_origin | Sports Warehouse repository-local Ryderwear image corpus, previously curated/imported for this project |
+| source_root_scope | Ryderwear product/image evidence paths under images/brands/ryderwear only, limited to accepted/eligible Ryderwear Batch 2 decisions |
+| source_root_exclusions | exclude unrelated brands, broad user folders, generated reports, SQL files, public storefront publication outputs, deferred item sets, unresolved itemId 184, and banner/non_product cases unless separately approved |
+| reviewer_decision | approve_source_root |
+| reviewer_notes | Approved only as a controlled source/evidence corpus for generating a Ryderwear Batch 2 candidate product-image-set manifest. This does not approve image copying, ProductDB updates, SQL/import payloads, copy simulation, storefront gallery changes, or publication. |
+| approval_date | 2026-05-29 |
 
 Required source-root constraints:
 
