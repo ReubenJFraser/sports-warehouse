@@ -36,6 +36,11 @@ function admin_render_nav(): string
                 'icon'  => 'fa-solid fa-clipboard-check',
                 'label' => 'Review Approvals',
             ],
+            [
+                'href'  => $adminBase . '/product-image-manifests.php',
+                'icon'  => 'fa-solid fa-table-list',
+                'label' => 'Product Image Manifests',
+            ],
         ],
         'Hero Tools' => [
             [
