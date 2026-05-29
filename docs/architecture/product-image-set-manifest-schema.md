@@ -2,6 +2,8 @@
 
 This document defines the initial schema foundation for the Sports Warehouse canonical product image set manifest. It is documentation and template guidance only. It does not generate a live Ryderwear manifest.
 
+Schema v1 uses embedded fields for several logical entities named in the architecture. ProductVariant is represented mainly through `variant_group` and related product identifiers. ImageSet is represented through `products[].images[]` plus image role, sequence, and variant fields. ReviewDecision is represented through `approval_status`, `review_decision_code`, reviewer notes, and related gate or report records. These are complete schema v1 representations, not missing top-level arrays. Future schema versions may normalize ProductVariant, ImageSet, or ReviewDecision into separate top-level collections if needed.
+
 ## Manifest-level fields
 
 | Field | Type | Required | Description |
@@ -10,7 +12,7 @@ This document defines the initial schema foundation for the Sports Warehouse can
 | `manifest_id` | string | Yes | Stable ID for this manifest document. |
 | `generated_at` | string | Yes | ISO 8601 timestamp for when this manifest draft or committed version was generated. |
 | `batch_id` | string | Yes | Batch or workflow identifier, such as a controlled review batch name. |
-| `source_roots` | array of SourceRoot | Yes | Declared and reviewed input roots. |
+| `source_roots` | array of SourceRoot | Yes | Declared and reviewed input roots. Product-gallery roots may exclude banner or marketing paths while separate marketing roots can preserve rejected or non_product evidence rows. |
 | `products` | array of Product | Yes | Product records and their associated image assets. |
 
 ## SourceRoot fields
@@ -38,7 +40,7 @@ This document defines the initial schema foundation for the Sports Warehouse can
 | `title` | string | Yes | Product title. |
 | `model_id` | string | No | Model grouping identifier used by Sports Warehouse workflows. |
 | `variant_group` | string | No | Variant group such as color or style. |
-| `approval_status` | approval_status enum | Yes | Review state for the product image set. |
+| `approval_status` | approval_status enum | Yes | Product-level approval_status for the overall product image set state. This can remain `proposed` while individual image rows are approved if other rows are deferred, rejected, banner, non_product, or unresolved. |
 | `review_decision_code` | review_decision_code enum | Yes | Review decision for the product row or image set. |
 | `images` | array of ImageAsset | Yes | Image assets associated with this product. |
 
@@ -61,7 +63,7 @@ This document defines the initial schema foundation for the Sports Warehouse can
 | `digital_source_type` | digital_source_type enum | Yes | Source or derivation category for the image. |
 | `derived_from_image_id` | string or null | No | Parent image ID when this image is derived from another ImageAsset. |
 | `products_shown` | array of strings | Yes | Product keys or item IDs visibly shown in the image. |
-| `approval_status` | approval_status enum | Yes | Review state for the image row. |
+| `approval_status` | approval_status enum | Yes | Image-level approval_status for this individual image row. |
 | `review_decision_code` | review_decision_code enum | Yes | Review decision for the image row. |
 | `reviewer_notes` | string | No | Human reviewer notes. |
 | `delivery` | array of DeliveryAsset | Yes | Derived delivery assets generated from this image. |
@@ -79,6 +81,19 @@ This document defines the initial schema foundation for the Sports Warehouse can
 | `mime_type` | string | Yes | Delivery MIME type. |
 | `derived_from_image_id` | string | Yes | Source ImageAsset ID used to generate the delivery asset. |
 | `generated_by` | string | Yes | Tool, workflow, or job ID that generated this delivery asset. |
+
+
+## Product-level and image-level approval
+
+Product-level approval_status describes the overall image set state for the product. Image-level approval_status describes the review state of a single ImageAsset row. A product or ImageSet may remain `proposed` with `review_decision_code` set to `not_reviewed` while some individual image rows are `approved`, especially when the set still contains deferred, rejected, banner, non_product, or unresolved rows.
+
+Product-level approval_status is not sufficient by itself for product gallery publication. Exporters must evaluate each ImageAsset row and include only approved rows with product-safe roles unless a future policy explicitly permits partial publication.
+
+## CSV mirror flattening rule
+
+The v1 flat CSV mirror, including `product-image-set-manifest-flat.example.csv`, is one row per ImageAsset. It may include zero or one primary delivery projection for convenience. If an ImageAsset has multiple DeliveryAsset entries in JSON, the CSV mirror either flattens the primary or preferred delivery asset or leaves delivery fields blank. The CSV mirror must not be mistaken for a complete delivery graph.
+
+A future `product-image-set-delivery-flat.csv` mirror may be introduced as one row per DeliveryAsset if delivery asset review, diffing, or export validation requires it. Do not create that separate delivery CSV for schema v1 unless a future architecture change requires it.
 
 ## Controlled enums
 
@@ -134,8 +149,11 @@ This document defines the initial schema foundation for the Sports Warehouse can
 - `checksum_sha256` must match 64 lowercase hex characters when present.
 - Relative paths must not escape the declared source root. Paths containing `..`, absolute path prefixes, drive letters, or URL schemes are invalid for `source_relpath`.
 - No approved product image set should have duplicate `sequence` values for the same `product_key` unless explicitly allowed by a future exception field.
-- `banner` and `non_product` roles must be excluded from product gallery exports by default.
+- Product gallery exporters must include only approved image rows with product-safe roles such as `primary`, `gallery`, `thumbnail`, `zoom`, `hero`, or `swatch`.
+- Product gallery exporters must exclude `banner` and `non_product` rows by default.
 - Deferred rows must not be copied, imported, or published.
+- Rejected `banner` and `non_product` rows may remain in the manifest as evidence or history but must not be treated as gallery assets.
+- Product-level approval_status cannot be treated as sufficient if individual image rows are deferred or rejected, unless a future policy explicitly permits partial publication.
 - Generated IDs, enum values, and CSV headers must be ASCII-safe.
 - Delivery URLs must not be used as identity keys.
 - The flat CSV mirror must preserve `image_id`, `checksum_sha256`, `approval_status`, and `review_decision_code` so review changes can be reconciled safely.

@@ -10,7 +10,7 @@ The manifest is needed because folder names, original filenames, copy reports, p
 
 The canonical JSON manifest is the internal source of truth for product image sets. It owns the declared product-to-image relationships, source provenance, technical metadata, review status, and delivery derivation links.
 
-The flat CSV mirror is a review, QA, and tooling mirror of the canonical JSON manifest. It exists for spreadsheet review, diff-friendly checks, and lightweight tooling, but it must be regenerated from the JSON manifest or reconciled back through controlled manifest update logic.
+The flat CSV mirror is a review, QA, and tooling mirror of the canonical JSON manifest. In schema v1, the flat CSV mirror is one row per ImageAsset. It may include zero or one primary delivery projection for convenience, but it is not a complete delivery graph. If an image has multiple DeliveryAsset records, the CSV mirror either flattens the primary or preferred delivery asset or leaves delivery fields blank. A future `product-image-set-delivery-flat.csv` mirror may be added as one row per DeliveryAsset if delivery-specific review needs require it. The CSV mirror must be regenerated from the JSON manifest or reconciled back through controlled manifest update logic.
 
 Copy plans, copy simulations, SQL/import payloads, admin views, storefront views, schema.org JSON-LD, and optional IIIF exports are derived outputs. These outputs must be generated from approved manifest rows and must not be treated as source truth.
 
@@ -22,11 +22,11 @@ A Product represents a Sports Warehouse catalog item that can own a product imag
 
 ### ProductVariant
 
-A ProductVariant represents a sellable or display-specific variation of a Product, such as color, size, fit, or model grouping. Variants can share an ImageSet or require variant-specific images. The manifest uses `variant_group` and related product identifiers to keep variant presentation explicit instead of inferred from filenames.
+A ProductVariant represents a sellable or display-specific variation of a Product, such as color, size, fit, or model grouping. Variants can share an ImageSet or require variant-specific images. In schema v1, ProductVariant is a logical entity represented through embedded fields rather than a separate top-level collection. The manifest uses `variant_group` and related product identifiers to keep variant presentation explicit instead of inferred from filenames.
 
 ### ImageSet
 
-An ImageSet is the ordered collection of ImageAsset records assigned to a Product or ProductVariant for a defined presentation purpose. A product gallery ImageSet may include primary, gallery, thumbnail, and zoom roles. The ImageSet is represented by the product-level `images` array plus role, sequence, and variant fields on each image row.
+An ImageSet is the ordered collection of ImageAsset records assigned to a Product or ProductVariant for a defined presentation purpose. A product gallery ImageSet may include primary, gallery, thumbnail, and zoom roles. In schema v1, ImageSet is a logical entity represented through embedded fields rather than a separate top-level collection. The ImageSet is represented by the product-level `images` array plus role, sequence, and variant fields on each image row.
 
 ### ImageAsset
 
@@ -38,7 +38,12 @@ A SourceRoot declares an approved input boundary for candidate image discovery. 
 
 ### ReviewDecision
 
-A ReviewDecision records the human or policy decision that changes or confirms the state of a Product, ImageAsset, or SourceRoot. It is represented by `approval_status`, `review_decision_code`, reviewer notes, and preserved decision history. Prior evidence records may inform decisions, but they do not replace the canonical manifest.
+A ReviewDecision records the human or policy decision that changes or confirms the state of a Product, ImageAsset, or SourceRoot. In schema v1, ReviewDecision is a logical entity represented through embedded fields rather than a separate top-level collection. It is represented by `approval_status`, `review_decision_code`, reviewer notes, and preserved decision history. Prior evidence records may inform decisions, but they do not replace the canonical manifest.
+
+
+### Logical entities in schema v1
+
+ProductVariant, ImageSet, and ReviewDecision are logical entities in this architecture. Schema v1 intentionally represents them through embedded fields instead of separate top-level arrays: ProductVariant through `variant_group` and related product identifiers, ImageSet through `products[].images[]` plus image role, sequence, and variant fields, and ReviewDecision through `approval_status`, `review_decision_code`, reviewer notes, gate records, and report records. This embedded representation is complete for schema v1 and should not be treated as a gap merely because those logical entities are not normalized into top-level collections. Future schema versions may normalize ProductVariant, ImageSet, or ReviewDecision into separate top-level collections if operational scale, review history, or variant-specific publishing rules require it.
 
 ### DeliveryAsset
 
@@ -59,7 +64,7 @@ Safe operation must happen in this order:
 9. Generate platform import payloads and storefront views.
 10. Publish derived URLs and markup.
 
-No downstream output should be generated from unapproved, deferred, rejected, or undiscovered rows.
+No downstream output should be generated from unapproved, deferred, rejected, or undiscovered rows. Product gallery exporters must include only approved image rows with product-safe roles such as `primary`, `gallery`, `thumbnail`, `zoom`, `hero`, or `swatch`, and must exclude `banner` and `non_product` rows by default.
 
 ## Review and gating model
 
@@ -79,6 +84,8 @@ No downstream output should be generated from unapproved, deferred, rejected, or
 - `reject_non_product`: Reviewer rejected a non-product image.
 - `reject_banner`: Reviewer rejected a banner or marketing asset for product gallery use.
 - `not_reviewed`: Row has not yet been reviewed.
+
+Product-level approval_status describes the overall product image set state. Image-level approval_status describes an individual image row. A product image set may remain `proposed` with `not_reviewed` while some individual image rows are `approved`, especially when the set still includes deferred, rejected, banner, non_product, or unresolved rows.
 
 Banner and non-product assets must not enter product gallery exports unless explicitly routed through a separate workflow designed for marketing, editorial, or site banner assets. Deferred rows must not be copied, imported, or published.
 
@@ -115,4 +122,8 @@ These outputs remain derived artifacts. If a derived output conflicts with the c
 - Preserve review decision history and reviewer notes.
 - Do not let delivery URLs become image identity.
 - Keep generated IDs, enum values, and CSV headers ASCII-safe.
-- Keep banner and non_product assets out of product gallery exports by default.
+- Product gallery exporters must include only approved image rows with product-safe roles such as `primary`, `gallery`, `thumbnail`, `zoom`, `hero`, or `swatch`.
+- Product gallery exporters must exclude banner and non_product rows by default.
+- Deferred rows must not be copied, imported, or published.
+- Rejected banner and non_product rows may remain in the manifest as evidence or history but must not be treated as gallery assets.
+- Product-level approval_status cannot be treated as sufficient for publication if individual image rows are deferred or rejected, unless a future policy explicitly permits partial publication.

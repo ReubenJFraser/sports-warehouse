@@ -16,6 +16,18 @@
       ],
       "approval_status": "approved",
       "reviewer_notes": "Example source root only. Do not use as a live Ryderwear manifest."
+    },
+    {
+      "source_root_id": "src_example_ryderwear_marketing_002",
+      "root_label": "Example marketing and banner source root",
+      "root_type": "repository_path",
+      "allowlist_rule_id": "allow_example_marketing_assets_002",
+      "root_scope": "docs/architecture/examples/marketing-source-roots/not-real",
+      "exclusions": [
+        "product-gallery/"
+      ],
+      "approval_status": "approved",
+      "reviewer_notes": "Example marketing and banner source root only. Separate from product-gallery source roots; rows are excluded from product gallery export by default."
     }
   ],
   "products": [
@@ -163,7 +175,7 @@
           "sequence": 99,
           "role": "banner",
           "variant_group": "black",
-          "source_root_id": "src_example_ryderwear_approved_001",
+          "source_root_id": "src_example_ryderwear_marketing_002",
           "source_relpath": "banners/core-training-campaign.jpg",
           "original_filename": "core-training-campaign.jpg",
           "mime_type": "image/jpeg",
@@ -176,7 +188,7 @@
           "products_shown": [],
           "approval_status": "rejected",
           "review_decision_code": "reject_banner",
-          "reviewer_notes": "Banner marked non_product for product gallery export and excluded by default.",
+          "reviewer_notes": "Banner from the separate marketing source root; rejected for product gallery export and retained only as evidence.",
           "delivery": []
         }
       ]
