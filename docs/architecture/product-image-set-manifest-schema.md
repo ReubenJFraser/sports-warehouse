@@ -2,7 +2,7 @@
 
 This document defines the initial schema foundation for the Sports Warehouse canonical product image set manifest. It is documentation and template guidance only. It does not generate a live Ryderwear manifest.
 
-Schema v1 uses embedded fields for several logical entities named in the architecture. ProductVariant is represented mainly through `variant_group` and related product identifiers. ImageSet is represented through `products[].images[]` plus image role, sequence, and variant fields. ReviewDecision is represented through `approval_status`, `review_decision_code`, reviewer notes, and related gate or report records. These are complete schema v1 representations, not missing top-level arrays. Future schema versions may normalize ProductVariant, ImageSet, or ReviewDecision into separate top-level collections if needed.
+Schema v1 uses embedded fields for several logical entities named in the architecture. ProductVariant is represented mainly through `variant_group` and normalized product identifiers. ImageSet is represented through `products[].images[]` plus image role, sequence, and variant fields. ReviewDecision is represented through `approval_status`, `review_decision_code`, reviewer notes, and related gate or report records. These are complete schema v1 representations, not missing top-level arrays. Future schema versions may normalize ProductVariant, ImageSet, or ReviewDecision into separate top-level collections if needed.
 
 ## Manifest-level fields
 
@@ -30,19 +30,22 @@ Schema v1 uses embedded fields for several logical entities named in the archite
 
 ## Product fields
 
+Sports Warehouse project-specific candidate manifest Product fields are:
+
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `product_key` | string | Yes | Stable manifest key for the product. |
-| `item_id` | string | No | Sports Warehouse internal item ID when available. |
-| `external_item_id` | string | No | External catalog or supplier item ID when available. |
-| `sku` | string | No | Product or variant SKU. |
-| `gtin` | string | No | GTIN, UPC, or EAN when available. |
+| `item_id` | integer or null | No | Manifest-normalized name for the Excel/ProductDB `db_itemId` database item identity. Populate from `db_itemId` when a unique reliable ProductDB/CSV match exists. This may be null only when no reliable ProductDB identity can be established. |
+| `model_id` | string | Yes | Canonical Sports Warehouse product/model slug. Required for Sports Warehouse product image set manifests. |
+| `sku` | string or null | No | Product or variant SKU when available. |
+| `gtin` | string or null | No | GTIN, UPC, or EAN when available. |
 | `title` | string | Yes | Product title. |
-| `model_id` | string | No | Model grouping identifier used by Sports Warehouse workflows. |
-| `variant_group` | string | No | Variant group such as color or style. |
+| `variant_group` | string or null | No | Variant group such as color or style. |
 | `approval_status` | approval_status enum | Yes | Product-level approval_status for the overall product image set state. This can remain `proposed` while individual image rows are approved if other rows are deferred, rejected, banner, non_product, or unresolved. |
 | `review_decision_code` | review_decision_code enum | Yes | Review decision for the product row or image set. |
+| `reviewer_notes` | string | No | Human reviewer notes for the product row or image set. |
 | `images` | array of ImageAsset | Yes | Image assets associated with this product. |
+
+`product_key` is deprecated and omitted for Sports Warehouse candidate manifests when it would duplicate `model_id`. `external_item_id` is deprecated and omitted because it duplicated `model_id` in this project. If a future external, supplier, or platform identifier is needed, introduce a new precisely named field such as `supplier_item_id`, `supplier_sku`, `platform_item_id`, or `source_system_item_id` rather than restoring `external_item_id`.
 
 ## ImageAsset fields
 
@@ -62,7 +65,7 @@ Schema v1 uses embedded fields for several logical entities named in the archite
 | `checksum_sha256` | string | Yes | SHA-256 checksum as 64 lowercase hex characters. |
 | `digital_source_type` | digital_source_type enum | Yes | Source or derivation category for the image. |
 | `derived_from_image_id` | string or null | No | Parent image ID when this image is derived from another ImageAsset. |
-| `products_shown` | array of strings | Yes | Product keys or item IDs visibly shown in the image. |
+| `products_shown` | array of strings | Yes | Product `model_id` values or `item_id` values visibly shown in the image. |
 | `approval_status` | approval_status enum | Yes | Image-level approval_status for this individual image row. |
 | `review_decision_code` | review_decision_code enum | Yes | Review decision for the image row. |
 | `reviewer_notes` | string | No | Human reviewer notes. |
@@ -148,7 +151,7 @@ A future `product-image-set-delivery-flat.csv` mirror may be introduced as one r
 - `source_root_id` on each ImageAsset must reference a declared source root.
 - `checksum_sha256` must match 64 lowercase hex characters when present.
 - Relative paths must not escape the declared source root. Paths containing `..`, absolute path prefixes, drive letters, or URL schemes are invalid for `source_relpath`.
-- No approved product image set should have duplicate `sequence` values for the same `product_key` unless explicitly allowed by a future exception field.
+- No approved product image set should have duplicate `sequence` values for the same `model_id` and `variant_group` unless explicitly allowed by a future exception field.
 - Product gallery exporters must include only approved image rows with product-safe roles such as `primary`, `gallery`, `thumbnail`, `zoom`, `hero`, or `swatch`.
 - Product gallery exporters must exclude `banner` and `non_product` rows by default.
 - Deferred rows must not be copied, imported, or published.

@@ -18,7 +18,7 @@ Copy plans, copy simulations, SQL/import payloads, admin views, storefront views
 
 ### Product
 
-A Product represents a Sports Warehouse catalog item that can own a product image set. It includes durable catalog identifiers such as `product_key`, `item_id`, `external_item_id`, `sku`, `gtin`, title, model linkage, variant grouping, review state, and associated images.
+A Product represents a Sports Warehouse catalog item that can own a product image set. In Sports Warehouse candidate manifests, product identity is normalized to `item_id` for the database item identity and `model_id` for the canonical product/model slug, plus optional `sku` and `gtin`, title, variant grouping, review state, and associated images.
 
 ### ProductVariant
 
@@ -48,6 +48,20 @@ ProductVariant, ImageSet, and ReviewDecision are logical entities in this archit
 ### DeliveryAsset
 
 A DeliveryAsset represents a generated or published output derived from an ImageAsset. It can include destination relative path, URL, dimensions, MIME type, source derivation, and generator name. Delivery URLs are derived locations, not image identity.
+
+## Sports Warehouse product identity model
+
+The Sports Warehouse product image set manifest uses a normalized identity model for candidate manifests:
+
+- `db_itemId` is the Excel/ProductDB field name for the database item identity.
+- `item_id` is the manifest field name for that same database item identity.
+- `db_itemId` -> `item_id` is a naming normalization, not a new identity.
+- `model_id` is the canonical Sports Warehouse product/model slug.
+- `product_key` is not used in Sports Warehouse candidate manifests when it would only duplicate `model_id`.
+- `external_item_id` is deprecated and removed from Sports Warehouse candidate manifests because in this project it duplicated `model_id`.
+- `external_item_id` must not be used as another name for `model_id`.
+- If a genuine outside-system identifier is needed later, use a clearly named field such as `supplier_item_id`, `supplier_sku`, `platform_item_id`, or `source_system_item_id`, with a precise definition.
+- Downstream tools must not infer ProductDB identity from `product_key` or `external_item_id`. They must use `item_id` when a reliable ProductDB identity is established, and `model_id` only as the canonical Sports Warehouse product/model slug.
 
 ## Workflow sequence
 
