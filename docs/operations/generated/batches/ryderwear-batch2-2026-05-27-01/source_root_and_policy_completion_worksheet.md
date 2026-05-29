@@ -10,12 +10,12 @@ Completing this worksheet does not itself authorize copying, import, publication
 
 | Field | Value |
 |---|---|
-| worksheet_completion_status | incomplete |
-| completed_by | TBD |
-| completion_date | TBD |
-| review_scope | TBD |
-| final_gate_recommendation | TBD |
-| next_allowed_task | TBD |
+| worksheet_completion_status | complete_for_candidate_manifest_preparation |
+| completed_by | Reuben Fraser, with ChatGPT/Codex-assisted policy drafting |
+| completion_date | 2026-05-29 |
+| review_scope | Ryderwear Batch 2 source-root and manifest-policy decisions for candidate product-image-set manifest preparation only |
+| final_gate_recommendation | candidate_manifest_generation_allowed_for_accepted_eligible_decisions_only |
+| next_allowed_task | generate Ryderwear Batch 2 candidate product-image-set manifest from approved SourceRoot and accepted/eligible decisions only |
 | downstream_artifacts_unblocked | no |
 
 ## What completion means
@@ -141,10 +141,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Reconcile the prior `source_asset_id` concept with the canonical manifest model. Candidate options are: supersede `source_asset_id` with manifest `image_id`; retain `source_asset_id` only as a technical source inventory alias; or map `source_asset_id` into an `image_id` and `checksum_sha256` strategy. |
 | unresolved issue | The worksheet must not automatically decide whether `source_asset_id` is superseded, retained as a technical alias, or mapped into `image_id`. Human manifest policy approval is required before any candidate manifest or later `source_asset_inventory.csv` projection uses this field. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Use manifest image_id as the canonical image identity. Retain source_asset_id only as a technical source-inventory alias or derived evidence-view field if needed later. source_asset_id must not become the canonical source-of-truth identifier. image_id should be generated under the canonical manifest policy and tied to source_root_id, normalized source_relpath, product_key context, and checksum_sha256 when available. |
+| follow_up_required | no for candidate manifest preparation; yes before any later source_asset_inventory.csv projection if that projection includes source_asset_id |
+| approval_date | 2026-05-29 |
 
 ### 6.2 Checksum/bytes/MIME capture policy
 
@@ -152,10 +152,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Capture `checksum_sha256`, `bytes`, and `mime_type` during one reproducible controlled pass over approved `SourceRoot` entries for rows that are accepted and eligible for the candidate manifest. Use filesystem stat for bytes and a consistent detector policy for MIME, with magic-bytes first and extension fallback only if needed. |
 | unresolved issue | The checksum/bytes/MIME normalization policy is deferred in the saved reviewer record. Tooling, detector order, timestamp/run documentation, and consistency rules still require explicit approval before any candidate manifest or derived source evidence view is generated. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | For candidate manifest generation, capture checksum_sha256, byte_size, mime_type, width_px, and height_px during one controlled pass over the approved SourceRoot only. Use filesystem stat for byte_size, image metadata for dimensions, and magic-bytes MIME detection first with extension fallback only where necessary. Record enough run context in provenance_note to make the metadata capture reproducible. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 6.3 Provenance_note policy
 
@@ -163,10 +163,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Encode source root label/version, `SourceRoot` reference, scan or evidence run identifier/date, mapping basis, confidence class, collision group or suspicious reason where applicable, reviewer decision state, defer reason, and prerequisite condition to clear defer. |
 | unresolved issue | The provenance_note policy is deferred in the saved reviewer record. Required row-type vocabulary and minimum provenance content still require explicit approval before manifest rows or downstream evidence views are generated. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Each candidate manifest row should include provenance context sufficient to identify source_root_id, source_relpath, evidence basis, reviewer decision state, acceptance/defer status, and any exclusion reason. For deferred or excluded cases, provenance should preserve the reason without converting the case into an approved manifest row. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 6.4 Suspicious/remap representation policy
 
@@ -174,10 +174,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Represent suspicious/remap cases in the candidate manifest as review state and evidence/history only when allowed by manifest policy. Later `suspicious_mapping_report.csv` rows, if approved by later gates, should be derived from manifest review fields and supporting evidence rather than treated as the canonical source of truth. |
 | unresolved issue | `suspicious_mapping_report.csv` remains blocked. Accepted suspicious/remap decisions can be considered for candidate manifest inclusion only after source-root and manifest policy approval, and unresolved suspicious/remap cases must remain excluded or separately routed. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Represent only accepted/eligible suspicious-remap decisions in the candidate manifest. Accepted rows may be included as product-image-set candidates if they remain within the approved SourceRoot and match the accepted reviewer evidence. Deferred suspicious/remap cases and banner/non_product cases must be excluded or retained only as evidence/history where the manifest policy allows. suspicious_mapping_report.csv remains blocked as a later derived output. |
+| follow_up_required | no for candidate manifest preparation; yes before suspicious_mapping_report.csv generation |
+| approval_date | 2026-05-29 |
 
 ### 6.5 Accepted-vs-deferred inclusion policy
 
@@ -185,10 +185,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Include only accepted and eligible product-item visual evidence decisions in any later candidate product-image-set manifest. Exclude all deferred cases unless they are separately resolved by a human reviewer. |
 | unresolved issue | The saved reviewer record has only 2 accepted decisions and 17 deferred decisions. The workflow must avoid silently converting draft or deferred decisions into approved manifest rows, copied assets, import payloads, or storefront gallery entries. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Include only the two accepted/eligible decisions in the candidate manifest: suspicious-02 / ryderwear_unisex_gym_bag_accessories and suspicious-03 / ryderwear_female_nkd_shorts_v_scrunch. Exclude all deferred decisions, including dec-001 through dec-011, itemId 184, unresolved policy/source-root cases, and unresolved provenance cases unless separately resolved by a later human decision. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 6.6 Banner/non_product separation policy
 
@@ -196,10 +196,10 @@ The following policy completion sections preserve the existing useful source-evi
 |---|---|
 | current proposed approach | Treat banner/non_product cases outside product-item gallery approval. They may remain as evidence/history, but they should be excluded from product gallery exports by default and may require a separate marketing/banner `SourceRoot` and workflow. |
 | unresolved issue | `suspicious-01` is explicitly classified by the reviewer as a banner and non-product item. It must not be included as product-item visual evidence or exported as a product gallery row without a separate human decision and workflow. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Exclude banner/non_product cases from the product-item candidate manifest. The known suspicious-01 / ryderwear_female_nkd_leggings_v_full_length_scrunch case must not be treated as product-item visual approval. It may be retained only as evidence/history or routed to a future marketing/banner SourceRoot workflow if needed. |
+| follow_up_required | no for product-item candidate manifest preparation; yes if a future banner/marketing workflow is created |
+| approval_date | 2026-05-29 |
 
 ## 7. Canonical manifest policy decisions
 
@@ -211,10 +211,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Use stable manifest identity that includes the Ryderwear Batch 2 batch key and a candidate/draft marker. Keep `batch_id` aligned with `ryderwear-batch2-2026-05-27-01`. |
 | unresolved issue | Final naming format, version marker, draft/candidate marker, and collision behavior for re-runs are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Use batch_id ryderwear-batch2-2026-05-27-01. Use manifest_id ryderwear_batch2_2026_05_27_candidate_product_image_set_manifest_v1 for the first candidate manifest. Later reruns should increment the manifest version rather than overwrite prior committed manifests. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 7.2 source_root_id naming policy
 
@@ -222,10 +222,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Assign each approved root a deterministic `source_root_id` and represent it as a `SourceRoot` entry with root type, owner/origin, scope, and exclusions. |
 | unresolved issue | The format for `source_root_id`, handling of multiple roots, root versioning, and root exclusion encoding is not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Use source_root_id src_ryderwear_repo_images_brands_ryderwear_v1 for the approved repository_path root images/brands/ryderwear. If future roots are approved, assign separate deterministic source_root_id values and do not merge them silently into this root. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 7.3 product_key and item_id mapping policy
 
@@ -233,10 +233,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Map each product image set to a stable `product_key` and, where available, the relevant `item_id` or itemId from reviewer/gate artifacts. Preserve slug-only decisions when itemId is not available. |
 | unresolved issue | The canonical mapping rules for slug-only suspicious/remap cases, itemId formatting, ProductDB identity linkage, and conflict handling are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Use the accepted decision slug as product_key where itemId is not available in the saved reviewer JSON. For this candidate manifest, preserve suspicious-02 as product_key ryderwear_unisex_gym_bag_accessories and suspicious-03 as product_key ryderwear_female_nkd_shorts_v_scrunch. Leave item_id empty or null where no itemId is available rather than inventing one. Do not link to ProductDB identity unless an explicit reliable mapping exists. |
+| follow_up_required | no for candidate manifest preparation; yes before ProductDB updates or import payloads |
+| approval_date | 2026-05-29 |
 
 ### 7.4 image_id generation policy
 
@@ -244,10 +244,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Generate a deterministic `image_id` for each manifest image row from approved source root context, normalized relative path, checksum where available, and product image set context. |
 | unresolved issue | The exact `image_id` canonical input, whether it supersedes or maps from `source_asset_id`, and whether checksum is required for candidate rows are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Generate image_id deterministically from product_key, role, sequence, source_root_id, normalized source_relpath, and checksum_sha256 once captured. The preferred form is ASCII-safe and stable, for example img_{product_key}*{role}*{sequence}_{checksum12}, where checksum12 is the first 12 lowercase hex characters of checksum_sha256. If checksum capture fails, keep the row deferred rather than generating an approved image_id from path alone. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 7.5 sequence and role assignment policy
 
@@ -255,10 +255,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Record image `sequence` and role assignment, such as primary/gallery/supporting evidence, in the candidate manifest before any downstream gallery or copy projection. |
 | unresolved issue | The rules for primary image selection, gallery order, tie-breakers, and unsupported or evidence-only images are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | For the candidate manifest, assign sequence according to the visible/current image order from the approved evidence set. Use primary for the first clear product-gallery image when appropriate and gallery for additional product images. Do not create thumbnail, zoom, delivery, or storefront-specific roles unless they already exist as evidence and are approved. Ambiguous or evidence-only images must remain excluded or deferred. |
+| follow_up_required | no for candidate manifest preparation; yes before storefront gallery/export design |
+| approval_date | 2026-05-29 |
 
 ### 7.6 variant_group policy
 
@@ -266,10 +266,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Use `variant_group` to group images by relevant product variation context when needed, such as color, size segment, collection, or other approved merchandising dimension. |
 | unresolved issue | The allowed `variant_group` vocabulary, normalization rules, and behavior for unknown or ambiguous variants are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Use variant_group only when a clear product variant, model, collection, color, or merchandising group is supported by the accepted evidence. For the first candidate manifest, derive variant_group conservatively from the accepted product_key/model context where clear; otherwise use null or unknown rather than inventing a variant. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 7.7 approval_status and review_decision_code mapping policy
 
@@ -277,10 +277,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Map saved reviewer states into manifest `approval_status` and `review_decision_code` fields without converting draft/deferred states into approval. Accepted cases may become candidate-approved or candidate-eligible only if source-root and manifest policy approvals are complete. Deferred cases remain deferred or excluded. |
 | unresolved issue | The exact mapping from `accept_proposed`, `defer_decision`, banner/non_product handling, and source/provenance blockers into `approval_status` and `review_decision_code` is not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | For accepted/eligible candidate manifest rows, map accept_proposed to approval_status approved and review_decision_code accept_proposed. This approval applies only to candidate manifest inclusion and does not approve copy, import, ProductDB updates, storefront gallery changes, or publication. Map deferred cases to deferred/defer_decision only if included as evidence/history; otherwise exclude them. Map banner/non_product cases to rejected/reject_banner or reject_non_product only if a later evidence/history representation is needed; do not include them as product-gallery rows. |
+| follow_up_required | no for candidate manifest preparation |
+| approval_date | 2026-05-29 |
 
 ### 7.8 Delivery asset projection policy
 
@@ -288,10 +288,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Treat delivery assets, copied files, import payload paths, admin views, and storefront views as downstream projections from approved manifest rows only. |
 | unresolved issue | Projection rules for destination paths, gallery exports, import payloads, copy plans, and storefront visibility are not approved and remain blocked by later gates. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Do not generate delivery assets in the candidate manifest. Use empty delivery arrays or blank delivery fields for candidate rows. Destination paths, copied files, import payload paths, admin views, storefront views, and gallery exports remain later derived projections and are not approved by this worksheet. |
+| follow_up_required | yes before copy simulation, image copying, import payloads, or storefront gallery work |
+| approval_date | 2026-05-29 |
 
 ### 7.9 JSON canonical plus CSV mirror policy
 
@@ -299,10 +299,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Generate canonical JSON manifest as the internal source of truth and derive flat CSV review/tooling mirrors from that JSON when a later task is approved. |
 | unresolved issue | The exact JSON path, CSV mirror path, flattening rules, round-trip constraints, and reviewer edit rules are not approved. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Generate the candidate canonical JSON manifest as the internal source-of-truth candidate artifact. A flat CSV mirror may be generated from the JSON for review/tooling only. The JSON remains authoritative. The CSV mirror must not become the source of truth and must not be used to infer additional rows outside the approved manifest scope. |
+| follow_up_required | no for candidate manifest preparation; yes before any reviewer-edit round trip from CSV back into JSON |
+| approval_date | 2026-05-29 |
 
 ### 7.10 banner/non_product separation policy
 
@@ -310,10 +310,10 @@ The following policy completion sections are required before a Ryderwear Batch 2
 |---|---|
 | current proposed approach | Preserve banner/non_product rows as evidence/history when needed, exclude them from product gallery exports by default, and route them through a separate marketing/banner `SourceRoot` and workflow if they are to be managed. |
 | unresolved issue | The separate banner/non_product workflow, SourceRoot policy, export behavior, and approval mapping are not approved. The known banner/non-product reviewer case must not be treated as product-item visual approval. |
-| human decision | TBD |
-| reviewer notes | TBD |
-| follow_up_required | TBD |
-| approval_date | TBD |
+| human decision | approve_policy |
+| reviewer notes | Exclude banner/non_product cases from the product-item candidate manifest. The known suspicious-01 case remains outside product gallery approval and should not be included in product gallery exports. A separate marketing/banner SourceRoot workflow may be created later if banner assets need canonical management. |
+| follow_up_required | no for product-item candidate manifest preparation; yes if future banner/marketing workflow is created |
+| approval_date | 2026-05-29 |
 
 ## 8. Accepted decisions eligible for candidate manifest preparation
 
@@ -402,43 +402,43 @@ Visual evidence alone must not approve itemId `184` if source/provenance remains
 
 A human reviewer or policy owner must complete this checklist before a follow-up task can generate a Ryderwear Batch 2 candidate product-image-set manifest. A later `source_asset_inventory.csv` or other source evidence view may be derived only after the manifest approach is approved.
 
-- [ ] Approved source root recorded.
-- [ ] Source root scope recorded.
-- [ ] Source root exclusions recorded.
-- [ ] Source root owner or origin recorded.
-- [ ] `SourceRoot` entry policy approved.
-- [ ] manifest_id and batch_id naming policy approved.
-- [ ] source_root_id naming policy approved.
-- [ ] product_key and item_id mapping policy approved.
-- [ ] image_id generation policy approved.
-- [ ] `source_asset_id` reconciliation policy approved.
-- [ ] Checksum/bytes/MIME capture policy approved.
-- [ ] `provenance_note` policy approved.
-- [ ] sequence and role assignment policy approved.
-- [ ] variant_group policy approved.
-- [ ] approval_status and review_decision_code mapping policy approved.
-- [ ] delivery asset projection policy approved.
-- [ ] JSON canonical plus flat CSV mirror policy approved.
-- [ ] Suspicious/remap inclusion policy approved.
-- [ ] Accepted-vs-deferred inclusion policy approved.
-- [ ] banner/non_product separation policy approved.
-- [ ] Deferred cases excluded or separately resolved.
-- [ ] Banner/non_product case excluded or routed separately.
-- [ ] The later candidate manifest scope is limited to accepted/eligible decisions and the approved source root.
+- [x] Approved source root recorded.
+- [x] Source root scope recorded.
+- [x] Source root exclusions recorded.
+- [x] Source root owner or origin recorded.
+- [x] `SourceRoot` entry policy approved.
+- [x] manifest_id and batch_id naming policy approved.
+- [x] source_root_id naming policy approved.
+- [x] product_key and item_id mapping policy approved.
+- [x] image_id generation policy approved.
+- [x] `source_asset_id` reconciliation policy approved.
+- [x] Checksum/bytes/MIME capture policy approved.
+- [x] `provenance_note` policy approved.
+- [x] sequence and role assignment policy approved.
+- [x] variant_group policy approved.
+- [x] approval_status and review_decision_code mapping policy approved.
+- [x] delivery asset projection policy approved.
+- [x] JSON canonical plus flat CSV mirror policy approved.
+- [x] Suspicious/remap inclusion policy approved.
+- [x] Accepted-vs-deferred inclusion policy approved.
+- [x] banner/non_product separation policy approved.
+- [x] Deferred cases excluded or separately resolved.
+- [x] Banner/non_product case excluded or routed separately.
+- [x] The later candidate manifest scope is limited to accepted/eligible decisions and the approved source root.
 
 ## 13. Gate recommendation
 
 Conservative gate recommendation:
 
-- `source_asset_inventory.csv` remains blocked until later gates and should be treated as a downstream derived output, not the next canonical source-of-truth artifact.
-- A Ryderwear Batch 2 candidate product-image-set manifest remains blocked until this worksheet is completed by a human reviewer or policy owner.
-- Once this worksheet is completed, a follow-up task may generate a controlled candidate product-image-set manifest scoped only to accepted/eligible decisions and the approved `SourceRoot` entries.
-- Review/tooling CSV mirrors and source evidence views may be derived only after the candidate manifest approach is approved.
-- `suspicious_mapping_report.csv` remains blocked until later gates.
-- `copy_simulation.csv` remains blocked until later gates.
-- Image copy outputs remain blocked until later gates.
-- SQL/import payloads remain blocked until later gates.
-- Storefront publication and storefront gallery exports remain blocked until later gates.
+- Candidate product-image-set manifest generation is now allowed as the next controlled task, limited to the approved SourceRoot and accepted/eligible decisions only.
+- source_asset_inventory.csv remains blocked as canonical source truth and may only later be generated as a derived source evidence view if separately approved.
+- `suspicious_mapping_report.csv` remains blocked.
+- copy_simulation.csv remains blocked.
+- Image copy outputs remain blocked.
+- SQL/import payloads remain blocked.
+- ProductDB changes remain blocked.
+- Storefront publication and gallery exports remain blocked.
+- Review/tooling CSV mirrors may be derived only from the candidate canonical JSON manifest and must not become source truth.
 - This worksheet does not unblock copy simulation, image copying, import, reconciliation, publication, ProductDB changes, admin views, storefront views, or public storefront changes.
 
 ## Future admin UI note
@@ -447,13 +447,21 @@ After this worksheet is completed once in Markdown, a future admin UI can be des
 
 ## 14. Recommended next Codex task
 
-Do not run any next artifact-generation task until this worksheet is actually completed by a human reviewer or policy owner.
+Recommended next task:
 
-Conservative next-task sequence:
+Generate a Ryderwear Batch 2 candidate product-image-set manifest from the approved SourceRoot and accepted/eligible decisions only.
 
-1. Complete this worksheet with human source-root and manifest-policy decisions.
-2. Then generate a Ryderwear Batch 2 candidate product-image-set manifest from approved source roots and accepted/eligible decisions only.
-3. Then create or derive review/tooling CSV mirrors and source evidence views from the candidate manifest.
-4. Only later generate copy simulation from approved manifest rows after the relevant later gates approve that step.
+The candidate manifest task must:
 
-The candidate manifest task must remain scoped to the approved source root, recorded exclusions, approved policy decisions, and accepted eligible decisions only. It must not include deferred cases, banner/non_product cases, unresolved source/provenance cases, copied assets, import payloads, storefront gallery entries, or storefront publication inputs unless a separate human decision resolves them first.
+- include only suspicious-02 and suspicious-03 accepted/eligible decisions;
+- use approved source root images/brands/ryderwear;
+- exclude all deferred decisions;
+- exclude itemId 184;
+- exclude suspicious-01 banner/non_product case;
+- not copy images;
+- not generate copy_simulation.csv;
+- not generate SQL/import payloads;
+- not update ProductDB;
+- not publish storefront changes.
+
+No later artifact-generation task is authorized by this worksheet. Review/tooling CSV mirrors and source evidence views remain limited to future separately controlled tasks derived from the candidate canonical JSON manifest. Copy simulation, image copying, import payloads, ProductDB updates, storefront gallery changes, and publication remain blocked.
