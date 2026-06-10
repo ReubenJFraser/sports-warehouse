@@ -494,6 +494,116 @@ In this case, the correct next step is local synchronization, not returning to C
 
 ---
 
+## Codex UI Recovery and PR Navigation
+
+Use this section when the operator becomes lost between the OpenAI/ChatGPT Codex task screen, GitHub Pull Requests, GitHub Copilot Chat, and GitHub Agents screens.
+
+The critical recovery rule is:
+
+> If the OpenAI/ChatGPT Codex task pane shows a completed task and a PR number near the top-right, use the **Open** button beside the PR number, for example `PR 202`. Do not search through GitHub navigation first. The Open button is the direct route back to the GitHub PR/task context.
+
+This is the preferred bridge from the OpenAI/ChatGPT Codex task screen back to the GitHub PR/task context.
+
+### Distinguish OpenAI/ChatGPT Codex from GitHub Pull Requests
+
+There are two related but different surfaces.
+
+#### OpenAI/ChatGPT Codex
+
+OpenAI/ChatGPT Codex is where the operator may see:
+
+- the Codex project sidebar
+- project entries such as `fpl-preseason-dashboard`
+- recent tasks such as `Analyze World Cup Fantasy strategy`
+- a task pane with an **Open** button and a PR number
+
+This surface is not GitHub itself.
+
+It can create and link GitHub PRs, but GitHub remains authoritative for real PR existence, mergeability, merge status, and closed PR history.
+
+When the Codex task pane already shows a PR number, use the **Open** button beside that PR number before searching elsewhere.
+
+#### GitHub Pull Requests
+
+GitHub Pull Requests is where completed Codex work appears as PRs.
+
+To find older completed Codex work in GitHub:
+
+1. go to the repository
+2. click `Pull requests`
+3. switch from `Open` to `Closed`
+4. inspect recent completed Codex PRs there
+
+The number beside `Closed` changes over time.
+
+It may say `196 Closed`, `200 Closed`, or another number.
+
+Do not treat that number as a fixed instruction.
+
+It is only the current count of closed PRs.
+
+### Avoid GitHub Copilot and Agents Confusion
+
+GitHub Agents or GitHub Copilot screens may show model options such as:
+
+- `Claude Haiku`
+- `Claude Sonnet`
+- `GPT-5.5`
+- `GPT-5.3 Codex`
+
+If the screen shows `Claude Haiku 4.5` or another Claude model, that is not the same Codex workflow.
+
+If the model selector says Claude Haiku, Claude Sonnet, or another non-Codex model, stop before approving file changes. Either switch to a Codex model if available or return to the OpenAI Codex task screen and use the **Open** button beside the PR.
+
+Do not allow file-changing tools such as `create_or_update_file` when the wrong model is selected and the intention is specifically to use Codex.
+
+### Do Not Type `/task` into GitHub Global Search
+
+Typing `/task ...` into GitHub's global search bar only performs a GitHub search.
+
+It does not create a Codex task.
+
+If a task must be started from GitHub Copilot Chat, type the task into the Copilot Chat composer, not the GitHub global search bar.
+
+### Large Prompt Workaround
+
+If a Codex prompt is too large to paste into the OpenAI Codex composer, use one of these safer patterns:
+
+1. create a GitHub issue with the full task prompt, then ask Codex to implement that issue
+2. create a repo task file such as `docs/world-cup-watch/tasks/<task-name>.md`, then ask Codex to read and implement it
+3. split the task into smaller scoped prompts
+
+Prefer a GitHub issue or repo task file for long, detailed instructions.
+
+This keeps the task auditable and avoids partial prompt loss in the composer.
+
+### Two PowerShell Tab Reminder
+
+Use two PowerShell tabs for local work.
+
+One tab is for the local server only.
+
+The other tab is for Git commands and script execution.
+
+Server tab:
+
+```powershell
+cd C:\laragon\www\fpl-preseason-dashboard
+py -m http.server 8010 --bind 127.0.0.1 --directory C:\laragon\www\fpl-preseason-dashboard
+```
+
+Command tab:
+
+```powershell
+cd C:\laragon\www\fpl-preseason-dashboard
+git status --short
+git branch --show-current
+```
+
+If the server is accidentally started in the Git-command tab, press `Ctrl + C` and restart it in the dedicated server tab.
+
+---
+
 ## Revision Policy
 
 One narrow correction cycle is allowed before merge.
